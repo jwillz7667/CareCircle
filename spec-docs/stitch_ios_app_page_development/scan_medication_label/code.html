@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#79542b",
+                        "surface-variant": "#e3e3e0",
+                        "surface": "#faf9f7",
+                        "tertiary-fixed-dim": "#efbd8a",
+                        "outline": "#717974",
+                        "surface-container": "#eeeeeb",
+                        "on-primary-fixed-variant": "#2c4d40",
+                        "inverse-surface": "#2f312f",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c1c8c3",
+                        "surface-bright": "#faf9f7",
+                        "surface-dim": "#dadad8",
+                        "primary-fixed": "#c5ebd9",
+                        "on-tertiary-container": "#fffbff",
+                        "background": "#faf9f7",
+                        "on-primary-container": "#f5fff8",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#614018",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#b8c8dd",
+                        "secondary-container": "#d1e1f7",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#394859",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#436558",
+                        "inverse-primary": "#aacfbe",
+                        "tertiary-container": "#956d40",
+                        "surface-container-highest": "#e3e3e0",
+                        "primary-container": "#597c6d",
+                        "surface-container-high": "#e8e8e6",
+                        "on-secondary-fixed": "#0d1d2c",
+                        "inverse-on-surface": "#f1f1ee",
+                        "primary-fixed-dim": "#aacfbe",
+                        "secondary-fixed": "#d4e4f9",
+                        "on-secondary-container": "#556476",
+                        "on-surface": "#1a1c1b",
+                        "primary": "#416355",
+                        "on-tertiary-fixed": "#2c1700",
+                        "tertiary-fixed": "#ffdcbc",
+                        "on-primary-fixed": "#002117",
+                        "on-background": "#1a1c1b",
+                        "secondary": "#516072",
+                        "on-surface-variant": "#414845",
+                        "surface-container-low": "#f4f4f1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "glass-padding": "8px",
+                        "stack-gap": "16px",
+                        "gutter-card": "12px",
+                        "margin-main": "20px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Manrope"],
+                        "display-lg": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "title-sm": ["20px", {"lineHeight": "25px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["15px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["17px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .inner-specular-highlight-tl-2px {
+            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.4);
+        }
+        .liquid-glass {
+            backdrop-filter: blur(40px) saturate(150%);
+        }
+        .scan-frame-corner {
+            width: 32px;
+            height: 32px;
+            position: absolute;
+            border-color: #416355; /* primary / sage */
+            filter: drop-shadow(0 0 4px #416355);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-black overflow-hidden h-screen w-full font-body-md text-on-surface select-none">
+<!-- Camera Viewfinder Content Background -->
+<div class="fixed inset-0 z-0">
+<img class="w-full h-full object-cover opacity-80 brightness-75" data-alt="A first-person point-of-view perspective of a camera viewfinder focusing on a white medication pill bottle with a detailed prescription label. The background consists of a warm, slightly out-of-focus wooden kitchen table, creating a home care setting. The lighting is soft and natural, emphasizing the professional and clean aesthetic of the CareCircle design system. The image uses a muted, warm cream and sage green color palette consistent with dignified support." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBc7os0hELGm_A-BYgCx5ui4-PXzRw_Zyn5XLxMrTEgzrH7k8JeKnVcO_VvQCqM2M7DrWg3WuzdIjFomf2b-PpN9inIXXaTg5nWoZ-zsIP5iW7718HRh6S4EpqK2o4fBi7Op5-hhglcpJnyK6yuBy67VFu4tmNT1X9w45j-aXQUzYtsveZisgX_pNX74A5Iofwz9XqTIWsRtasMcRZj57gYWOS3IgzZN6tB9VahxDDmJIO38BnfwCPEdAqk0u0KUWLRQZpsP-OBJ00"/>
+</div>
+<!-- Top AppBar Overlay (Liquid Glass) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-main h-16 bg-surface/30 backdrop-blur-[40px] saturate-[150%] inner-specular-highlight-tl-2px border-b border-white/10">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:opacity-80 transition-opacity active:scale-105 duration-300">
+<span class="material-symbols-outlined">close</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-white">Scan label</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:opacity-80 transition-opacity active:scale-105 duration-300">
+<span class="material-symbols-outlined">flash_on</span>
+</button>
+</header>
+<!-- Scan Area & Frame -->
+<main class="fixed inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
+<div class="relative w-[85%] aspect-[3/4] max-w-[320px]">
+<!-- Corners -->
+<div class="scan-frame-corner top-0 left-0 border-t-4 border-l-4 rounded-tl-lg"></div>
+<div class="scan-frame-corner top-0 right-0 border-t-4 border-r-4 rounded-tr-lg"></div>
+<div class="scan-frame-corner bottom-0 left-0 border-b-4 border-l-4 rounded-bl-lg"></div>
+<div class="scan-frame-corner bottom-0 right-0 border-b-4 border-r-4 rounded-br-lg"></div>
+<!-- Scanning Line -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-primary/40 shadow-[0_0_15px_#416355] animate-pulse"></div>
+</div>
+<div class="mt-8 px-6 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+<p class="font-body-md text-body-md text-white/90">Point at the prescription label</p>
+</div>
+</main>
+<!-- Bottom Liquid Glass Panel -->
+<nav class="fixed bottom-12 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] z-50 rounded-xl bg-surface/30 backdrop-blur-[40px] saturate-[150%] inner-specular-highlight-tl-2px border border-white/10 p-glass-padding">
+<div class="flex justify-between items-center gap-2">
+<!-- Scan Tab (Active) -->
+<button class="flex-1 flex flex-col items-center justify-center py-3 gap-1 bg-primary/20 rounded-lg text-white transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<span class="font-label-caps text-label-caps">Scan</span>
+</button>
+<!-- Type Manually Tab -->
+<button class="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-white/60 hover:bg-white/5 rounded-lg transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined">keyboard</span>
+<span class="font-label-caps text-label-caps">Type manually</span>
+</button>
+<!-- From Photo Library Tab -->
+<button class="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-white/60 hover:bg-white/5 rounded-lg transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined">photo_library</span>
+<span class="font-label-caps text-label-caps">Photo library</span>
+</button>
+</div>
+</nav>
+<!-- Floating Action Button for Capture -->
+<div class="fixed bottom-40 left-1/2 -translate-x-1/2 z-20">
+<button class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-white/20 backdrop-blur-lg active:scale-90 transition-transform duration-200 shadow-xl">
+<div class="w-16 h-16 rounded-full bg-white"></div>
+</button>
+</div>
+</body></html>

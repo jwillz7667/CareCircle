@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .inner-specular-highlight-tl-2px {
+      box-shadow: inset 2px 2px 0px 0px rgba(255, 255, 255, 0.4);
+    }
+    .glass-lensing {
+      backdrop-filter: blur(40px) saturate(150%);
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary": "#79542b",
+            "surface-variant": "#e3e3e0",
+            "surface": "#faf9f7",
+            "tertiary-fixed-dim": "#efbd8a",
+            "outline": "#717974",
+            "surface-container": "#eeeeeb",
+            "on-primary-fixed-variant": "#2c4d40",
+            "inverse-surface": "#2f312f",
+            "on-tertiary": "#ffffff",
+            "error": "#ba1a1a",
+            "outline-variant": "#c1c8c3",
+            "surface-bright": "#faf9f7",
+            "surface-dim": "#dadad8",
+            "primary-fixed": "#c5ebd9",
+            "on-tertiary-container": "#fffbff",
+            "background": "#faf9f7",
+            "on-primary-container": "#f5fff8",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed-variant": "#614018",
+            "on-secondary": "#ffffff",
+            "error-container": "#ffdad6",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#b8c8dd",
+            "secondary-container": "#d1e1f7",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed-variant": "#394859",
+            "on-error-container": "#93000a",
+            "surface-tint": "#436558",
+            "inverse-primary": "#aacfbe",
+            "tertiary-container": "#956d40",
+            "surface-container-highest": "#e3e3e0",
+            "primary-container": "#597c6d",
+            "surface-container-high": "#e8e8e6",
+            "on-secondary-fixed": "#0d1d2c",
+            "inverse-on-surface": "#f1f1ee",
+            "primary-fixed-dim": "#aacfbe",
+            "secondary-fixed": "#d4e4f9",
+            "on-secondary-container": "#556476",
+            "on-surface": "#1a1c1b",
+            "primary": "#416355",
+            "on-tertiary-fixed": "#2c1700",
+            "tertiary-fixed": "#ffdcbc",
+            "on-primary-fixed": "#002117",
+            "on-background": "#1a1c1b",
+            "secondary": "#516072",
+            "on-surface-variant": "#414845",
+            "surface-container-low": "#f4f4f1"
+          },
+          "borderRadius": {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "glass-padding": "8px",
+            "stack-gap": "16px",
+            "gutter-card": "12px",
+            "margin-main": "20px"
+          },
+          "fontFamily": {
+            "headline-md": ["Manrope"],
+            "display-lg": ["Manrope"],
+            "title-sm": ["Manrope"],
+            "label-caps": ["Manrope"],
+            "body-md": ["Manrope"],
+            "body-lg": ["Manrope"]
+          },
+          "fontSize": {
+            "headline-md": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "display-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "title-sm": ["20px", {"lineHeight": "25px", "fontWeight": "600"}],
+            "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+            "body-md": ["15px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "body-lg": ["17px", {"lineHeight": "24px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar: Liquid Glass Shell -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 glass-lensing border-b border-on-surface/[0.05] inner-specular-highlight-tl-2px">
+<div class="flex justify-between items-center px-margin-main h-16">
+<h1 class="font-display-lg text-display-lg text-primary">More</h1>
+<div class="flex items-center gap-stack-gap">
+<button class="text-primary hover:opacity-80 transition-opacity active:scale-105 duration-300">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center border border-on-surface/[0.05]">
+<span class="material-symbols-outlined text-on-secondary-fixed text-sm" data-icon="person">person</span>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-24 px-margin-main space-y-8">
+<!-- Care Recipient Summary Card -->
+<section>
+<div class="bg-surface-container-lowest border border-on-surface/[0.08] p-margin-main rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-stack-gap">
+<div class="relative">
+<img class="w-16 h-16 rounded-full object-cover border-2 border-primary-fixed" data-alt="A portrait of a serene elderly woman with silver hair and kind eyes, Eleanor, smiling gently in a sunlit garden. The lighting is warm and golden, reflecting the Dignified Support aesthetic of CareCircle. The background is softly blurred with lush greenery, maintaining a high-legibility, boutique editorial style with a calm, premium atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtP-YgkDT83YRvBubZmIe5SPnVtcswMQLiBxlvd47Cl8gwO0i5WGNeiFDNBseujB0rdZh7DNwG6HtEwOF9IJ8ZBk0atzCFkaa0Y6oypkKW4OJws1ArE-o4CGnV6AO9W9TYZuifDO0k1aK1P3Iq-AAvNupppJBHnru3VHLN4nQ0Zk1DZGvijFT6hM9K8uL0QR_k9BtQUabyVXYJHVmbWSWz4zUw5tZKi4LsT7arA2XGJBVtu2BP3NUph_7f8vy7v2G_AirMH9Fiwho"/>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-surface-container-lowest">
+<span class="material-symbols-outlined text-white text-[12px]" data-icon="favorite">favorite</span>
+</div>
+</div>
+<div>
+<h2 class="font-title-sm text-title-sm text-on-surface">Eleanor</h2>
+<p class="font-body-md text-body-md text-on-surface-variant/70">82 Years Old • Primary Recipient</p>
+</div>
+</div>
+<button class="bg-primary-fixed/20 text-primary px-4 py-1.5 rounded-full font-label-caps text-label-caps hover:bg-primary-fixed/40 transition-colors">
+          Edit
+        </button>
+</div>
+</section>
+<!-- Circle Members Group -->
+<section class="space-y-stack-gap">
+<div class="flex justify-between items-end px-1">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Circle Members</h3>
+<button class="text-primary font-label-caps text-label-caps">Manage</button>
+</div>
+<div class="bg-surface-container-lowest border border-on-surface/[0.08] rounded-lg overflow-hidden p-gutter-card">
+<div class="flex items-center -space-x-3 overflow-hidden py-2">
+<img class="w-10 h-10 rounded-full border-2 border-surface-container-lowest object-cover" data-alt="Close-up portrait of a professional male caregiver in his 40s with a warm, empathetic expression. Soft indoor studio lighting against a neutral cream background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvxNyTrRzjnP8jdPCYV7i32oFJ6pLUrfvqJ8T243I-jHwc9K63lQJYHXjE7zxehLz4yk9LiMBZ1mpL-k80NvfYPt57-wB-HdM_RKcUHKAnayG3kJUyFMMe_QJZxJfLUkua3UT1UnDqy8BCYKDgjibSs8UN-9SR9Kvmnf8IFk4CIgOFRYUzqRI6Qs_c5vQGGIS-Ej6lbb3E9XunxT14egtDu2WADBWqeGEMK2bfh0bDQzk53c42JGNAzBzBF6eQ1tEstTYvyQA3YiA"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container-lowest object-cover" data-alt="Close-up portrait of a young adult daughter with a bright, supportive smile. Soft natural daylight lighting in a clean, minimalist setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSa9KhOmc3-aVkW7t9ih5z2W7Vm8HBco3Wg81O2egf8vc7gUxj1ayutIKxC6Qx-X7yIFD6j2qT-Jie-srDs0uE_9RDY8P5Apvq6tOtLTNn1UwIfeo8HFQM45x0ULqkW9rW841dzsF7ctszW2SZJXcYRPcnCo2GKZs9pRfzsIGtKjFwMi66Z0qfWG5ARV96CZvDuQqPbhqLOj72laNK2clSbz50-59IPsnWzAihqel7uWpv-olgV4JOAwXZdttSUI7p_hlMmrLuSp0"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container-lowest object-cover" data-alt="Portrait of an older adult son, looking stable and reliable, wearing a navy sweater. Professional lighting with a warm, safe aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAx_IegV1dJbdiB8wJD5rJOOUSTAyziFSH2q1N8zIUpGZXBAgLxc_jeaQ35YXosmBkVLZWcIUQTkCO-a8xU6WHZs17zQYV90d-e8gnw8JMsOoi7kLqSfTCv_j2_m1OMbYI-2sHBgJfrAP5NeU-zJAh2U1gRN44CA0Hi75bmvaXHrdsy74mosx3XVwGAFEvfmG35Zp0jKlWsTakoqmQ_7tfYn6TmpKJiprOOAmbOwEDAHqS33s-2pqFbBAqOqCSHN1gJju089EB-UM"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container-lowest object-cover" data-alt="Portrait of a medical professional with a comforting presence, wearing clinical scrubs in a light sage green. Clean, bright high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuARkdr-aHgSDSo75UhcqZ_CDkiJNzVURDvpvzQgh_4bDNXvrYH_YwubeDbU9XsNyQ55Zc0CXyHiE9pXNAMUceR6bzgYWa2RvNfDxIlcYNbsG2xZ0smNfF2Khj1p3p-GDNkWnjKJHPY43UkgarapsbVVAP8VuSAEkhFxCcrvVEaehJvKKMgmkNBRjOQ3VL_EAn3iG57qC2jyjLOQ3ruurVxyf58H00FJDuaxUVI47Opqn23qe91BZlvZQj7aopbRXOxxGc9q_YTIsuI"/>
+<div class="w-10 h-10 rounded-full border-2 border-surface-container-lowest bg-surface-container flex items-center justify-center font-label-caps text-on-surface-variant text-[10px]">
+            +1
+          </div>
+</div>
+</div>
+</section>
+<!-- Care Tools Inset Group -->
+<section class="space-y-stack-gap">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant px-1 uppercase tracking-widest">Care Tools</h3>
+<div class="bg-surface-container-lowest border border-on-surface/[0.08] rounded-lg divide-y divide-on-surface/[0.05]">
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+<span class="font-body-lg text-body-lg">Documents</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-lg text-body-lg">Calendar</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="assignment">assignment</span>
+<span class="font-body-lg text-body-lg">Care minutes log</span>
+<span class="bg-tertiary/10 text-tertiary px-2 py-0.5 rounded-full font-label-caps text-[10px] uppercase">Pro</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-error" data-icon="emergency">emergency</span>
+<span class="font-body-lg text-body-lg">Emergency contacts</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Account Inset Group -->
+<section class="space-y-stack-gap">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant px-1 uppercase tracking-widest">Account</h3>
+<div class="bg-surface-container-lowest border border-on-surface/[0.08] rounded-lg divide-y divide-on-surface/[0.05]">
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="loyalty">loyalty</span>
+<span class="font-body-lg text-body-lg">Subscription</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+<span class="font-body-lg text-body-lg">Notifications</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="lock">lock</span>
+<span class="font-body-lg text-body-lg">Privacy</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="file_export">file_export</span>
+<span class="font-body-lg text-body-lg">Data export</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="help">help</span>
+<span class="font-body-lg text-body-lg">Help</span>
+</div>
+<span class="material-symbols-outlined text-outline/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container/30 transition-colors group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-error group-active:scale-95 duration-200" data-icon="logout">logout</span>
+<span class="font-body-lg text-body-lg text-error">Sign out</span>
+</div>
+</div>
+</div>
+</section>
+<p class="text-center font-label-caps text-label-caps text-on-surface-variant/40 pt-4 pb-8">
+      CareCircle v26.4.2 • Secure Encryption Active
+    </p>
+</main>
+<!-- BottomNavBar: Liquid Glass Capsule -->
+<nav class="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] z-50 rounded-full bg-surface/80 glass-lensing border border-on-surface/[0.05] inner-specular-highlight-tl-2px shadow-lg">
+<div class="flex justify-around items-center p-glass-padding h-14">
+<a class="flex flex-col items-center justify-center text-secondary/40 hover:bg-on-surface/[0.05] rounded-full transition-all active:scale-95 duration-200 px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary/40 hover:bg-on-surface/[0.05] rounded-full transition-all active:scale-95 duration-200 px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-label-caps text-label-caps">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary/40 hover:bg-on-surface/[0.05] rounded-full transition-all active:scale-95 duration-200 px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-caps text-label-caps">Meds</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary bg-primary-fixed/20 rounded-full px-4 py-1 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+<span class="font-label-caps text-label-caps">More</span>
+</a>
+</div>
+</nav>
+</body></html>

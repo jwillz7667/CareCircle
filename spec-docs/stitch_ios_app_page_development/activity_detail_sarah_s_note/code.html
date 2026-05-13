@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .inner-specular-highlight-tl-2px {
+            box-shadow: inset 1px 1px 0px 0px rgba(255, 255, 255, 0.4), 
+                        inset -1px -1px 0px 0px rgba(0, 0, 0, 0.05);
+        }
+        .glass-blur {
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+        }
+        body {
+            background-color: #faf9f7;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#79542b",
+                        "surface-variant": "#e3e3e0",
+                        "surface": "#faf9f7",
+                        "tertiary-fixed-dim": "#efbd8a",
+                        "outline": "#717974",
+                        "surface-container": "#eeeeeb",
+                        "on-primary-fixed-variant": "#2c4d40",
+                        "inverse-surface": "#2f312f",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c1c8c3",
+                        "surface-bright": "#faf9f7",
+                        "surface-dim": "#dadad8",
+                        "primary-fixed": "#c5ebd9",
+                        "on-tertiary-container": "#fffbff",
+                        "background": "#faf9f7",
+                        "on-primary-container": "#f5fff8",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#614018",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#b8c8dd",
+                        "secondary-container": "#d1e1f7",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#394859",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#436558",
+                        "inverse-primary": "#aacfbe",
+                        "tertiary-container": "#956d40",
+                        "surface-container-highest": "#e3e3e0",
+                        "primary-container": "#597c6d",
+                        "surface-container-high": "#e8e8e6",
+                        "on-secondary-fixed": "#0d1d2c",
+                        "inverse-on-surface": "#f1f1ee",
+                        "primary-fixed-dim": "#aacfbe",
+                        "secondary-fixed": "#d4e4f9",
+                        "on-secondary-container": "#556476",
+                        "on-surface": "#1a1c1b",
+                        "primary": "#416355",
+                        "on-tertiary-fixed": "#2c1700",
+                        "tertiary-fixed": "#ffdcbc",
+                        "on-primary-fixed": "#002117",
+                        "on-background": "#1a1c1b",
+                        "secondary": "#516072",
+                        "on-surface-variant": "#414845",
+                        "surface-container-low": "#f4f4f1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "glass-padding": "8px",
+                        "stack-gap": "16px",
+                        "gutter-card": "12px",
+                        "margin-main": "20px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Manrope"],
+                        "display-lg": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "title-sm": ["20px", {"lineHeight": "25px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["15px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["17px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-background selection:bg-primary-fixed">
+<!-- TopAppBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-[40px] saturate-[150%] border-b border-on-surface/[0.05] inner-specular-highlight-tl-2px">
+<div class="flex justify-between items-center px-margin-main h-16">
+<div class="flex items-center gap-3">
+<button class="text-primary active:scale-105 duration-300 transition-opacity hover:opacity-80">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 600;">chevron_left</span>
+</button>
+<div class="flex flex-col">
+<span class="font-headline-md text-[18px] leading-tight text-primary">Sarah's note</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant/60 uppercase">Voice Handoff</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full overflow-hidden border border-on-surface/[0.05] active:scale-105 duration-300">
+<img alt="Sarah" class="w-full h-full object-cover" data-alt="A professional headshot of a middle-aged female caregiver with a warm, empathetic expression. She is set against a soft, out-of-focus home interior that feels light and airy. The lighting is bright and natural, reflecting a serene and trustworthy atmosphere in line with a high-end caregiving application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIUJFXm1xnE1YrN0eLhBf4uWM5RkVcCceD0M9B2Z2M-efu1MHUe9oLC02L9zsG66NSHmPGt_pPpDPq2pRmUqdtddmBt-YR5HAfpflrXZ_vOItyBkOxWoTpia7Koi2BI_ad1V9PtZp_uf7jRoxhFH35Q0Rq5jE_58TLaO7Qd3vQaGztctgs07qKX1M_i2Qbt2Q6SdbZYv7gX3dqGcrKLCO8L2yeZRe9b1ibpOXcJTpx5r-TPjOoVH-Vjg0OXKepqolIH1h5N5sdx94"/>
+</button>
+</div>
+</nav>
+<!-- Content Canvas -->
+<main class="pt-20 pb-32 px-margin-main space-y-stack-gap">
+<!-- Expanded Activity Card -->
+<article class="bg-surface-container-lowest rounded-lg border border-on-surface/[0.05] overflow-hidden">
+<div class="p-5 space-y-4">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mic</span>
+</div>
+<div>
+<h2 class="font-title-sm text-on-surface">Afternoon Update</h2>
+<p class="font-label-caps text-on-surface-variant/60">Today • 12:47 PM</p>
+</div>
+</div>
+</div>
+<!-- Transcript with Entity Highlights -->
+<div class="font-body-lg text-on-surface-variant leading-relaxed">
+                    "Finished lunch. Mom's 
+                    <span class="bg-primary-fixed/40 text-on-primary-fixed-variant px-1 rounded-sm font-semibold">BP was 122/80</span> 
+                    which is great. She mentioned some 
+                    <span class="bg-error-container text-on-error-container px-1 rounded-sm font-semibold">hip soreness</span> 
+                    after our walk. She ate a full bowl of 
+                    <span class="bg-secondary-fixed text-on-secondary-fixed-variant px-1 rounded-sm font-semibold">Vegetable Soup</span>. 
+                    Don't forget the 
+                    <span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-1 rounded-sm font-semibold">Physical Therapy</span> 
+                    visit tomorrow morning at 9."
+                </div>
+<!-- Meal Photo -->
+<div class="relative rounded-lg overflow-hidden h-56 w-full">
+<img alt="Meal Photo" class="w-full h-full object-cover" data-alt="A top-down aesthetic photograph of a nutritious vegetable soup served in a handcrafted ceramic bowl. Beside the bowl is a small piece of whole-grain bread on a linen napkin. The scene is set on a light wood table with soft, natural morning light pouring in, creating a warm, wholesome, and dignified lifestyle mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFA99HUpCZDwdERPjlcCPsMxomahkm_mLmejDhyuCkm-elR7HtKYi2MQ3ahXEg2tufKj-pn7MsOaCGt2pR_YMSCbXjV8pAavnVtCMPLDVUVPTpIMISpdWl16fZDk56ZA9hDlBZ2n7lJlXg4n1-1q0NpO8k0snMIrNO-X7HCb0rA3nTZcfvpHirC03gDWWAXMKLM27tU-UjuA5LHM4Z9U8S9TDSNpOM1F1jWYysj5wl5b5psIstc5XKrIdLKqlF8WOCLyteISRsrOw"/>
+</div>
+<!-- Reactions Row -->
+<div class="flex flex-wrap gap-2 pt-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-on-surface/[0.05] hover:bg-surface-variant transition-colors active:scale-95 duration-200">
+<span class="text-xs">Mark</span>
+<span class="text-sm">❤️</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-on-surface/[0.05] hover:bg-surface-variant transition-colors active:scale-95 duration-200">
+<span class="text-xs">Diane</span>
+<span class="text-sm">👍</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-on-surface/[0.05] hover:bg-surface-variant transition-colors active:scale-95 duration-200">
+<span class="text-xs">Mom</span>
+<span class="text-sm">🙏</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Comments Thread -->
+<section class="space-y-4">
+<h3 class="font-label-caps text-on-surface-variant/40 px-1">Comments</h3>
+<div class="space-y-stack-gap">
+<!-- Mark's Comment -->
+<div class="flex gap-3">
+<img alt="Mark" class="w-10 h-10 rounded-full object-cover shrink-0 border border-on-surface/[0.05]" data-alt="A portrait of a middle-aged man with a kind and thoughtful expression, wearing a casual navy sweater. The background is a clean, modern home office with soft, diffused lighting. The overall visual style is high-fidelity and realistic, embodying a sense of familial responsibility and calm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY9nzNGeQcwmAMxHJij1Y_5gw0UKwjijeRhJJROmqxtpCl0iNSaVw-rWfOTjTgyjPTKahPCLptektwIER8aHsRFuIInJaE-YvDEGVj82aWBaiVBA5lvRppYfwpC5fJMCAlOmh-mNwIaufHbCGMvHKHjapVGCqcIbiVoLWe83JisTrG-iwEOz5nRYT1DzcyEOekMVks4ywoxjg-mbElU4ThwLmlhCATDzaWnquwvCMXDMrt2XygBhILJTbwlbq-B8FVU-8whOLpX4I"/>
+<div class="space-y-1">
+<div class="bg-surface-container-high p-4 rounded-2xl rounded-tl-none border border-on-surface/[0.05]">
+<p class="font-body-md text-on-surface">Should I call Dr. Patel about the hip?</p>
+</div>
+<div class="flex items-center gap-2 px-1">
+<span class="font-label-caps text-[10px] text-on-surface">Mark</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant/40">15 min ago</span>
+</div>
+</div>
+</div>
+<!-- Sarah's Comment -->
+<div class="flex gap-3 flex-row-reverse">
+<img alt="Sarah" class="w-10 h-10 rounded-full object-cover shrink-0 border border-on-surface/[0.05]" data-alt="A portrait of Sarah, the caregiver, showing a gentle and reassuring smile. The lighting is warm and golden, as if from a late afternoon sun. The background is softly blurred, focusing entirely on her approachable and professional persona, maintaining a clean and premium look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnD_JPnSDsK3s0iyYyFlzevu1QRTFNUF43fEeAP_VKQP7cX11-hMuaBtig7k19b_nnZcZV9ZGOBMytBFzJWrxYTkxs3pts2mxahjgT0TTJVUvl-i6EDoEXO0HuC9HR_XRRYLERO1iVMJR2bP6mjkDAu00wm3zZazSb16h3Qf1tXZMO_sR9Mu6HrhtixZYdDQU9u4wZFI6fwOpV5F6nI2rJ6SomtzUx7_PTfs9NaPfkWdOU1B8jgh9u3amzxn49eJpEXqdt2t3Bp_U"/>
+<div class="space-y-1 items-end flex flex-col">
+<div class="bg-primary-container p-4 rounded-2xl rounded-tr-none text-on-primary-container">
+<p class="font-body-md">I'll mention it at tomorrow's appointment.</p>
+</div>
+<div class="flex items-center gap-2 px-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant/40">5 min ago</span>
+<span class="font-label-caps text-[10px] text-primary">Sarah</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Liquid Glass Bottom Input -->
+<div class="fixed bottom-0 left-0 w-full p-5 z-50">
+<div class="max-w-screen-md mx-auto bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-[40px] saturate-[150%] rounded-full border border-on-surface/[0.05] inner-specular-highlight-tl-2px shadow-lg flex items-center p-2 gap-2">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant/60 hover:bg-on-surface/[0.05] transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 font-body-md text-on-surface placeholder:text-on-surface-variant/40 py-2" placeholder="Add a comment..." type="text"/>
+<button class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center inner-specular-highlight-tl-2px active:scale-90 transition-all duration-200 shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 600;">send</span>
+</button>
+</div>
+<!-- Spacer for Home Indicator -->
+<div class="h-4"></div>
+</div>
+</body></html>

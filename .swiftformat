@@ -1,0 +1,35 @@
+--swiftversion 6.0
+
+--indent 4
+--maxwidth 120
+
+--wraparguments before-first
+--wrapcollections before-first
+--wrapparameters before-first
+--wrapreturntype if-multiline
+
+--commas always
+--header strip
+--importgrouping testable-bottom
+--self remove
+
+--marktypes always
+--markextensions always
+
+--elseposition same-line
+--guardelse same-line
+
+--decimalgrouping 3
+--hexgrouping 4
+
+--funcattributes prev-line
+--typeattributes prev-line
+--varattributes same-line
+--shortoptionals always
+--redundanttype inferred
+--patternlet hoist
+--trimwhitespace always
+--operatorfunc spaced
+--ranges spaced
+
+--exclude build,DerivedData,.build,spec-docs,docs

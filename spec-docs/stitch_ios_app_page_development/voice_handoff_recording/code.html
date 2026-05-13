@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "tertiary": "#79542b",
+                  "surface-variant": "#e3e3e0",
+                  "surface": "#faf9f7",
+                  "tertiary-fixed-dim": "#efbd8a",
+                  "outline": "#717974",
+                  "surface-container": "#eeeeeb",
+                  "on-primary-fixed-variant": "#2c4d40",
+                  "inverse-surface": "#2f312f",
+                  "on-tertiary": "#ffffff",
+                  "error": "#ba1a1a",
+                  "outline-variant": "#c1c8c3",
+                  "surface-bright": "#faf9f7",
+                  "surface-dim": "#dadad8",
+                  "primary-fixed": "#c5ebd9",
+                  "on-tertiary-container": "#fffbff",
+                  "background": "#faf9f7",
+                  "on-primary-container": "#f5fff8",
+                  "on-error": "#ffffff",
+                  "on-tertiary-fixed-variant": "#614018",
+                  "on-secondary": "#ffffff",
+                  "error-container": "#ffdad6",
+                  "surface-container-lowest": "#ffffff",
+                  "secondary-fixed-dim": "#b8c8dd",
+                  "secondary-container": "#d1e1f7",
+                  "on-primary": "#ffffff",
+                  "on-secondary-fixed-variant": "#394859",
+                  "on-error-container": "#93000a",
+                  "surface-tint": "#436558",
+                  "inverse-primary": "#aacfbe",
+                  "tertiary-container": "#956d40",
+                  "surface-container-highest": "#e3e3e0",
+                  "primary-container": "#597c6d",
+                  "surface-container-high": "#e8e8e6",
+                  "on-secondary-fixed": "#0d1d2c",
+                  "inverse-on-surface": "#f1f1ee",
+                  "primary-fixed-dim": "#aacfbe",
+                  "secondary-fixed": "#d4e4f9",
+                  "on-secondary-container": "#556476",
+                  "on-surface": "#1a1c1b",
+                  "primary": "#416355",
+                  "on-tertiary-fixed": "#2c1700",
+                  "tertiary-fixed": "#ffdcbc",
+                  "on-primary-fixed": "#002117",
+                  "on-background": "#1a1c1b",
+                  "secondary": "#516072",
+                  "on-surface-variant": "#414845",
+                  "surface-container-low": "#f4f4f1"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "glass-padding": "8px",
+                  "stack-gap": "16px",
+                  "gutter-card": "12px",
+                  "margin-main": "20px"
+          },
+          "fontFamily": {
+                  "headline-md": ["Manrope"],
+                  "display-lg": ["Manrope"],
+                  "title-sm": ["Manrope"],
+                  "label-caps": ["Manrope"],
+                  "body-md": ["Manrope"],
+                  "body-lg": ["Manrope"],
+                  "mono": ["JetBrains Mono"]
+          },
+          "fontSize": {
+                  "headline-md": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "display-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "title-sm": ["20px", {"lineHeight": "25px", "fontWeight": "600"}],
+                  "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                  "body-md": ["15px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "body-lg": ["17px", {"lineHeight": "24px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>.inner-specular-highlight-tl-2px {
+    box-shadow: inset 2px 2px 0 0 rgba(255, 255, 255, 0.4)
+    }
+.liquid-glass {
+    background: rgba(250, 249, 247, 0.7);
+    backdrop-filter: blur(40px) saturate(150%);
+    -webkit-backdrop-filter: blur(40px) saturate(150%)
+    }
+.waveform-bar {
+    width: 4px;
+    border-radius: 2px;
+    background-color: #416355
+    }
+.glow-pulse {
+    box-shadow: 0 0 0 0 rgba(65, 99, 85, 0.4)
+    }
+.bg-main-hero {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuB6Okk68DuIzONCjwW3ZjcZdCoitW8n1hLb6jkYADIXC4N7frIt3fSuFatYiuVWsai6UWngfZF5WPUFVPEsHVTs13eddF75O8fkOroAahs1WiYwcu7yP-Z-hHLI640YL0jHgpXTFLnFS77Owul1vo0o2OZEtWrC1L1js_CVmi8I2mJhZnc4MEWoWDwrzM35Yqpr5x1yrvClVoozdRvoognopf2UFaNJWzVuNEO_2a9eQu3xdImZYhchMyTSFX_7NM9Gf_gnsCGzsa0);
+    background-size: cover;
+    background-position: center
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen relative overflow-hidden">
+<!-- Background Content (Blurred Home Dashboard) -->
+<main class="fixed inset-0 z-0 p-margin-main blur-xl scale-110">
+<div class="max-w-md mx-auto space-y-stack-gap">
+<!-- TopAppBar Placeholder -->
+<div class="flex justify-between items-center h-16">
+<div class="w-10 h-10 rounded-full bg-surface-container"></div>
+<div class="font-display-lg text-primary">CareCircle</div>
+<div class="w-10 h-10 rounded-full bg-surface-container"></div>
+</div>
+<!-- Bento Grid Mockup -->
+<div class="grid grid-cols-2 gap-gutter-card">
+<div class="col-span-2 h-48 bg-surface-container rounded-lg border border-on-surface/[0.05]"></div>
+<div class="h-32 bg-surface-container rounded-lg border border-on-surface/[0.05]"></div>
+<div class="h-32 bg-surface-container rounded-lg border border-on-surface/[0.05]"></div>
+<div class="col-span-2 h-40 bg-surface-container rounded-lg border border-on-surface/[0.05]"></div>
+</div>
+</div>
+</main>
+<!-- Dark Overlay -->
+<div class="fixed inset-0 bg-on-surface/10 z-10"></div>
+<!-- Voice Recording Modal Sheet -->
+<div class="fixed inset-x-0 bottom-0 top-12 z-50 flex flex-col justify-end items-center px-margin-main pb-margin-main">
+<div class="w-full max-w-md h-full liquid-glass rounded-t-xl inner-specular-highlight-tl-2px flex flex-col border border-on-surface/[0.05] overflow-hidden">
+<!-- Modal Handle -->
+<div class="flex justify-center pt-3 pb-8">
+<div class="w-10 h-1 rounded-full bg-on-surface/10"></div>
+</div>
+<!-- Content Header -->
+<div class="px-margin-main text-center space-y-2">
+<h1 class="font-display-lg text-display-lg text-on-surface">What happened?</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Tell your circle what's going on with Mom.</p>
+</div>
+<!-- Center Content: Waveform & Timer -->
+<div class="flex-1 flex flex-col items-center justify-center space-y-12">
+<!-- Animated Sage Waveform -->
+<div class="flex items-center justify-center gap-1.5 h-32 w-full px-12">
+<div class="waveform-bar h-8"></div>
+<div class="waveform-bar h-12"></div>
+<div class="waveform-bar h-20"></div>
+<div class="waveform-bar h-28"></div>
+<div class="waveform-bar h-16"></div>
+<div class="waveform-bar h-24"></div>
+<div class="waveform-bar h-12"></div>
+<div class="waveform-bar h-20"></div>
+<div class="waveform-bar h-8"></div>
+<div class="waveform-bar h-16"></div>
+<div class="waveform-bar h-24"></div>
+<div class="waveform-bar h-20"></div>
+<div class="waveform-bar h-12"></div>
+<div class="waveform-bar h-8"></div>
+</div>
+<!-- Timer -->
+<div class="font-mono text-[40px] font-light tracking-tighter text-on-surface">
+          0:24
+        </div>
+</div>
+<!-- Action Controls -->
+<div class="p-margin-main space-y-stack-gap">
+<div class="flex items-center justify-between w-full px-6">
+<!-- Cancel Button -->
+<button class="flex flex-col items-center gap-2 group transition-all active:scale-95">
+<div class="w-12 h-12 rounded-full border border-on-surface/10 flex items-center justify-center text-on-surface hover:bg-surface-variant/50">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Cancel</span>
+</button>
+<!-- Main Recording Button (Active State) -->
+<div class="relative">
+<div class="absolute inset-0 bg-primary/20 rounded-full scale-150 blur-xl opacity-60"></div>
+<button class="relative w-24 h-24 bg-primary rounded-full inner-specular-highlight-tl-2px shadow-lg flex items-center justify-center transition-all active:scale-95 group">
+<div class="w-8 h-8 bg-on-primary rounded-sm shadow-sm transition-transform group-hover:scale-110"></div>
+</button>
+</div>
+<!-- Add Photo Button -->
+<button class="flex flex-col items-center gap-2 group transition-all active:scale-95">
+<div class="w-12 h-12 rounded-full border border-on-surface/10 flex items-center justify-center text-on-surface hover:bg-surface-variant/50">
+<span class="material-symbols-outlined text-[24px]">add_a_photo</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Add photo</span>
+</button>
+</div>
+<!-- Confirm Send (Bottom Floating Action) -->
+<div class="pt-8">
+<button class="w-full h-14 bg-primary text-on-primary rounded-full font-title-sm text-title-sm shadow-md inner-specular-highlight-tl-2px flex items-center justify-center gap-3 active:scale-[0.98] transition-transform">
+<span>Send to Circle</span>
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+<!-- Safe Area Spacer -->
+<div class="h-8"></div>
+</div>
+</div>
+<!-- Background Imagery (Internalized Detail) -->
+<div class="hidden">
+<img data-alt="A portrait of a serene older woman with soft grey hair smiling gently, captured in warm morning light filtering through a window. The aesthetic is clean and dignified, emphasizing a premium healthcare and family care context. The color palette features warm creams, soft sage greens, and neutral tones, creating a sense of safety and professional support." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOOfpIkrMj1mmJXlwpoHNM9xx2pdrZl26lZpWFZDordeDGjXqf_rUIGvkwcb4h--9LPCUXN9NuKvdRMEKYl4s8pDDvSKgvCkn26Wedvyk1RGkFp8ytR9O90z8nNXhWjKP3LYHSyfF3KLKUrX9LUCX5t4EC03a2VMLS10TsJ7uE2-M0iMTLPzdV7lo6NafXtyyrjJDNnbQMbBWb927zZ_ql2S6V6y7Rjssml4jkN7cGPSXcIf0UhXWXHMQtqNxwQIDAAMOA-NcnsYk"/>
+<img data-alt="Close up of two hands gently holding each other, one younger and one older, representing compassionate care and multi-generational connection. The background is a soft, out-of-focus home environment with bright, high-key lighting. The style is modern and editorial, with a focus on human warmth and the dignified support philosophy of the brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3M-tAH6uIQWkXuaN_9LgaTfhc7vYv5pF1-NaO_TiXY6TPm21BnoBo0TdIDY2Me_aG0e5TjF01iEEXsTP5dzhvJ-gO6xIDDLzaxKIdOjn1GDI40uiLejmwOtDtD7oPSVTiHMh9wSmNBlZwVcvcGSrdAKlJOpdVF6pYKjPD0u2r2UzwXiVnRrRhU4INzAWOzq3qo_nCYzYV1z8HhUxd5bsI_wbkK45tz4WeLHL_kZ80VigB1WECoFDs9UF7946dy9DTR-E7EpggJ-E"/>
+</div>
+</body></html>

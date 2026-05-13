@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#79542b",
+                    "surface-variant": "#e3e3e0",
+                    "surface": "#faf9f7",
+                    "tertiary-fixed-dim": "#efbd8a",
+                    "outline": "#717974",
+                    "surface-container": "#eeeeeb",
+                    "on-primary-fixed-variant": "#2c4d40",
+                    "inverse-surface": "#2f312f",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c1c8c3",
+                    "surface-bright": "#faf9f7",
+                    "surface-dim": "#dadad8",
+                    "primary-fixed": "#c5ebd9",
+                    "on-tertiary-container": "#fffbff",
+                    "background": "#faf9f7",
+                    "on-primary-container": "#f5fff8",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed-variant": "#614018",
+                    "on-secondary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#b8c8dd",
+                    "secondary-container": "#d1e1f7",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#394859",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#436558",
+                    "inverse-primary": "#aacfbe",
+                    "tertiary-container": "#956d40",
+                    "surface-container-highest": "#e3e3e0",
+                    "primary-container": "#597c6d",
+                    "surface-container-high": "#e8e8e6",
+                    "on-secondary-fixed": "#0d1d2c",
+                    "inverse-on-surface": "#f1f1ee",
+                    "primary-fixed-dim": "#aacfbe",
+                    "secondary-fixed": "#d4e4f9",
+                    "on-secondary-container": "#556476",
+                    "on-surface": "#1a1c1b",
+                    "primary": "#416355",
+                    "on-tertiary-fixed": "#2c1700",
+                    "tertiary-fixed": "#ffdcbc",
+                    "on-primary-fixed": "#002117",
+                    "on-background": "#1a1c1b",
+                    "secondary": "#516072",
+                    "on-surface-variant": "#414845",
+                    "surface-container-low": "#f4f4f1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "glass-padding": "8px",
+                    "stack-gap": "16px",
+                    "gutter-card": "12px",
+                    "margin-main": "20px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Manrope"],
+                    "display-lg": ["Manrope"],
+                    "title-sm": ["Manrope"],
+                    "label-caps": ["Manrope"],
+                    "body-md": ["Manrope"],
+                    "body-lg": ["Manrope"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "title-sm": ["20px", {"lineHeight": "25px", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["15px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["17px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .inner-specular-highlight-tl-2px {
+            box-shadow: inset 2px 2px 0px rgba(255, 255, 255, 0.4);
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 3.5rem;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: rgba(26, 28, 27, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-[40px] saturate-[150%] border-b border-on-surface/[0.05] inner-specular-highlight-tl-2px flex justify-between items-center px-margin-main h-16">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed/30 flex items-center justify-center overflow-hidden border border-on-surface/[0.05]">
+<img alt="Family Profile" class="w-full h-full object-cover" data-alt="A close-up high-quality 3D avatar of a friendly elderly woman with silver hair and warm expression, set against a soft sage green studio background. The lighting is gentle and professional, following a premium modern UI aesthetic with clean lines and soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF8vA_dTfVgeyaIrlx0LJSEiKRKlibr4-PZ8HY43DngBwvOUWn6pzVoI8-RATaYknywrF3CiF0ADvwUI8xNS0yGfx-hVZWh-gw4kKWPmfcAp6fX8tpUK196rjMolJHQmQTm6FlfT-cjUeknlO8aLh9jUDP6C34Gk4QsBGIzJRBdKaW0rHTo8Ga-X45nOJZX7byJyaOHNd5PTb2jZd3AtIKKqimWMCLBmvzqGGKXcv6PCO3zTBD_wNSZHsN83A8BTr2QF9It4rxc6I"/>
+</div>
+<span class="font-headline-md text-headline-md text-primary">Today</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-105 duration-300">calendar_today</button>
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-105 duration-300">notifications</button>
+</div>
+</nav>
+<main class="pt-20 pb-32">
+<!-- Date Scroller -->
+<section class="px-margin-main mb-8 overflow-x-auto no-scrollbar">
+<div class="flex gap-3 pb-2">
+<div class="flex flex-col items-center justify-center min-w-[56px] h-20 rounded-full border border-on-surface/[0.05] bg-surface-container-low text-on-surface-variant/60">
+<span class="font-label-caps text-[10px]">MON</span>
+<span class="font-headline-md text-headline-md">14</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[56px] h-20 rounded-full border border-on-surface/[0.05] bg-surface-container-low text-on-surface-variant/60">
+<span class="font-label-caps text-[10px]">TUE</span>
+<span class="font-headline-md text-headline-md">15</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[56px] h-20 rounded-full bg-primary text-on-primary inner-specular-highlight-tl-2px">
+<span class="font-label-caps text-[10px]">WED</span>
+<span class="font-headline-md text-headline-md">16</span>
+<div class="w-1 h-1 bg-on-primary rounded-full mt-1"></div>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[56px] h-20 rounded-full border border-on-surface/[0.05] bg-surface-container-low text-on-surface-variant/60">
+<span class="font-label-caps text-[10px]">THU</span>
+<span class="font-headline-md text-headline-md">17</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[56px] h-20 rounded-full border border-on-surface/[0.05] bg-surface-container-low text-on-surface-variant/60">
+<span class="font-label-caps text-[10px]">FRI</span>
+<span class="font-headline-md text-headline-md">18</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[56px] h-20 rounded-full border border-on-surface/[0.05] bg-surface-container-low text-on-surface-variant/60">
+<span class="font-label-caps text-[10px]">SAT</span>
+<span class="font-headline-md text-headline-md">19</span>
+</div>
+</div>
+</section>
+<!-- Timeline -->
+<section class="relative px-margin-main timeline-line">
+<!-- 8:00 AM Aide Arrives -->
+<div class="flex gap-6 mb-12 relative">
+<div class="w-10 pt-1 text-right">
+<span class="font-label-caps text-on-surface-variant/50">8 AM</span>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<div class="bg-primary-fixed/20 border border-primary/10 rounded-lg p-4 inner-specular-highlight-tl-2px flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div>
+<p class="font-title-sm text-on-surface">Aide arrives — Diane</p>
+<p class="text-body-md text-on-surface-variant/70">Daily morning shift</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 8:30 AM Meds -->
+<div class="flex gap-6 mb-12 relative">
+<div class="w-10 pt-1 text-right">
+<span class="font-label-caps text-on-surface-variant/50">8:30</span>
+</div>
+<div class="flex-1">
+<div class="bg-tertiary-container/10 border border-tertiary-container/20 rounded-lg p-4 inner-specular-highlight-tl-2px">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">Gauge</span>
+</div>
+<div>
+<p class="font-title-sm text-on-surface">Morning meds</p>
+<p class="text-body-md text-on-surface-variant/70">Lisinopril, Metformin</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- NOW LINE -->
+<div class="absolute left-0 right-0 z-10 flex items-center" style="top: 240px;">
+<div class="w-14 text-right pr-2">
+<span class="font-label-caps text-primary text-[10px]">10:45</span>
+</div>
+<div class="h-[2px] flex-1 bg-primary/40 relative">
+<div class="absolute -left-1 -top-[3px] w-2 h-2 rounded-full bg-primary"></div>
+</div>
+</div>
+<!-- 12:00 PM Lunch -->
+<div class="flex gap-6 mb-12 relative pt-8">
+<div class="w-10 pt-1 text-right">
+<span class="font-label-caps text-on-surface-variant/50">12 PM</span>
+</div>
+<div class="flex-1">
+<div class="bg-surface-container-low border border-on-surface/[0.05] rounded-lg p-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">ForkKnife</span>
+</div>
+<div>
+<p class="font-title-sm text-on-surface">Lunch + midday meds</p>
+<p class="text-body-md text-on-surface-variant/70">Prepared by Diane</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2:00 PM Appointment -->
+<div class="flex gap-6 mb-12 relative">
+<div class="w-10 pt-1 text-right">
+<span class="font-label-caps text-on-surface-variant/50">2 PM</span>
+</div>
+<div class="flex-1">
+<div class="bg-primary-fixed/20 border border-primary/10 rounded-lg p-4 inner-specular-highlight-tl-2px">
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">stethoscope</span>
+</div>
+<div>
+<p class="font-title-sm text-on-surface">Cardiology — Dr. Patel</p>
+<p class="text-body-md text-on-surface-variant/70">Routine check-up</p>
+</div>
+</div>
+<div class="flex items-center gap-2 bg-surface/50 rounded-full py-2 px-3 border border-on-surface/[0.05]">
+<span class="material-symbols-outlined text-secondary text-[18px]">directions_car</span>
+<span class="text-label-caps text-secondary">MARK IS DRIVING</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 4:00 PM Aide Leaves -->
+<div class="flex gap-6 mb-12 relative">
+<div class="w-10 pt-1 text-right">
+<span class="font-label-caps text-on-surface-variant/50">4 PM</span>
+</div>
+<div class="flex-1">
+<div class="border border-on-surface/[0.1] border-dashed rounded-lg p-4">
+<div class="flex items-center gap-3 opacity-60">
+<div class="w-10 h-10 rounded-full border border-on-surface/[0.1] flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">logout</span>
+</div>
+<div>
+<p class="font-title-sm text-on-surface">Aide leaves</p>
+<p class="text-body-md text-on-surface-variant/70">Shift ends</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 8:00 PM Meds -->
+<div class="flex gap-6 mb-24 relative">
+<div class="w-10 pt-1 text-right">
+<span class="font-label-caps text-on-surface-variant/50">8 PM</span>
+</div>
+<div class="flex-1">
+<div class="bg-surface-container-low border border-on-surface/[0.05] rounded-lg p-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary/40">medication</span>
+</div>
+<div>
+<p class="font-title-sm text-on-surface">Evening meds</p>
+<p class="text-body-md text-on-surface-variant/70">Atorvastatin</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] rounded-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-[40px] saturate-[150%] border border-on-surface/[0.05] inner-specular-highlight-tl-2px shadow-lg flex justify-around items-center p-glass-padding h-14">
+<div class="flex flex-col items-center justify-center text-secondary/40 dark:text-secondary-fixed-dim/40 hover:bg-on-surface/[0.05] rounded-full transition-all active:scale-95 duration-200 cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim bg-primary-fixed/20 rounded-full px-4 py-1 transition-all active:scale-95 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-label-caps text-label-caps">Today</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary/40 dark:text-secondary-fixed-dim/40 hover:bg-on-surface/[0.05] rounded-full transition-all active:scale-95 duration-200 cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-caps text-label-caps">Meds</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary/40 dark:text-secondary-fixed-dim/40 hover:bg-on-surface/[0.05] rounded-full transition-all active:scale-95 duration-200 cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+<span class="font-label-caps text-label-caps">More</span>
+</div>
+</nav>
+</body></html>

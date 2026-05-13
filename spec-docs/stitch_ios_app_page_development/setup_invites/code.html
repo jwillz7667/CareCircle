@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#79542b",
+                        "surface-variant": "#e3e3e0",
+                        "surface": "#faf9f7",
+                        "tertiary-fixed-dim": "#efbd8a",
+                        "outline": "#717974",
+                        "surface-container": "#eeeeeb",
+                        "on-primary-fixed-variant": "#2c4d40",
+                        "inverse-surface": "#2f312f",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c1c8c3",
+                        "surface-bright": "#faf9f7",
+                        "surface-dim": "#dadad8",
+                        "primary-fixed": "#c5ebd9",
+                        "on-tertiary-container": "#fffbff",
+                        "background": "#faf9f7",
+                        "on-primary-container": "#f5fff8",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#614018",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#b8c8dd",
+                        "secondary-container": "#d1e1f7",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#394859",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#436558",
+                        "inverse-primary": "#aacfbe",
+                        "tertiary-container": "#956d40",
+                        "surface-container-highest": "#e3e3e0",
+                        "primary-container": "#597c6d",
+                        "surface-container-high": "#e8e8e6",
+                        "on-secondary-fixed": "#0d1d2c",
+                        "inverse-on-surface": "#f1f1ee",
+                        "primary-fixed-dim": "#aacfbe",
+                        "secondary-fixed": "#d4e4f9",
+                        "on-secondary-container": "#556476",
+                        "on-surface": "#1a1c1b",
+                        "primary": "#416355",
+                        "on-tertiary-fixed": "#2c1700",
+                        "tertiary-fixed": "#ffdcbc",
+                        "on-primary-fixed": "#002117",
+                        "on-background": "#1a1c1b",
+                        "secondary": "#516072",
+                        "on-surface-variant": "#414845",
+                        "surface-container-low": "#f4f4f1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "glass-padding": "8px",
+                        "stack-gap": "16px",
+                        "gutter-card": "12px",
+                        "margin-main": "20px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Manrope"],
+                        "display-lg": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-lg": ["34px", {"lineHeight": "41px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "title-sm": ["20px", {"lineHeight": "25px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["15px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["17px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .inner-specular-highlight-tl-2px {
+            box-shadow: inset 2px 2px 0px 0px rgba(255, 255, 255, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .liquid-glass {
+            background: rgba(250, 249, 247, 0.8);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-[40px] saturate-[150%] border-b border-on-surface/[0.05] h-16 flex items-center px-margin-main justify-between">
+<div class="flex items-center gap-4">
+<button class="text-primary active:scale-105 duration-300">
+<span class="material-symbols-outlined text-[28px]">chevron_left</span>
+</button>
+<span class="font-title-sm text-title-sm text-on-surface">Step 3 of 3</span>
+</div>
+<div class="flex gap-1.5 items-center">
+<div class="w-8 h-1.5 rounded-full bg-primary"></div>
+<div class="w-8 h-1.5 rounded-full bg-primary"></div>
+<div class="w-8 h-1.5 rounded-full bg-primary"></div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-20 px-margin-main pb-32">
+<!-- Hero Section -->
+<section class="mt-8 mb-10">
+<h1 class="font-display-lg text-display-lg text-primary mb-4">Bring in your circle</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-[320px]">Siblings, aides, your loved one — anyone helping.</p>
+</section>
+<!-- Avatar Horizontal Scroll -->
+<section class="mb-12">
+<div class="flex overflow-x-auto pb-4 -mx-margin-main px-margin-main gap-4 no-scrollbar">
+<!-- Add Button Chip -->
+<button class="flex-shrink-0 flex flex-col items-center gap-3">
+<div class="w-20 h-20 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center bg-primary-fixed/10 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-[32px]">add</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary">+ Add</span>
+</button>
+<!-- Example Members -->
+<div class="flex-shrink-0 flex flex-col items-center gap-3">
+<img class="w-20 h-20 rounded-full object-cover border border-on-surface/[0.05]" data-alt="A portrait of a kind, middle-aged man with short hair and a warm smile, wearing a casual linen shirt. The photograph is shot in soft, natural daylight with a shallow depth of field, set against a clean, warm-toned background that matches a serene caregiving app's aesthetic. The lighting is gentle and welcoming." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzA4buBH95zw5HEeg39n-3ajBITxpHmbtqcyKrRGc22CjiMhrQl2EUQhslAXS62t60nltixvcUXIncsYMXGHZK6Ip2TpGmHh4tH9Leh2TIRN3nggctO0hZWQQijkB8fNQuIZULwThltIL_MUypfAI14MRlByeCG2RbVlYfTN_DZCjIOcqf2BngOX-5DmM6Gsk3v1VA_U6XenMGSL_HGrDjgL2XMmWxUhbKNfq3P6cDQePVeO6woRQwnxfIBrpTDYJDyD1-PQb_nUM"/>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Brother</span>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-3">
+<img class="w-20 h-20 rounded-full object-cover border border-on-surface/[0.05]" data-alt="A professional female caregiver in her 30s with a friendly expression and glasses. She is wearing a soft teal-colored medical scrub top. The image has high-key lighting, creating a bright and clean modern look. The background is a soft, out-of-focus interior reflecting a peaceful and safe home environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLOQkY5InAZk930EngSooM4xEHGfKto7BJVM1VwZHct7wyklnZBB6gxUgR5PsVDWARwVubJzDHYy1hO8M1Ip8Eew2oO-EfRRl_vdi0VFhSJhq5Fo5weQETcA86sysWQDHcKKx78BK1E-S6uTTk1fk3N2nbnRR2J_8JjHLlHyXsViY-60JqszX61cc6Bv0OvFDVPjotYICw-J5QsxOCRzxJA-PqdsrzeYaHKc1_1glSgFQ88F8tNzo1WUtZRI9YYiFc3C9E9JnBgns"/>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Aide</span>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-3">
+<img class="w-20 h-20 rounded-full object-cover border border-on-surface/[0.05]" data-alt="A close-up portrait of an elderly woman with silver hair and gentle, expressive eyes. She radiates dignity and calm. The lighting is soft and golden, highlighting her features with a premium editorial feel. The overall color palette is warm and anchored in soft creams and neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPGeSmQLuIbqHVNjDvGBJGQm6cl6nkJS5HlHYKZthExOR1giy38FmIg4YgFlLVV6iX3XQNVrhBAAGIAxUIdWvKr4GdkFoBvN0Tzd5iflVZEdXXycxZIgpsrQV7mlyh7jlbwrFL-nGaqy3e_RHbA_bPh5BFXuc1_fuDMqaHcHuF9DeDfhgGAckcsMpLMIe9UAuSJ3R8exl6isbV5EFyPyhrq_FQ9m3Hi76ZCrM_z-o5VnVclMJ59coP2kqpgOiehO29WcesDKXj_bM"/>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Mom</span>
+</div>
+</div>
+</section>
+<!-- Role Selection -->
+<section class="space-y-4">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant opacity-60">Invite as...</h2>
+<div class="grid grid-cols-1 gap-3">
+<!-- Family Member -->
+<button class="liquid-glass inner-specular-highlight-tl-2px w-full h-16 rounded-full border border-on-surface/[0.05] flex items-center px-6 justify-between group active:scale-[0.98] transition-all">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">family_restroom</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Family member</span>
+</div>
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">chevron_right</span>
+</button>
+<!-- Paid Aide -->
+<button class="liquid-glass inner-specular-highlight-tl-2px w-full h-16 rounded-full border border-on-surface/[0.05] flex items-center px-6 justify-between group active:scale-[0.98] transition-all">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">medical_services</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Paid aide</span>
+</div>
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">chevron_right</span>
+</button>
+<!-- Your Loved One -->
+<button class="liquid-glass inner-specular-highlight-tl-2px w-full h-16 rounded-full border border-on-surface/[0.05] flex items-center px-6 justify-between group active:scale-[0.98] transition-all">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">favorite</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Your loved one</span>
+</div>
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">chevron_right</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Bottom Actions Layer (Floating Glass) -->
+<footer class="fixed bottom-0 w-full p-margin-main bg-gradient-to-t from-surface via-surface/90 to-transparent">
+<div class="flex flex-col gap-3">
+<!-- Primary Send Button -->
+<button class="h-16 w-full rounded-full bg-primary text-on-primary font-title-sm text-title-sm flex items-center justify-center gap-2 inner-specular-highlight-tl-2px active:scale-95 transition-transform">
+<span>Send invites</span>
+<span class="material-symbols-outlined">send</span>
+</button>
+<!-- Secondary Skip Button -->
+<button class="h-14 w-full rounded-full border border-primary text-primary font-title-sm text-title-sm flex items-center justify-center active:bg-primary/5 transition-colors">
+                I'll do this later
+            </button>
+</div>
+<!-- Safe Area Offset -->
+<div class="h-3"></div>
+</footer>
+</body></html>

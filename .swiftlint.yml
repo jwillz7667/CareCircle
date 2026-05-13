@@ -1,0 +1,108 @@
+# SwiftLint configuration for CareCircle
+# Quality bar items 4 (no force-unwraps) and 9 (no noise comments) drive most opt-ins.
+
+disabled_rules:
+  - todo
+  - line_length        # delegated to swiftformat
+  - trailing_whitespace
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - force_unwrapping
+  - implicit_return
+  - last_where
+  - multiline_arguments
+  - prefer_self_type_over_type_of_self
+  - private_action
+  - private_outlet
+  - prohibited_super_call
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - toggle_bool
+  - unused_import
+  - vertical_parameter_alignment_on_call
+  - closure_spacing
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - convenience_type
+  - discouraged_object_literal
+  - discouraged_optional_boolean
+  - flatmap_over_map_reduce
+  - identical_operands
+  - joined_default_parameter
+  - legacy_multiple
+  - literal_expression_end_indentation
+  - lower_acl_than_parent
+  - modifier_order
+  - operator_usage_whitespace
+  - overridden_super_call
+  - pattern_matching_keywords
+  - reduce_into
+  - redundant_type_annotation
+  - static_operator
+  - strong_iboutlet
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - yoda_condition
+
+# Hard fails — these reflect the quality bar
+force_cast: error
+force_try: error
+force_unwrapping: error
+
+excluded:
+  - build
+  - DerivedData
+  - .build
+  - spec-docs
+  - docs
+  - CareCircle.xcodeproj
+
+identifier_name:
+  min_length: 1
+  max_length:
+    warning: 60
+    error: 80
+  excluded:
+    - id
+    - i
+    - x
+    - y
+
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+    error: 60
+
+file_length:
+  warning: 400
+  error: 600
+
+function_body_length:
+  warning: 40
+  error: 80
+
+function_parameter_count:
+  warning: 6
+  error: 8
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+type_body_length:
+  warning: 250
+  error: 400
+
+nesting:
+  type_level:
+    warning: 2
+
+trailing_comma:
+  mandatory_comma: true
