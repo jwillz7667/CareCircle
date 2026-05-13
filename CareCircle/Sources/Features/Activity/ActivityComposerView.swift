@@ -177,6 +177,7 @@ struct ActivityComposerView: View {
 
         do {
             try modelContext.save()
+            scheduleExtraction(for: activity)
             dismiss()
         } catch {
             modelContext.delete(activity)
@@ -185,5 +186,20 @@ struct ActivityComposerView: View {
             )
             errorMessage = "Couldn't save the post. Please try again."
         }
+    }
+
+    private func scheduleExtraction(for activity: Activity) {
+        guard !trimmedBody.isEmpty else { return }
+        let redactor = PHIRedactor(
+            circle: circle,
+            currentCaregiverDisplayName: author.displayName
+        )
+        let extractor = EntityExtractorFactory.makeDefault(redactor: redactor)
+        ActivityExtractionService.enqueue(
+            activityID: activity.id,
+            text: trimmedBody,
+            extractor: extractor,
+            in: modelContext
+        )
     }
 }

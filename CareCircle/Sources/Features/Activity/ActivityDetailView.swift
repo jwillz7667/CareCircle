@@ -50,6 +50,16 @@ struct ActivityDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
                 }
 
+                if let entities = activity.extractedEntities, !entities.isEmpty {
+                    VStack(alignment: .leading, spacing: Theme.tightSpacing) {
+                        Text("Highlights")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.ccSecondary)
+                        ExtractedEntitiesView(state: .ready(entities), compact: false)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 ReactionsBar(activity: activity, author: author, canReact: permissions.canReact)
 
                 Divider()

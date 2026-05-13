@@ -199,6 +199,7 @@ struct VoiceComposerView: View {
 
         do {
             try modelContext.save()
+            scheduleExtraction(for: activity, transcript: result.transcript)
             dismiss()
         } catch {
             modelContext.delete(activity)
@@ -208,6 +209,22 @@ struct VoiceComposerView: View {
             isSubmitting = false
             service.reset()
         }
+    }
+
+    private func scheduleExtraction(for activity: Activity, transcript: String) {
+        let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let redactor = PHIRedactor(
+            circle: circle,
+            currentCaregiverDisplayName: author.displayName
+        )
+        let extractor = EntityExtractorFactory.makeDefault(redactor: redactor)
+        ActivityExtractionService.enqueue(
+            activityID: activity.id,
+            text: trimmed,
+            extractor: extractor,
+            in: modelContext
+        )
     }
 }
 

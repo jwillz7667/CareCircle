@@ -21,6 +21,8 @@ final class Activity {
 
     var audioDurationSeconds: Double = 0
 
+    var extractedEntitiesJSON: String?
+
     var circle: Circle?
 
     @Relationship(deleteRule: .cascade, inverse: \ActivityReaction.activity)
@@ -52,6 +54,7 @@ final class Activity {
         photoData: Data? = nil,
         audioData: Data? = nil,
         audioDurationSeconds: Double = 0,
+        extractedEntitiesJSON: String? = nil,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -62,6 +65,13 @@ final class Activity {
         self.photoData = photoData
         self.audioData = audioData
         self.audioDurationSeconds = audioDurationSeconds
+        self.extractedEntitiesJSON = extractedEntitiesJSON
         self.createdAt = createdAt
+    }
+
+    var extractedEntities: ExtractedEntities? {
+        guard let json = extractedEntitiesJSON,
+              let data = json.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(ExtractedEntities.self, from: data)
     }
 }

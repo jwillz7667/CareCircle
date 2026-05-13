@@ -53,6 +53,10 @@ struct ActivityRowView: View {
                     .accessibilityLabel("Photo attachment")
             }
 
+            if let entities = activity.extractedEntities, !entities.isEmpty {
+                ExtractedEntitiesView(state: .ready(entities), compact: true)
+            }
+
             footer
         }
         .padding(Theme.spacing)
