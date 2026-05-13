@@ -67,6 +67,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     disableRequestLogging: config.NODE_ENV === 'test',
     trustProxy: true,
     bodyLimit: 5 * 1024 * 1024,
+    pluginTimeout: 30_000,
   });
   app.decorate('ctx', ctx);
 
@@ -106,11 +107,13 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
 
   if (!opts.skipStartupTasks) {
     app.addHook('onReady', async () => {
-      try {
-        await storage.ensureBuckets();
-      } catch (err) {
-        logger.warn({ err }, 'failed to ensure MinIO buckets — continuing');
-      }
+      // Fire MinIO bucket setup in the background — a slow private-DNS
+      // resolution or an unreachable MinIO must not block API startup
+      // past Fastify's onReady timeout (default 10s).
+      void storage
+        .ensureBuckets()
+        .catch((err) => logger.warn({ err }, 'failed to ensure MinIO buckets — continuing'));
+      // Realtime LISTEN connection is fast; await it so we surface DB issues.
       await realtime.start();
     });
   }
