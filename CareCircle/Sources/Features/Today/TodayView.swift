@@ -1,22 +1,49 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - TodayView
 
+/// Tab 2: a chronological mash-up of today's appointments and today's
+/// medication doses for the active Circle. Each entry routes to its native
+/// detail view (Appointment or Medication).
 struct TodayView: View {
+    let authState: AuthState
+
+    @Query(sort: \Circle.createdAt) private var circles: [Circle]
+
+    private var activeCircle: Circle? {
+        guard case let .signedIn(user) = authState.status else {
+            return circles.first
+        }
+        return circles.first(where: { $0.ownerAppleUserID == user.id }) ?? circles.first
+    }
+
+    private var authorContext: ActivityAuthorContext {
+        guard case let .signedIn(user) = authState.status else {
+            return ActivityAuthorContext(appleUserID: "", displayName: "")
+        }
+        return ActivityAuthorContext(appleUserID: user.id, displayName: user.displayName)
+    }
+
     var body: some View {
         NavigationStack {
-            EmptyStateView(
-                systemImage: "list.bullet.clipboard.fill",
-                title: "Nothing scheduled",
-                message: "Today's tasks and reminders will appear here."
-            )
-            .navigationTitle("Today")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(Color.ccBackground, for: .navigationBar)
+            content
+                .navigationTitle("Today")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbarBackground(Color.ccBackground, for: .navigationBar)
         }
     }
-}
 
-#Preview {
-    TodayView()
+    @ViewBuilder
+    private var content: some View {
+        if let circle = activeCircle {
+            TodayTimelineView(circle: circle, author: authorContext)
+        } else {
+            EmptyStateView(
+                systemImage: "list.bullet.clipboard.fill",
+                title: "No Circle yet",
+                message: "Create a Circle on the Home tab to see today's plan."
+            )
+        }
+    }
 }

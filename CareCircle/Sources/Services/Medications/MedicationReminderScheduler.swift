@@ -42,7 +42,10 @@ struct MedicationReminderScheduler {
             intentIdentifiers: [],
             options: []
         )
-        center.setNotificationCategories([category])
+        let existing = await center.notificationCategories()
+        var merged = existing
+        merged.insert(category)
+        center.setNotificationCategories(merged)
     }
 
     func requestAuthorizationIfNeeded() async -> Bool {

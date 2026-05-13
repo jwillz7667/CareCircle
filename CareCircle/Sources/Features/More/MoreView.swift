@@ -41,6 +41,13 @@ struct MoreView: View {
                                 }
                             }
                         }
+
+                        NavigationLink {
+                            AppointmentListView(circle: circle)
+                        } label: {
+                            Label("Calendar", systemImage: "calendar")
+                                .foregroundStyle(Color.ccText)
+                        }
                     }
                 }
 

@@ -12,7 +12,7 @@ struct MainTabView: View {
                     Label("Home", systemImage: "house.fill")
                 }
 
-            TodayView()
+            TodayView(authState: authState)
                 .tabItem {
                     Label("Today", systemImage: "list.bullet.clipboard.fill")
                 }
