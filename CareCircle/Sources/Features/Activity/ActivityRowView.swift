@@ -30,6 +30,10 @@ struct ActivityRowView: View {
         VStack(alignment: .leading, spacing: Theme.tightSpacing) {
             header
 
+            if let audio = activity.audioData {
+                VoiceNoteRow(audioData: audio, durationSeconds: activity.audioDurationSeconds)
+            }
+
             if !activity.body.isEmpty {
                 Text(activity.body)
                     .font(.body)

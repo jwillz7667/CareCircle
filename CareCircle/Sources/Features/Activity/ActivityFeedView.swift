@@ -7,7 +7,8 @@ struct ActivityFeedView: View {
     let circle: Circle
     let author: ActivityAuthorContext
 
-    @State private var isComposing = false
+    @State private var isComposingText = false
+    @State private var isComposingVoice = false
     @State private var filter = ActivityFeedFilter()
 
     private var permissions: CirclePermissions {
@@ -62,8 +63,11 @@ struct ActivityFeedView: View {
             }
         }
         .background(Color.ccBackground)
-        .sheet(isPresented: $isComposing) {
+        .sheet(isPresented: $isComposingText) {
             ActivityComposerView(circle: circle, author: author)
+        }
+        .sheet(isPresented: $isComposingVoice) {
+            VoiceComposerView(circle: circle, author: author)
         }
     }
 
@@ -145,8 +149,17 @@ struct ActivityFeedView: View {
     }
 
     private var postButton: some View {
-        Button {
-            isComposing = true
+        Menu {
+            Button {
+                isComposingText = true
+            } label: {
+                Label("Text or photo", systemImage: "square.and.pencil")
+            }
+            Button {
+                isComposingVoice = true
+            } label: {
+                Label("Voice note", systemImage: "mic.fill")
+            }
         } label: {
             Label("Post", systemImage: "plus")
                 .font(.body.weight(.semibold))

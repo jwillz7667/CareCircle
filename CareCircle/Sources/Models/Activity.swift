@@ -16,6 +16,11 @@ final class Activity {
     @Attribute(.externalStorage)
     var photoData: Data?
 
+    @Attribute(.externalStorage)
+    var audioData: Data?
+
+    var audioDurationSeconds: Double = 0
+
     var circle: Circle?
 
     @Relationship(deleteRule: .cascade, inverse: \ActivityReaction.activity)
@@ -45,6 +50,8 @@ final class Activity {
         type: ActivityType,
         body: String = "",
         photoData: Data? = nil,
+        audioData: Data? = nil,
+        audioDurationSeconds: Double = 0,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -53,6 +60,8 @@ final class Activity {
         typeRaw = type.rawValue
         self.body = body
         self.photoData = photoData
+        self.audioData = audioData
+        self.audioDurationSeconds = audioDurationSeconds
         self.createdAt = createdAt
     }
 }
