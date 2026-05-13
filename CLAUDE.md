@@ -17,7 +17,7 @@ A Railway-Postgres backend alternative is documented at @docs/CARECIRCLE_DATABAS
 
 ## Project configuration facts
 - Single target/scheme `CareCircle`. Bundle ID `Res.CareCircle`. Dev team `487LC4H9U4`.
-- Entitlements file: `CareCircle/CareCircle.entitlements`. Has CloudKit + APNs (`aps-environment = development`). **No Sign in with Apple capability yet** — must be added in Xcode before Phase 1. iCloud container identifier list is empty — must be filled before Phase 1.
+- Entitlements file: `CareCircle/CareCircle.entitlements`. Has Sign in with Apple, CloudKit (`iCloud.Res.CareCircle`), and APNs (`aps-environment = development`).
 - `Info.plist` is in the synchronized-folder membership exception list and is managed via the project's Build Settings / Info tab in Xcode.
 - The Xcode project uses `PBXFileSystemSynchronizedRootGroup` rooted at `CareCircle/`. **Any `.swift` file placed under `CareCircle/` is automatically added to the app target — you do not need to edit `project.pbxproj` to add Swift sources.**
 - No test target exists yet. When tests are added, the user must create a Unit Testing Bundle in Xcode (File ▸ New ▸ Target). The future test target's synchronized root should be the top-level `CareCircleTests/` folder (which already exists with `Unit/` and `Integration/` subdirs). It MUST live outside `CareCircle/` so test files don't accidentally join the app target via the app's synchronized root group.
@@ -67,7 +67,7 @@ CareCircleTests/                // OUTSIDE the app's synced root — will be the
   Integration/
 ```
 
-`ContentView.swift` and `Item.swift` at `CareCircle/` are Xcode-template stubs and will be replaced by Phase 1.
+All Phase 1 sources live under `CareCircle/Sources/`. The Xcode-template stubs that previously sat at `CareCircle/` (`CareCircleApp.swift`, `ContentView.swift`, `Item.swift`) were deleted in Phase 1.
 
 ## Build / run / test
 
@@ -104,6 +104,9 @@ CloudKit-only, no custom backend. Each Circle is backed by a `CKShare` in the ow
 ## Platform gotchas (add new entries as we discover them)
 
 - **Do not put `.gitkeep` (or any other non-source marker files) anywhere under `CareCircle/`.** Xcode 26's `PBXFileSystemSynchronizedRootGroup` treats every non-Swift file as a resource to copy into the app bundle. Multiple `.gitkeep` files (same basename in sibling folders) trigger `Multiple commands produce '.gitkeep'` build failures. If you need to track an empty folder in git, do it outside `CareCircle/` or put a real `.swift` file there.
+- **`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`** is set project-wide (Xcode 26 default). Every type and free function is implicitly `@MainActor` unless explicitly marked otherwise. Mark `Sendable` value types that don't touch UI state as `nonisolated` (e.g. `nonisolated struct KeychainStore`), otherwise default-value expressions in `@MainActor` initializers will warn about cross-isolation calls.
+- **`MemberImportVisibility` is on.** Each `.swift` file must `import` every module whose extension methods it calls — re-exports don't count. Calling `Logger.critical(...)` requires `import OSLog` in the file that calls it, not just in the file that defines the `Logger` constants.
+- **Typed `throws(SomeError)` makes `catch let e as SomeError` redundant** — Swift narrows the bound error type automatically, so the cast is `'as' test is always true`. Use a single un-typed `catch` for typed-throws functions.
 - HealthKit reads on Simulator return empty; test on device or with mock data.
 - `CKShare` URLs only resolve on devices logged into iCloud. Simulator handling requires a workaround that will be documented in `docs/cloudkit_testing.md` once we hit it (Phase 3).
 - `SFSpeechRecognizer.requiresOnDeviceRecognition = true` is supported on iPhone 11 and later for English. Fall back explicitly for older devices.

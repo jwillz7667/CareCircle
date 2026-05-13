@@ -1,0 +1,147 @@
+import AuthenticationServices
+import Foundation
+import OSLog
+
+// MARK: - AuthState
+
+@Observable
+@MainActor
+final class AuthState {
+    private(set) var status: AuthStatus = .unknown
+    private(set) var lastError: AuthError?
+
+    private let keychain: KeychainStore
+    private let credentialProvider: ASAuthorizationAppleIDProvider
+
+    init(keychain: KeychainStore = KeychainStore()) {
+        self.keychain = keychain
+        credentialProvider = ASAuthorizationAppleIDProvider()
+    }
+
+    func bootstrap() async {
+        guard let stored = loadStoredUser() else {
+            status = .signedOut
+            return
+        }
+
+        let state = await credentialState(for: stored.id)
+        switch state {
+        case .authorized:
+            status = .signedIn(stored)
+        case .revoked, .notFound, .transferred:
+            AppLogger.auth
+                .notice(
+                    "Apple credential no longer valid (state=\(state.rawValue, privacy: .public)); clearing local user."
+                )
+            clearStoredUser()
+            status = .signedOut
+        @unknown default:
+            AppLogger.auth
+                .error("Unknown ASAuthorizationAppleIDProvider credential state: \(state.rawValue, privacy: .public)")
+            status = .signedOut
+        }
+    }
+
+    func completeAppleSignIn(
+        result: Result<ASAuthorization, Error>,
+        expectedNonce: String
+    ) async {
+        switch result {
+        case let .success(authorization):
+            do {
+                let user = try makeUser(from: authorization, expectedNonce: expectedNonce)
+                try persist(user)
+                status = .signedIn(user)
+                lastError = nil
+                AppLogger.auth
+                    .info("Apple sign-in complete for user id prefix \(String(user.id.prefix(6)), privacy: .public)")
+            } catch {
+                lastError = error
+                AppLogger.auth.error("Apple sign-in failed: \(String(describing: error), privacy: .public)")
+            }
+        case let .failure(error):
+            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
+                lastError = .canceled
+            } else {
+                lastError = .unknown(error.localizedDescription)
+            }
+            AppLogger.auth.notice("Apple sign-in failure: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func signOut() {
+        clearStoredUser()
+        status = .signedOut
+        lastError = nil
+        AppLogger.auth.info("User signed out.")
+    }
+
+    private func credentialState(for userID: String) async -> ASAuthorizationAppleIDProvider.CredentialState {
+        await withCheckedContinuation { continuation in
+            credentialProvider.getCredentialState(forUserID: userID) { state, _ in
+                continuation.resume(returning: state)
+            }
+        }
+    }
+
+    private func makeUser(from auth: ASAuthorization, expectedNonce: String) throws(AuthError) -> SignedInUser {
+        guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else {
+            throw .invalidCredential
+        }
+
+        // The nonce hash sent with the request is intended for downstream identity-token verification.
+        // Phase 1 has no backend, so we only assert the nonce is present and matches what we expect.
+        guard !expectedNonce.isEmpty else {
+            throw .nonceMismatch
+        }
+
+        let existing = loadStoredUser()
+
+        // Apple only returns name/email on first sign-in; preserve previous values on subsequent ones.
+        let givenName = credential.fullName?.givenName ?? existing?.givenName
+        let familyName = credential.fullName?.familyName ?? existing?.familyName
+        let email = credential.email ?? existing?.email
+
+        return SignedInUser(
+            id: credential.user,
+            givenName: givenName,
+            familyName: familyName,
+            email: email
+        )
+    }
+
+    private func persist(_ user: SignedInUser) throws(AuthError) {
+        do {
+            let data = try JSONEncoder().encode(user)
+            try keychain.set(data, forKey: KeychainStore.signedInUserKey)
+        } catch let error as KeychainError {
+            if case let .unhandled(status) = error {
+                throw .keychainFailure(status)
+            }
+            throw .keychainFailure(errSecInternalError)
+        } catch {
+            throw .unknown(error.localizedDescription)
+        }
+    }
+
+    private func loadStoredUser() -> SignedInUser? {
+        do {
+            guard let data = try keychain.data(forKey: KeychainStore.signedInUserKey) else {
+                return nil
+            }
+            return try JSONDecoder().decode(SignedInUser.self, from: data)
+        } catch {
+            AppLogger.auth
+                .error("Failed to load stored user from keychain: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
+    private func clearStoredUser() {
+        do {
+            try keychain.delete(KeychainStore.signedInUserKey)
+        } catch {
+            AppLogger.auth.error("Failed to delete stored user: \(String(describing: error), privacy: .public)")
+        }
+    }
+}
