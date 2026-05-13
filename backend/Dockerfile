@@ -5,14 +5,14 @@ RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 
 WORKDIR /app
 
-COPY backend/pnpm-lock.yaml backend/pnpm-workspace.yaml backend/package.json ./
-COPY backend/packages/db/package.json packages/db/
-COPY backend/packages/shared/package.json packages/shared/
-COPY backend/apps/api/package.json apps/api/
-COPY backend/apps/worker/package.json apps/worker/
-COPY backend/apps/migrator/package.json apps/migrator/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/db/package.json packages/db/
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+COPY apps/worker/package.json apps/worker/
+COPY apps/migrator/package.json apps/migrator/
 RUN pnpm install --frozen-lockfile
 
-COPY backend/ ./
+COPY . .
 
 CMD ["pnpm", "--filter", "@carecircle/api", "start"]
