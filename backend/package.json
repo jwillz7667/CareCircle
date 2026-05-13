@@ -1,0 +1,32 @@
+{
+  "name": "carecircle-backend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "CareCircle Railway-Postgres backend (API + worker + migrator)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "build": "pnpm -r build",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "pnpm -r typecheck",
+    "migrate": "pnpm --filter @carecircle/migrator run migrate",
+    "seed": "pnpm --filter @carecircle/migrator run seed",
+    "dev:api": "pnpm --filter @carecircle/api run dev",
+    "dev:worker": "pnpm --filter @carecircle/worker run dev",
+    "test": "pnpm --filter @carecircle/api run test",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "fresh": "docker compose down -v && docker compose up -d && pnpm wait:db && pnpm migrate && pnpm seed",
+    "wait:db": "node ./scripts/wait-for-postgres.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

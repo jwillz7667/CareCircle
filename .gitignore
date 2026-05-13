@@ -62,3 +62,16 @@ Carthage/Build/
 # SourceKit / IDE caches
 .sourcekit-lsp/
 .cache/
+
+# Node / pnpm (backend)
+node_modules/
+dist/
+.tsbuildinfo
+coverage/
+.turbo/
+
+# Docker compose local volumes
+backend/.data/
+
+# Claude scheduled-task runtime
+.claude/scheduled_tasks.lock

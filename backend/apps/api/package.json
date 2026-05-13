@@ -1,0 +1,38 @@
+{
+  "name": "@carecircle/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@carecircle/db": "workspace:*",
+    "@carecircle/shared": "workspace:*",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/helmet": "^12.0.1",
+    "@fastify/rate-limit": "^10.2.1",
+    "@fastify/websocket": "^11.0.1",
+    "bullmq": "^5.34.0",
+    "fastify": "^5.1.0",
+    "fastify-plugin": "^5.0.1",
+    "ioredis": "^5.4.1",
+    "jose": "^5.9.6",
+    "minio": "^8.0.2",
+    "pg": "^8.13.1",
+    "pg-listen": "^1.7.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
