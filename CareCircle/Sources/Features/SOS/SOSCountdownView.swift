@@ -16,6 +16,7 @@ struct SOSCountdownView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -35,7 +36,7 @@ struct SOSCountdownView: View {
                         .trim(from: 0, to: progress)
                         .stroke(.white, style: StrokeStyle(lineWidth: 12, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 1), value: progress)
+                        .animation(reduceMotion ? nil : .linear(duration: 1), value: progress)
 
                     VStack(spacing: 4) {
                         Text("\(secondsRemaining)")

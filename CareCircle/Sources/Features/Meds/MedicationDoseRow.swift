@@ -97,6 +97,8 @@ struct MedicationDoseRow: View {
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .foregroundStyle(Color.ccPrimary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Mark dose taken")
@@ -108,6 +110,8 @@ struct MedicationDoseRow: View {
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .foregroundStyle(Color.ccDanger)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Mark dose skipped")

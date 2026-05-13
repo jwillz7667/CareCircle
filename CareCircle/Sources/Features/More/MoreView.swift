@@ -6,6 +6,7 @@ import SwiftUI
 struct MoreView: View {
     let authState: AuthState
 
+    @Environment(SimplifiedModePreference.self) private var simplifiedPreference
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
 
     private var activeCircle: Circle? {
@@ -77,6 +78,22 @@ struct MoreView: View {
                                 .foregroundStyle(Color.ccText)
                         }
                     }
+                }
+
+                Section {
+                    @Bindable var preferenceBinding = simplifiedPreference
+                    Toggle(isOn: $preferenceBinding.isManualOverrideEnabled) {
+                        Label("Simplified mode", systemImage: "rectangle.compress.vertical")
+                            .foregroundStyle(Color.ccText)
+                    }
+                    .tint(Color.ccPrimary)
+                    .accessibilityHint(
+                        "Switches to a single-screen layout with big call/text buttons for the person being cared for."
+                    )
+                } header: {
+                    Text("Accessibility")
+                } footer: {
+                    Text("Designed for the person being cared for. Big buttons, fewer screens, one-tap call to family.")
                 }
 
                 Section("Account") {

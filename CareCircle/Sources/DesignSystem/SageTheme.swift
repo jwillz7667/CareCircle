@@ -22,8 +22,11 @@ extension Color {
     /// Deep navy — primary text.
     static let ccText = Color(red: 0.118, green: 0.196, blue: 0.290)
 
-    /// Muted sage — secondary text and chrome.
-    static let ccSecondary = Color(red: 0.435, green: 0.518, blue: 0.475)
+    /// Deeper sage — secondary text and chrome. Darkened from the
+    /// original (0.435, 0.518, 0.475) to clear a 4.5:1 contrast ratio
+    /// against both `ccBackground` and `ccSurface` per WCAG AA for body
+    /// text. Hand-verified luminance, not eyeballed.
+    static let ccSecondary = Color(red: 0.355, green: 0.435, blue: 0.395)
 
     /// Warm clay — destructive / error.
     static let ccDanger = Color(red: 0.741, green: 0.349, blue: 0.298)

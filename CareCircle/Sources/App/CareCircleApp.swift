@@ -9,6 +9,7 @@ struct CareCircleApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authState = AuthState()
     @State private var sosCenter = SOSCenter()
+    @State private var simplifiedPreference = SimplifiedModePreference()
 
     let modelContainer: ModelContainer
 
@@ -51,6 +52,7 @@ struct CareCircleApp: App {
             RootView(authState: authState)
                 .environment(\.circleSharingService, CircleSharingService.shared)
                 .environment(sosCenter)
+                .environment(simplifiedPreference)
         }
         .modelContainer(modelContainer)
     }

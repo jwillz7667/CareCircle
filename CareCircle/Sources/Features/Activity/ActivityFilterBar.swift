@@ -71,14 +71,17 @@ struct ActivityFilterBar: View {
         Button(action: action) {
             Text(label)
                 .font(.caption.weight(.semibold))
-                .padding(.horizontal, Theme.tightSpacing + 2)
-                .padding(.vertical, 6)
+                .padding(.horizontal, Theme.spacing)
+                .padding(.vertical, 10)
+                .frame(minHeight: 44)
                 .background(
                     Capsule().fill(isOn ? Color.ccPrimary : Color.ccSurface)
                 )
                 .foregroundStyle(isOn ? Color.white : Color.ccText)
+                .contentShape(.capsule)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
