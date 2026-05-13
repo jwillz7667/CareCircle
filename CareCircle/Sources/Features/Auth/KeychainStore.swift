@@ -11,6 +11,10 @@ nonisolated struct KeychainStore: Sendable {
     /// Key for the persisted `SignedInUser` payload.
     static let signedInUserKey = "signed-in-user"
 
+    /// Backend session tokens — minted by `POST /v1/auth/apple` and
+    /// rotated through `POST /v1/auth/refresh`. Stored as JSON.
+    static let backendTokensKey = "backend-tokens"
+
     init(service: String = KeychainStore.defaultService) {
         self.service = service
     }

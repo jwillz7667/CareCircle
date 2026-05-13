@@ -12,8 +12,16 @@ final class AuthState {
 
     private let keychain: KeychainStore
     private let credentialProvider: ASAuthorizationAppleIDProvider
+    private let backendAuthService: BackendAuthService
+    private let syncEngine: SyncEngine
 
-    init(keychain: KeychainStore = KeychainStore()) {
+    init(
+        backendAuthService: BackendAuthService,
+        syncEngine: SyncEngine,
+        keychain: KeychainStore = KeychainStore()
+    ) {
+        self.backendAuthService = backendAuthService
+        self.syncEngine = syncEngine
         self.keychain = keychain
         credentialProvider = ASAuthorizationAppleIDProvider()
     }
@@ -28,12 +36,15 @@ final class AuthState {
         switch state {
         case .authorized:
             status = .signedIn(stored)
+            syncEngine.refreshPendingCount()
+            syncEngine.triggerDrain()
         case .revoked, .notFound, .transferred:
             AppLogger.auth
                 .notice(
                     "Apple credential no longer valid (state=\(state.rawValue, privacy: .public)); clearing local user."
                 )
             clearStoredUser()
+            await backendAuthService.logout()
             status = .signedOut
         @unknown default:
             AppLogger.auth
@@ -44,17 +55,18 @@ final class AuthState {
 
     func completeAppleSignIn(
         result: Result<ASAuthorization, Error>,
-        expectedNonce: String
+        hashedNonce: String
     ) async {
         switch result {
         case let .success(authorization):
             do {
-                let user = try makeUser(from: authorization, expectedNonce: expectedNonce)
+                let user = try makeUser(from: authorization, hashedNonce: hashedNonce)
                 try persist(user)
                 status = .signedIn(user)
                 lastError = nil
                 AppLogger.auth
                     .info("Apple sign-in complete for user id prefix \(String(user.id.prefix(6)), privacy: .public)")
+                await exchangeBackendSession(authorization: authorization, hashedNonce: hashedNonce)
             } catch {
                 lastError = error
                 AppLogger.auth.error("Apple sign-in failed: \(String(describing: error), privacy: .public)")
@@ -73,7 +85,40 @@ final class AuthState {
         clearStoredUser()
         status = .signedOut
         lastError = nil
+        Task { await backendAuthService.logout() }
         AppLogger.auth.info("User signed out.")
+    }
+
+    private func exchangeBackendSession(
+        authorization: ASAuthorization,
+        hashedNonce: String
+    ) async {
+        guard
+            let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+            let tokenData = credential.identityToken,
+            let identityToken = String(data: tokenData, encoding: .utf8) else
+        {
+            AppLogger.auth.error("Apple credential missing identity token; skipping backend exchange.")
+            return
+        }
+
+        do {
+            try await backendAuthService.exchangeAppleIdentity(
+                identityToken: identityToken,
+                nonce: hashedNonce,
+                givenName: credential.fullName?.givenName,
+                familyName: credential.fullName?.familyName
+            )
+            syncEngine.refreshPendingCount()
+            syncEngine.triggerDrain()
+        } catch {
+            // Local Apple session is still valid; only the backend leg failed.
+            // The user keeps CloudKit functionality and the next foreground
+            // attempt can retry.
+            AppLogger.auth.error(
+                "Backend exchange failed: \(String(describing: error), privacy: .public)"
+            )
+        }
     }
 
     private func credentialState(for userID: String) async -> ASAuthorizationAppleIDProvider.CredentialState {
@@ -84,14 +129,15 @@ final class AuthState {
         }
     }
 
-    private func makeUser(from auth: ASAuthorization, expectedNonce: String) throws(AuthError) -> SignedInUser {
+    private func makeUser(from auth: ASAuthorization, hashedNonce: String) throws(AuthError) -> SignedInUser {
         guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else {
             throw .invalidCredential
         }
 
-        // The nonce hash sent with the request is intended for downstream identity-token verification.
-        // Phase 1 has no backend, so we only assert the nonce is present and matches what we expect.
-        guard !expectedNonce.isEmpty else {
+        // The SHA-256 hashed nonce is forwarded to the backend so the
+        // server-side identity-token verifier can compare it against the
+        // JWT's `nonce` claim. Locally we only require the hash to exist.
+        guard !hashedNonce.isEmpty else {
             throw .nonceMismatch
         }
 

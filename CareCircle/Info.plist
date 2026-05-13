@@ -16,5 +16,7 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>APIBaseURL</key>
+	<string>https://carecircle-production-5669.up.railway.app</string>
 </dict>
 </plist>

@@ -12,6 +12,7 @@ struct ActivityComposerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
 
     @State private var noteBody = ""
     @State private var pickerItem: PhotosPickerItem?
@@ -177,6 +178,7 @@ struct ActivityComposerView: View {
 
         do {
             try modelContext.save()
+            syncEngine.enqueueActivityCreate(activity)
             scheduleExtraction(for: activity)
             dismiss()
         } catch {

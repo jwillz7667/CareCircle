@@ -11,4 +11,6 @@ enum AppLogger {
     static let persistence = Logger(subsystem: subsystem, category: "persistence")
     static let cloudKit = Logger(subsystem: subsystem, category: "cloudkit")
     static let sos = Logger(subsystem: subsystem, category: "sos")
+    static let backend = Logger(subsystem: subsystem, category: "backend")
+    static let sync = Logger(subsystem: subsystem, category: "sync")
 }

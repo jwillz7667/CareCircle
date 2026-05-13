@@ -7,7 +7,7 @@ import SwiftUI
 struct SignInView: View {
     let authState: AuthState
 
-    @State private var currentNonce = ""
+    @State private var currentHashedNonce = ""
 
     var body: some View {
         VStack(spacing: Theme.looseSpacing) {
@@ -34,14 +34,15 @@ struct SignInView: View {
 
             VStack(spacing: Theme.spacing) {
                 SignInWithAppleButton(.signIn) { request in
-                    let nonce = Self.randomNonce()
-                    currentNonce = nonce
+                    let raw = Self.randomNonce()
+                    let hashed = Self.sha256(raw)
+                    currentHashedNonce = hashed
                     request.requestedScopes = [.fullName, .email]
-                    request.nonce = Self.sha256(nonce)
+                    request.nonce = hashed
                 } onCompletion: { result in
-                    let nonce = currentNonce
+                    let hashed = currentHashedNonce
                     Task {
-                        await authState.completeAppleSignIn(result: result, expectedNonce: nonce)
+                        await authState.completeAppleSignIn(result: result, hashedNonce: hashed)
                     }
                 }
                 .signInWithAppleButtonStyle(.black)

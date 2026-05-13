@@ -7,6 +7,7 @@ struct MoreView: View {
     let authState: AuthState
 
     @Environment(SimplifiedModePreference.self) private var simplifiedPreference
+    @Environment(SyncEngine.self) private var syncEngine
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
 
     private var activeCircle: Circle? {
@@ -110,6 +111,39 @@ struct MoreView: View {
                     .foregroundStyle(Color.ccDanger)
                 }
 
+                Section("Backend sync") {
+                    LabeledContent("Status", value: syncStatusLabel)
+                        .foregroundStyle(Color.ccText)
+
+                    if syncEngine.pendingCount > 0 {
+                        LabeledContent("Pending", value: "\(syncEngine.pendingCount)")
+                            .foregroundStyle(Color.ccText)
+                    }
+
+                    if let lastSync = syncEngine.lastSyncAt {
+                        LabeledContent(
+                            "Last sync",
+                            value: lastSync.formatted(.relative(presentation: .named))
+                        )
+                        .foregroundStyle(Color.ccText)
+                    }
+
+                    if let lastError = syncEngine.lastError {
+                        Text(lastError)
+                            .font(.footnote)
+                            .foregroundStyle(Color.ccDanger)
+                    }
+
+                    if shouldShowRetry {
+                        Button {
+                            syncEngine.triggerDrain()
+                        } label: {
+                            Label("Retry sync now", systemImage: "arrow.clockwise")
+                                .foregroundStyle(Color.ccPrimary)
+                        }
+                    }
+                }
+
                 Section("About") {
                     LabeledContent("Version", value: Self.appVersion)
                         .foregroundStyle(Color.ccText)
@@ -121,6 +155,25 @@ struct MoreView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Color.ccBackground, for: .navigationBar)
         }
+    }
+
+    private var syncStatusLabel: String {
+        switch syncEngine.status {
+        case .idle:
+            "Up to date"
+        case .draining:
+            "Syncing…"
+        case .offline:
+            "Waiting to sign in"
+        case let .error(message):
+            message
+        }
+    }
+
+    private var shouldShowRetry: Bool {
+        if case .error = syncEngine.status { return true }
+        if syncEngine.pendingCount > 0, case .offline = syncEngine.status { return true }
+        return false
     }
 
     private static var appVersion: String {
