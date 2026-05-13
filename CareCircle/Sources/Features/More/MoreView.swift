@@ -57,6 +57,13 @@ struct MoreView: View {
                         }
 
                         NavigationLink {
+                            CareMinuteListView(circle: circle, viewerAppleUserID: signedInAppleUserID)
+                        } label: {
+                            Label("Care minutes", systemImage: "clock.badge.checkmark")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
                             EmergencyContactsView(circle: circle)
                         } label: {
                             Label("Emergency contacts", systemImage: "phone.badge.plus")

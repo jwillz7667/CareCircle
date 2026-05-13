@@ -26,6 +26,7 @@ struct CareCircleApp: App {
             Document.self,
             SOSEvent.self,
             EmergencyContact.self,
+            CareMinuteEntry.self,
         ])
         let configuration = ModelConfiguration(
             schema: schema,
