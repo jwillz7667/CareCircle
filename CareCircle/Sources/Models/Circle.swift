@@ -5,16 +5,16 @@ import SwiftData
 
 @Model
 final class Circle {
-    @Attribute(.unique) var id: UUID
-    var name: String
-    var ownerAppleUserID: String
-    var createdAt: Date
+    var id = UUID()
+    var name = ""
+    var ownerAppleUserID = ""
+    var createdAt = Date.now
 
     @Relationship(deleteRule: .cascade, inverse: \CareRecipient.circle)
     var careRecipient: CareRecipient?
 
     @Relationship(deleteRule: .cascade, inverse: \Member.circle)
-    var members: [Member]
+    var members: [Member] = []
 
     init(
         id: UUID = UUID(),

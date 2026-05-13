@@ -15,13 +15,20 @@ struct MoreView: View {
         return circles.first(where: { $0.ownerAppleUserID == user.id })
     }
 
+    private var signedInAppleUserID: String {
+        if case let .signedIn(user) = authState.status {
+            return user.id
+        }
+        return ""
+    }
+
     var body: some View {
         NavigationStack {
             List {
                 if let circle = activeCircle {
                     Section("Your Circle") {
                         NavigationLink {
-                            CircleDetailView(circle: circle)
+                            CircleDetailView(circle: circle, signedInAppleUserID: signedInAppleUserID)
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(circle.name)

@@ -5,16 +5,16 @@ import SwiftData
 
 @Model
 final class CareRecipient {
-    @Attribute(.unique) var id: UUID
-    var firstName: String
+    var id = UUID()
+    var firstName = ""
     var lastName: String?
     var dateOfBirth: Date?
 
     @Attribute(.externalStorage)
     var photoData: Data?
 
-    var primaryConditions: [String]
-    var createdAt: Date
+    var primaryConditions: [String] = []
+    var createdAt = Date.now
 
     var circle: Circle?
 

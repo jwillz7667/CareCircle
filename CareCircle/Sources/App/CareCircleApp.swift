@@ -6,6 +6,7 @@ import SwiftUI
 
 @main
 struct CareCircleApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authState = AuthState()
 
     let modelContainer: ModelContainer
@@ -14,7 +15,8 @@ struct CareCircleApp: App {
         let schema = Schema([Circle.self, CareRecipient.self, Member.self])
         let configuration = ModelConfiguration(
             schema: schema,
-            isStoredInMemoryOnly: false
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .private(CloudKitConfiguration.containerIdentifier)
         )
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [configuration])
@@ -29,6 +31,7 @@ struct CareCircleApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(authState: authState)
+                .environment(\.circleSharingService, CircleSharingService.shared)
         }
         .modelContainer(modelContainer)
     }

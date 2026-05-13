@@ -5,8 +5,17 @@ import SwiftUI
 
 struct CircleDetailView: View {
     let circle: Circle
+    let signedInAppleUserID: String
 
     @State private var isEditingRecipient = false
+
+    private var activeMemberCount: Int {
+        circle.members.count(where: { $0.status != .removed })
+    }
+
+    private var invitedMemberCount: Int {
+        circle.members.count(where: { $0.status == .invited })
+    }
 
     var body: some View {
         List {
@@ -71,27 +80,35 @@ struct CircleDetailView: View {
     }
 
     private var membersSection: some View {
-        Section("Members (\(circle.members.count))") {
-            ForEach(circle.members.sorted(by: { $0.joinedAt < $1.joinedAt })) { member in
-                memberRow(member)
+        Section("Members") {
+            NavigationLink {
+                MembersListView(circle: circle, signedInAppleUserID: signedInAppleUserID)
+            } label: {
+                HStack(spacing: Theme.spacing) {
+                    Image(systemName: "person.3.fill")
+                        .font(.system(size: 22, weight: .regular))
+                        .foregroundStyle(Color.ccPrimary)
+                        .frame(width: 36)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Members")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.ccText)
+                        Text(membersSummary)
+                            .font(.footnote)
+                            .foregroundStyle(Color.ccSecondary)
+                    }
+                }
             }
         }
     }
 
-    private func memberRow(_ member: Member) -> some View {
-        HStack(spacing: Theme.spacing) {
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 32, weight: .light))
-                .foregroundStyle(Color.ccPrimary)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(member.displayName)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(Color.ccText)
-                Text(member.role.displayName)
-                    .font(.footnote)
-                    .foregroundStyle(Color.ccSecondary)
-            }
+    private var membersSummary: String {
+        if invitedMemberCount > 0 {
+            return "\(activeMemberCount) active · \(invitedMemberCount) invited"
         }
+        if activeMemberCount == 1 {
+            return "1 active member"
+        }
+        return "\(activeMemberCount) active members"
     }
 }
