@@ -53,6 +53,7 @@ struct CareCircleApp: App {
                 .environment(\.circleSharingService, CircleSharingService.shared)
                 .environment(sosCenter)
                 .environment(simplifiedPreference)
+                .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)
     }

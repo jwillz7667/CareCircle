@@ -13,8 +13,10 @@ enum Theme {
 // MARK: - Color + CareCircle palette
 
 extension Color {
-    /// Sage green — primary brand color per spec C1.
-    static let ccPrimary = Color(red: 0.498, green: 0.624, blue: 0.541)
+    /// Forest green — primary brand color (per spec C1, deepened from the
+    /// original washed sage so it reads as a solid brand mark against the
+    /// warm-cream background and clears AA contrast for fill + text use.)
+    static let ccPrimary = Color(red: 0.176, green: 0.416, blue: 0.310)
 
     /// Warm cream — app background.
     static let ccBackground = Color(red: 0.969, green: 0.957, blue: 0.929)
