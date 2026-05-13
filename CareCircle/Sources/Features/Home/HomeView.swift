@@ -7,7 +7,9 @@ struct HomeView: View {
     let authState: AuthState
 
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
+    @Environment(SOSCenter.self) private var sosCenter
     @State private var isPresentingCreate = false
+    @State private var isPresentingSOSCountdown = false
 
     private var activeCircle: Circle? {
         guard case let .signedIn(user) = authState.status else {
@@ -16,8 +18,13 @@ struct HomeView: View {
         return circles.first(where: { $0.ownerAppleUserID == user.id })
     }
 
+    private var signedInUser: SignedInUser? {
+        if case let .signedIn(user) = authState.status { return user }
+        return nil
+    }
+
     private var authorContext: ActivityAuthorContext {
-        guard case let .signedIn(user) = authState.status else {
+        guard let user = signedInUser else {
             return ActivityAuthorContext(appleUserID: "", displayName: "")
         }
         return ActivityAuthorContext(appleUserID: user.id, displayName: user.displayName)
@@ -32,6 +39,12 @@ struct HomeView: View {
         }
         .sheet(isPresented: $isPresentingCreate) {
             CreateCircleView(authState: authState)
+        }
+        .fullScreenCover(isPresented: $isPresentingSOSCountdown) {
+            if let circle = activeCircle, let user = signedInUser {
+                SOSCountdownView(circle: circle, user: user, center: sosCenter)
+                    .onDisappear { sosCenter.reset() }
+            }
         }
     }
 
@@ -64,6 +77,16 @@ struct HomeView: View {
     }
 
     private func populatedHome(for circle: Circle) -> some View {
-        ActivityFeedView(circle: circle, author: authorContext)
+        VStack(spacing: 0) {
+            SOSTriggerButton(isAvailable: signedInUser != nil) {
+                isPresentingSOSCountdown = true
+            }
+            .padding(.horizontal, Theme.spacing)
+            .padding(.top, Theme.tightSpacing)
+            .padding(.bottom, Theme.tightSpacing)
+
+            ActivityFeedView(circle: circle, author: authorContext)
+        }
+        .background(Color.ccBackground)
     }
 }

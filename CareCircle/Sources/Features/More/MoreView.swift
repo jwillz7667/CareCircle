@@ -55,6 +55,20 @@ struct MoreView: View {
                             Label("Documents", systemImage: "folder.fill")
                                 .foregroundStyle(Color.ccText)
                         }
+
+                        NavigationLink {
+                            EmergencyContactsView(circle: circle)
+                        } label: {
+                            Label("Emergency contacts", systemImage: "phone.badge.plus")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
+                            SOSHistoryView(circle: circle, viewerAppleUserID: signedInAppleUserID)
+                        } label: {
+                            Label("SOS history", systemImage: "sos.circle")
+                                .foregroundStyle(Color.ccText)
+                        }
                     }
                 }
 

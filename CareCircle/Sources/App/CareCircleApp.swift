@@ -8,6 +8,7 @@ import SwiftUI
 struct CareCircleApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authState = AuthState()
+    @State private var sosCenter = SOSCenter()
 
     let modelContainer: ModelContainer
 
@@ -21,6 +22,10 @@ struct CareCircleApp: App {
             ActivityComment.self,
             Medication.self,
             DoseEvent.self,
+            Appointment.self,
+            Document.self,
+            SOSEvent.self,
+            EmergencyContact.self,
         ])
         let configuration = ModelConfiguration(
             schema: schema,
@@ -44,6 +49,7 @@ struct CareCircleApp: App {
         WindowGroup {
             RootView(authState: authState)
                 .environment(\.circleSharingService, CircleSharingService.shared)
+                .environment(sosCenter)
         }
         .modelContainer(modelContainer)
     }
