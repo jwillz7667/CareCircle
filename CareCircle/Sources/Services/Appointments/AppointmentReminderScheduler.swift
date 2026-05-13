@@ -92,7 +92,9 @@ struct AppointmentReminderScheduler {
         for appointment: Appointment,
         fireDate: Date,
         offsetMinutes: Int
-    ) -> UNNotificationRequest {
+    )
+        -> UNNotificationRequest
+    {
         let content = UNMutableNotificationContent()
         content.title = appointment.title
         if let location = appointment.location?.trimmingCharacters(in: .whitespacesAndNewlines),

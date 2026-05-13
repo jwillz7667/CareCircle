@@ -25,6 +25,7 @@
 --funcattributes prev-line
 --typeattributes prev-line
 --varattributes same-line
+--modifierorder nonisolated,override,public,internal,fileprivate,private,fileprivate(set),private(set),open,static,dynamic,optional,lazy,final,required,convenience,weak,unowned
 --shortoptionals always
 --redundanttype inferred
 --patternlet hoist

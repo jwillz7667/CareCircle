@@ -48,6 +48,13 @@ struct MoreView: View {
                             Label("Calendar", systemImage: "calendar")
                                 .foregroundStyle(Color.ccText)
                         }
+
+                        NavigationLink {
+                            DocumentListView(circle: circle, viewerAppleUserID: signedInAppleUserID)
+                        } label: {
+                            Label("Documents", systemImage: "folder.fill")
+                                .foregroundStyle(Color.ccText)
+                        }
                     }
                 }
 

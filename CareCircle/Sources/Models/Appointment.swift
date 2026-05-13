@@ -10,12 +10,12 @@ final class Appointment {
     var provider: String?
     var location: String?
     var startsAt = Date.now
-    var durationMinutes: Int = 60
+    var durationMinutes = 60
     var prepNotes: String?
     var visitSummary: String?
     var transportResponsibleAppleUserID: String?
     var transportResponsibleDisplayName: String?
-    var reminderOffsetsMinutes: [Int] = [1440, 60]
+    var reminderOffsetsMinutes: [Int] = [1_440, 60]
     var completedAt: Date?
     var createdByAppleUserID = ""
     var createdByDisplayName = ""
@@ -35,7 +35,7 @@ final class Appointment {
         visitSummary: String? = nil,
         transportResponsibleAppleUserID: String? = nil,
         transportResponsibleDisplayName: String? = nil,
-        reminderOffsetsMinutes: [Int] = [1440, 60],
+        reminderOffsetsMinutes: [Int] = [1_440, 60],
         completedAt: Date? = nil,
         createdByAppleUserID: String,
         createdByDisplayName: String,
