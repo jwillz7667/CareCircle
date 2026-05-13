@@ -19,6 +19,7 @@ xcuserdata/
 .build/
 .swiftpm/
 Packages/
+!backend/packages/
 Package.pins
 Package.resolved
 *.xcodeproj/xcuserdata/
