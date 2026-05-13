@@ -1,22 +1,75 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - HomeView
 
 struct HomeView: View {
+    let authState: AuthState
+
+    @Query(sort: \Circle.createdAt) private var circles: [Circle]
+    @State private var isPresentingCreate = false
+
+    private var activeCircle: Circle? {
+        guard case let .signedIn(user) = authState.status else {
+            return circles.first
+        }
+        return circles.first(where: { $0.ownerAppleUserID == user.id })
+    }
+
     var body: some View {
         NavigationStack {
+            content
+                .navigationTitle("Home")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbarBackground(Color.ccBackground, for: .navigationBar)
+        }
+        .sheet(isPresented: $isPresentingCreate) {
+            CreateCircleView(authState: authState)
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let circle = activeCircle {
+            populatedHome(for: circle)
+        } else {
+            emptyHome
+        }
+    }
+
+    private var emptyHome: some View {
+        ZStack(alignment: .bottom) {
             EmptyStateView(
                 systemImage: "house.fill",
                 title: "Welcome to CareCircle",
-                message: "Record your first handoff to keep everyone aligned."
+                message: "Create your Circle to begin coordinating care with family."
             )
-            .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(Color.ccBackground, for: .navigationBar)
+
+            Button {
+                isPresentingCreate = true
+            } label: {
+                Label("Create your Circle", systemImage: "plus.circle.fill")
+            }
+            .buttonStyle(.ccPrimary)
+            .padding(.horizontal, Theme.looseSpacing)
+            .padding(.bottom, Theme.looseSpacing)
         }
     }
-}
 
-#Preview {
-    HomeView()
+    private func populatedHome(for circle: Circle) -> some View {
+        ScrollView {
+            VStack(spacing: Theme.looseSpacing) {
+                CircleHero(circleName: circle.name, recipient: circle.careRecipient)
+                    .padding(.horizontal, Theme.spacing)
+
+                Text("No recent activity yet.")
+                    .font(.body)
+                    .foregroundStyle(Color.ccSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Theme.looseSpacing)
+            }
+            .padding(.top, Theme.spacing)
+        }
+        .background(Color.ccBackground)
+    }
 }

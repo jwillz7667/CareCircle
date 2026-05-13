@@ -35,9 +35,9 @@ A Railway-Postgres backend alternative is documented at @docs/CARECIRCLE_DATABAS
 ## Workflow rules
 - Follow EXPLORE → PLAN → CODE → COMMIT for every phase per @docs/CARECIRCLE_BUILD_PROMPT.md.
 - Write the phase plan to `docs/phases/PHASE_<N>_PLAN.md` BEFORE coding.
-- Stop for explicit user approval after PLAN and after COMMIT.
+- **User has delegated approval**: do NOT stop after PLAN or COMMIT to ask "ready?" — chain straight into the next phase. Pause only for genuinely ambiguous product decisions or actions that require the Xcode UI (target creation, capability changes the entitlements file can't express).
 - After every logical chunk, run `xcodebuild` build + tests. Red bar = stop and fix.
-- Commits are user-authorized. Stage and summarize; do not commit unless explicitly told.
+- Commit + push after each phase; conventional-commits message, no AI attribution.
 
 ## Style essentials
 - `@Observable` macro, not `ObservableObject`.
@@ -107,6 +107,9 @@ CloudKit-only, no custom backend. Each Circle is backed by a `CKShare` in the ow
 - **`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`** is set project-wide (Xcode 26 default). Every type and free function is implicitly `@MainActor` unless explicitly marked otherwise. Mark `Sendable` value types that don't touch UI state as `nonisolated` (e.g. `nonisolated struct KeychainStore`), otherwise default-value expressions in `@MainActor` initializers will warn about cross-isolation calls.
 - **`MemberImportVisibility` is on.** Each `.swift` file must `import` every module whose extension methods it calls — re-exports don't count. Calling `Logger.critical(...)` requires `import OSLog` in the file that calls it, not just in the file that defines the `Logger` constants.
 - **Typed `throws(SomeError)` makes `catch let e as SomeError` redundant** — Swift narrows the bound error type automatically, so the cast is `'as' test is always true`. Use a single un-typed `catch` for typed-throws functions.
+- **`Logger.error("... \(self.prop, privacy: .public) ...")` requires explicit `self.` to satisfy Swift's escaping-closure capture rules.** swiftformat's `--self remove` strips it, producing `reference to property 'X' in closure requires explicit use of 'self' to make capture semantics explicit`. Workaround: bind to a local first — `let observed = roleRaw; AppLogger.x.error("... \(observed, privacy: .public) ...")`. Don't fight swiftformat.
+- **SwiftData model named `Circle` shadows `SwiftUI.Circle`** in this app's module. Swift's local-type-first lookup means bare `Circle` in `.swift` files (that import SwiftUI) resolves to the SwiftData model. For circular shapes, prefer `.clipShape(.circle)` (DSL static member) or fully qualify `SwiftUI.Circle()`. xcodebuild builds cleanly even though SourceKit shows phantom name-collision errors on freshly-created files until reindex.
+- **Stale SourceKit diagnostics on new files** routinely show "Cannot find type X in scope" for cross-file references in the same module. xcodebuild is the source of truth — if it builds and lints clean, ignore SourceKit's errors until it reindexes.
 - HealthKit reads on Simulator return empty; test on device or with mock data.
 - `CKShare` URLs only resolve on devices logged into iCloud. Simulator handling requires a workaround that will be documented in `docs/cloudkit_testing.md` once we hit it (Phase 3).
 - `SFSpeechRecognizer.requiresOnDeviceRecognition = true` is supported on iPhone 11 and later for English. Fall back explicitly for older devices.

@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - MoreView
@@ -5,9 +6,37 @@ import SwiftUI
 struct MoreView: View {
     let authState: AuthState
 
+    @Query(sort: \Circle.createdAt) private var circles: [Circle]
+
+    private var activeCircle: Circle? {
+        guard case let .signedIn(user) = authState.status else {
+            return circles.first
+        }
+        return circles.first(where: { $0.ownerAppleUserID == user.id })
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                if let circle = activeCircle {
+                    Section("Your Circle") {
+                        NavigationLink {
+                            CircleDetailView(circle: circle)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(circle.name)
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(Color.ccText)
+                                if let recipient = circle.careRecipient {
+                                    Text(recipient.fullName)
+                                        .font(.footnote)
+                                        .foregroundStyle(Color.ccSecondary)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Section("Account") {
                     if case let .signedIn(user) = authState.status {
                         LabeledContent("Signed in as", value: user.displayName)
