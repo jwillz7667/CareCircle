@@ -21,8 +21,16 @@ final class Medication {
 
     var circle: Circle?
 
+    // SwiftData + CloudKit requires to-many relationships to be optional.
+    // `doseEventsStore` is the CloudKit-facing storage; `doseEvents` is a
+    // non-optional computed accessor so call sites read it as `[DoseEvent]`.
     @Relationship(deleteRule: .cascade, inverse: \DoseEvent.medication)
-    var doseEvents: [DoseEvent] = []
+    var doseEventsStore: [DoseEvent]?
+
+    var doseEvents: [DoseEvent] {
+        get { doseEventsStore ?? [] }
+        set { doseEventsStore = newValue }
+    }
 
     var form: MedicationForm {
         get { MedicationForm(rawValue: formRaw) ?? .other }

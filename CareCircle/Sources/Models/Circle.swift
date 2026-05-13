@@ -13,29 +13,73 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \CareRecipient.circle)
     var careRecipient: CareRecipient?
 
+    // SwiftData + CloudKit requires to-many relationships to be optional.
+    // We keep optional `*Store` properties as the CloudKit-facing storage
+    // and expose non-optional `members`, `activities`, ... via computed
+    // accessors so the rest of the app reads them as ordinary `[Foo]`.
     @Relationship(deleteRule: .cascade, inverse: \Member.circle)
-    var members: [Member] = []
+    var membersStore: [Member]?
 
     @Relationship(deleteRule: .cascade, inverse: \Activity.circle)
-    var activities: [Activity] = []
+    var activitiesStore: [Activity]?
 
     @Relationship(deleteRule: .cascade, inverse: \Medication.circle)
-    var medications: [Medication] = []
+    var medicationsStore: [Medication]?
 
     @Relationship(deleteRule: .cascade, inverse: \Appointment.circle)
-    var appointments: [Appointment] = []
+    var appointmentsStore: [Appointment]?
 
     @Relationship(deleteRule: .cascade, inverse: \Document.circle)
-    var documents: [Document] = []
+    var documentsStore: [Document]?
 
     @Relationship(deleteRule: .cascade, inverse: \SOSEvent.circle)
-    var sosEvents: [SOSEvent] = []
+    var sosEventsStore: [SOSEvent]?
 
     @Relationship(deleteRule: .cascade, inverse: \EmergencyContact.circle)
-    var emergencyContacts: [EmergencyContact] = []
+    var emergencyContactsStore: [EmergencyContact]?
 
     @Relationship(deleteRule: .cascade, inverse: \CareMinuteEntry.circle)
-    var careMinuteEntries: [CareMinuteEntry] = []
+    var careMinuteEntriesStore: [CareMinuteEntry]?
+
+    var members: [Member] {
+        get { membersStore ?? [] }
+        set { membersStore = newValue }
+    }
+
+    var activities: [Activity] {
+        get { activitiesStore ?? [] }
+        set { activitiesStore = newValue }
+    }
+
+    var medications: [Medication] {
+        get { medicationsStore ?? [] }
+        set { medicationsStore = newValue }
+    }
+
+    var appointments: [Appointment] {
+        get { appointmentsStore ?? [] }
+        set { appointmentsStore = newValue }
+    }
+
+    var documents: [Document] {
+        get { documentsStore ?? [] }
+        set { documentsStore = newValue }
+    }
+
+    var sosEvents: [SOSEvent] {
+        get { sosEventsStore ?? [] }
+        set { sosEventsStore = newValue }
+    }
+
+    var emergencyContacts: [EmergencyContact] {
+        get { emergencyContactsStore ?? [] }
+        set { emergencyContactsStore = newValue }
+    }
+
+    var careMinuteEntries: [CareMinuteEntry] {
+        get { careMinuteEntriesStore ?? [] }
+        set { careMinuteEntriesStore = newValue }
+    }
 
     init(
         id: UUID = UUID(),
@@ -57,13 +101,13 @@ final class Circle {
         self.ownerAppleUserID = ownerAppleUserID
         self.createdAt = createdAt
         self.careRecipient = careRecipient
-        self.members = members
-        self.activities = activities
-        self.medications = medications
-        self.appointments = appointments
-        self.documents = documents
-        self.sosEvents = sosEvents
-        self.emergencyContacts = emergencyContacts
-        self.careMinuteEntries = careMinuteEntries
+        membersStore = members
+        activitiesStore = activities
+        medicationsStore = medications
+        appointmentsStore = appointments
+        documentsStore = documents
+        sosEventsStore = sosEvents
+        emergencyContactsStore = emergencyContacts
+        careMinuteEntriesStore = careMinuteEntries
     }
 }

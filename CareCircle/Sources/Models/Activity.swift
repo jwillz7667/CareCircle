@@ -25,11 +25,25 @@ final class Activity {
 
     var circle: Circle?
 
+    // SwiftData + CloudKit requires to-many relationships to be optional.
+    // We keep the optional `*Store` properties as the CloudKit-facing storage
+    // and expose non-optional `reactions`/`comments` via computed accessors so
+    // the rest of the app reads them as ordinary `[Foo]`.
     @Relationship(deleteRule: .cascade, inverse: \ActivityReaction.activity)
-    var reactions: [ActivityReaction] = []
+    var reactionsStore: [ActivityReaction]?
 
     @Relationship(deleteRule: .cascade, inverse: \ActivityComment.activity)
-    var comments: [ActivityComment] = []
+    var commentsStore: [ActivityComment]?
+
+    var reactions: [ActivityReaction] {
+        get { reactionsStore ?? [] }
+        set { reactionsStore = newValue }
+    }
+
+    var comments: [ActivityComment] {
+        get { commentsStore ?? [] }
+        set { commentsStore = newValue }
+    }
 
     var type: ActivityType {
         get {
