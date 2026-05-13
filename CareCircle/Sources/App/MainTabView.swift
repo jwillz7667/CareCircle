@@ -17,7 +17,7 @@ struct MainTabView: View {
                     Label("Today", systemImage: "list.bullet.clipboard.fill")
                 }
 
-            MedsView()
+            MedsView(authState: authState)
                 .tabItem {
                     Label("Meds", systemImage: "pills.fill")
                 }

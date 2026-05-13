@@ -1,9 +1,13 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - RootView
 
 struct RootView: View {
     let authState: AuthState
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -20,6 +24,11 @@ struct RootView: View {
         .task {
             if authState.status == .unknown {
                 await authState.bootstrap()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active, isSignedIn {
+                MedicationOverdueSweeper().sweep(in: modelContext)
             }
         }
     }

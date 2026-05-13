@@ -19,6 +19,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \Activity.circle)
     var activities: [Activity] = []
 
+    @Relationship(deleteRule: .cascade, inverse: \Medication.circle)
+    var medications: [Medication] = []
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -26,7 +29,8 @@ final class Circle {
         createdAt: Date = .now,
         careRecipient: CareRecipient? = nil,
         members: [Member] = [],
-        activities: [Activity] = []
+        activities: [Activity] = [],
+        medications: [Medication] = []
     ) {
         self.id = id
         self.name = name
@@ -35,5 +39,6 @@ final class Circle {
         self.careRecipient = careRecipient
         self.members = members
         self.activities = activities
+        self.medications = medications
     }
 }

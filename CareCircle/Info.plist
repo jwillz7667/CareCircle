@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>CareCircle uses the camera to scan medication labels so you can add prescriptions without typing.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>CareCircle records voice handoff notes so caregivers can leave hands-free updates for the Circle.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

@@ -19,6 +19,8 @@ struct CareCircleApp: App {
             Activity.self,
             ActivityReaction.self,
             ActivityComment.self,
+            Medication.self,
+            DoseEvent.self,
         ])
         let configuration = ModelConfiguration(
             schema: schema,
@@ -32,6 +34,9 @@ struct CareCircleApp: App {
                 "Failed to initialize ModelContainer: \(error.localizedDescription, privacy: .public)"
             )
             fatalError("Unable to initialize SwiftData ModelContainer: \(error)")
+        }
+        MainActor.assumeIsolated {
+            MedicationServices.shared.install(modelContainer: modelContainer)
         }
     }
 
