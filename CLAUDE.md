@@ -3,21 +3,20 @@
 This file is loaded into context on every Claude Code session. Keep it tight.
 
 ## What this project is
-iOS family-caregiving coordination app. SwiftUI + SwiftData + CloudKit.
-Full spec: @docs/CARECIRCLE_SPEC.md. Phased build plan: @docs/CARECIRCLE_BUILD_PROMPT.md. Phase plans: @docs/phases/.
-
-A Railway-Postgres backend alternative is documented at @docs/CARECIRCLE_DATABASE_SPEC.md but is **NOT in v1 scope** — v1 is CloudKit-only.
+iOS family-caregiving coordination app. SwiftUI + SwiftData with a hybrid sync layer: CloudKit for in-family Circle sharing, plus a Railway-Postgres backend (Phase 13, shipped) for backend-of-record persistence, cross-platform reach, and the eventual B2B path.
+Full spec: @docs/CARECIRCLE_SPEC.md. Backend spec: @docs/CARECIRCLE_DATABASE_SPEC.md. Phased build plan: @docs/CARECIRCLE_BUILD_PROMPT.md. Phase plans: @docs/phases/.
 
 ## Stack
-- Swift 6, SwiftUI, SwiftData, CloudKit (private + shared databases)
+- **iOS:** Swift 6, SwiftUI, SwiftData, CloudKit (private + shared databases for Circle sharing)
+- **Backend:** Node.js 22 + Fastify 5 + PostgreSQL 16 + Redis + MinIO on Railway (monorepo under `backend/`)
 - Swift Testing framework for unit tests; XCUITest reserved for late-phase critical flows only
 - swiftformat + swiftlint enforced (configs at root)
-- Sign in with Apple is the only auth path
-- Spec text says iOS 17+; the Xcode project deployment target is iOS 26.4. Lower it before TestFlight if older-device support is required for v1.
+- Sign in with Apple is the only auth path (iOS and backend)
+- iOS deployment target: **17.0** (lowered from 26.4 on 2026-05-13 for TestFlight reach).
 
 ## Project configuration facts
 - Single target/scheme `CareCircle`. Bundle ID `Res.CareCircle`. Dev team `487LC4H9U4`.
-- Entitlements file: `CareCircle/CareCircle.entitlements`. Has Sign in with Apple, CloudKit (`iCloud.Res.CareCircle`), and APNs (`aps-environment = development`).
+- Entitlements file: `CareCircle/CareCircle.entitlements`. Has Sign in with Apple, CloudKit (`iCloud.Res.CareCircle`), and APNs (`aps-environment = development`). Critical Alerts entitlement application filed with Apple (see @docs/CRITICAL_ALERTS_APPLICATION.md); add `com.apple.developer.usernotifications.critical-alerts` once approved.
 - `Info.plist` is in the synchronized-folder membership exception list and is managed via the project's Build Settings / Info tab in Xcode.
 - The Xcode project uses `PBXFileSystemSynchronizedRootGroup` rooted at `CareCircle/`. **Any `.swift` file placed under `CareCircle/` is automatically added to the app target — you do not need to edit `project.pbxproj` to add Swift sources.**
 - No test target exists yet. When tests are added, the user must create a Unit Testing Bundle in Xcode (File ▸ New ▸ Target). The future test target's synchronized root should be the top-level `CareCircleTests/` folder (which already exists with `Unit/` and `Integration/` subdirs). It MUST live outside `CareCircle/` so test files don't accidentally join the app target via the app's synchronized root group.
@@ -97,9 +96,15 @@ For interactive work, open `CareCircle.xcodeproj` in Xcode 26.
 6. **SF Symbols only for icons in v1.** No custom raster icons until polish phase.
 7. **Apply for the Critical Alert entitlement early.** Required for SOS (Phase 10) and missed-critical-meds escalations. Apple grants case by case. App must still work if denied (fall back to time-sensitive notifications). (Spec §5.5.)
 
-## Architecture (v1)
+## Architecture
 
-CloudKit-only, no custom backend. Each Circle is backed by a `CKShare` in the owner's private database; other members access via `CKContainer.default().sharedCloudDatabase`. Per-circle `CKRecordZone` keyed on the Circle UUID enables clean full-deletion. Sensitive document data is encrypted client-side with `CryptoKit` (AES-256-GCM) before write — the per-circle symmetric key lives in iCloud Keychain and propagates to members via CKShare invitation flow. (Spec §5.3.)
+Two-tier sync model:
+
+**CloudKit layer (in-app sharing).** Each Circle is backed by a `CKShare` in the owner's private database; other members access via `CKContainer.default().sharedCloudDatabase`. Per-circle `CKRecordZone` keyed on the Circle UUID enables clean full-deletion. Sensitive document data is encrypted client-side with `CryptoKit` (AES-256-GCM) before write — the per-circle symmetric key lives in iCloud Keychain and propagates to members via CKShare invitation flow. (Spec §5.3.)
+
+**Railway backend layer (backend-of-record).** Postgres 16 with FORCE RLS on every PHI table, pgcrypto envelope encryption (master key wraps per-circle DEKs), append-only audit log, LISTEN/NOTIFY → WebSocket fanout. Fastify 5 API + BullMQ worker. MinIO for object storage (E2EE for documents, server-side encryption for photos/voice). Sign in with Apple JWT verification, 15-min access tokens with 30-day refresh rotation. (Backend spec @docs/CARECIRCLE_DATABASE_SPEC.md.)
+
+iOS app currently writes through CloudKit only — the Railway backend is built and tested (68/68 integration tests) but the iOS `APIClient` + `SyncEngine` migration to write to both paths is a future task. New iOS features should keep working through SwiftData + CloudKit until that migration lands.
 
 ## Platform gotchas (add new entries as we discover them)
 
