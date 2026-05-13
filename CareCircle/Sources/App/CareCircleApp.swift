@@ -12,7 +12,14 @@ struct CareCircleApp: App {
     let modelContainer: ModelContainer
 
     init() {
-        let schema = Schema([Circle.self, CareRecipient.self, Member.self])
+        let schema = Schema([
+            Circle.self,
+            CareRecipient.self,
+            Member.self,
+            Activity.self,
+            ActivityReaction.self,
+            ActivityComment.self,
+        ])
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,

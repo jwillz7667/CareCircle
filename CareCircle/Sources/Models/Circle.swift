@@ -16,13 +16,17 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \Member.circle)
     var members: [Member] = []
 
+    @Relationship(deleteRule: .cascade, inverse: \Activity.circle)
+    var activities: [Activity] = []
+
     init(
         id: UUID = UUID(),
         name: String,
         ownerAppleUserID: String,
         createdAt: Date = .now,
         careRecipient: CareRecipient? = nil,
-        members: [Member] = []
+        members: [Member] = [],
+        activities: [Activity] = []
     ) {
         self.id = id
         self.name = name
@@ -30,5 +34,6 @@ final class Circle {
         self.createdAt = createdAt
         self.careRecipient = careRecipient
         self.members = members
+        self.activities = activities
     }
 }

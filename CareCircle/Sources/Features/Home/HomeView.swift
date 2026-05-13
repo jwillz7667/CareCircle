@@ -16,6 +16,13 @@ struct HomeView: View {
         return circles.first(where: { $0.ownerAppleUserID == user.id })
     }
 
+    private var authorContext: ActivityAuthorContext {
+        guard case let .signedIn(user) = authState.status else {
+            return ActivityAuthorContext(appleUserID: "", displayName: "")
+        }
+        return ActivityAuthorContext(appleUserID: user.id, displayName: user.displayName)
+    }
+
     var body: some View {
         NavigationStack {
             content
@@ -57,19 +64,6 @@ struct HomeView: View {
     }
 
     private func populatedHome(for circle: Circle) -> some View {
-        ScrollView {
-            VStack(spacing: Theme.looseSpacing) {
-                CircleHero(circleName: circle.name, recipient: circle.careRecipient)
-                    .padding(.horizontal, Theme.spacing)
-
-                Text("No recent activity yet.")
-                    .font(.body)
-                    .foregroundStyle(Color.ccSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Theme.looseSpacing)
-            }
-            .padding(.top, Theme.spacing)
-        }
-        .background(Color.ccBackground)
+        ActivityFeedView(circle: circle, author: authorContext)
     }
 }
