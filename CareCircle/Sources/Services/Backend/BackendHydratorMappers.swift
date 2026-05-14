@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - BackendHydratorMappers
+
 //
 // Pure DTO → SwiftData model converters used by `BackendHydrator`.
 // Lives in its own file so `BackendHydrator.swift` stays the orchestrator
@@ -121,13 +122,41 @@ enum BackendHydratorMappers {
         return event
     }
 
+    /// Documents hydrate as **placeholders**: backend metadata is
+    /// authoritative but the encrypted blob still lives in MinIO. The
+    /// caller's `BackendDocumentService` would have to GET the
+    /// presigned download URL + decrypt with the per-circle DEK to
+    /// produce viewable plaintext, neither of which is wired in v1.
+    /// The empty `ciphertext/nonce/tag` triple plus the populated
+    /// `backendObjectKey` is what `DocumentRowView` reads to render the
+    /// "Backend only" badge.
+    static func makeDocumentPlaceholder(from dto: DocumentDTO) -> Document {
+        Document(
+            id: parseUUID(dto.id) ?? UUID(),
+            title: dto.title,
+            type: DocumentType(rawValue: dto.documentType) ?? .other,
+            mimeType: dto.mimeType,
+            sizeBytes: dto.sizeBytes,
+            ciphertext: Data(),
+            nonce: Data(),
+            tag: Data(),
+            issuedAt: parseShortDate(dto.issuedAt),
+            expiresAt: parseShortDate(dto.expiresAt),
+            visibilityRoles: DocumentVisibility.defaultRoles,
+            uploadedByAppleUserID: dto.uploadedBy,
+            uploadedByDisplayName: "",
+            createdAt: dto.createdAt,
+            backendObjectKey: dto.objectKey
+        )
+    }
+
     // MARK: - Parsing helpers
 
     static func parseUUID(_ raw: String) -> UUID? {
         UUID(uuidString: raw)
     }
 
-    nonisolated(unsafe) private static let shortDateFormatter: DateFormatter = {
+    private static let shortDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(identifier: "en_US_POSIX")

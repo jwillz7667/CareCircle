@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - BackendReadDTOs
+
 //
 // Decoded payloads for the inbound hydration reads (Phase 16). Each
 // response struct mirrors a single GET handler in the Railway backend.
@@ -75,10 +76,6 @@ nonisolated struct ScheduleEnvelope: Decodable, Sendable, Equatable {
         let value = try container.decode(JSONValue.self)
         let data = try JSONEncoder().encode(value)
         rawJSON = String(data: data, encoding: .utf8) ?? ""
-    }
-
-    static func == (lhs: ScheduleEnvelope, rhs: ScheduleEnvelope) -> Bool {
-        lhs.rawJSON == rhs.rawJSON
     }
 }
 
@@ -166,6 +163,39 @@ nonisolated struct SOSEventDTO: Decodable, Sendable, Equatable {
     let canceledBy: String?
     let locationLat: Double?
     let locationLng: Double?
+}
+
+// MARK: - Documents
+
+nonisolated struct DocumentsResponse: Decodable, Sendable, Equatable {
+    let documents: [DocumentDTO]
+}
+
+nonisolated struct DocumentDTO: Decodable, Sendable, Equatable {
+    let id: String
+    let title: String
+    let documentType: String
+    let objectKey: String
+    let mimeType: String
+    let sizeBytes: Int
+    /// `YYYY-MM-DD` UTC strings; backend slices off the time component.
+    let issuedAt: String?
+    let expiresAt: String?
+    let uploadedBy: String
+    let createdAt: Date
+}
+
+/// Response from `POST /v1/circles/:id/documents/upload-url`.
+nonisolated struct DocumentUploadURLResponse: Decodable, Sendable, Equatable {
+    let bucket: String
+    let objectKey: String
+    let url: String
+    let expiresInSeconds: Int
+}
+
+/// Response from `POST /v1/circles/:id/documents`.
+nonisolated struct DocumentCreateResponse: Decodable, Sendable, Equatable {
+    let id: String
 }
 
 // MARK: - JSONValue

@@ -93,6 +93,7 @@ final class BackendHydrator {
             try await hydrateMembers(circleId: circleId, modelContext: modelContext)
             try await hydrateCareMinutes(circleId: circleId, modelContext: modelContext)
             try await hydrateSOSEvents(circleId: circleId, modelContext: modelContext)
+            try await hydrateDocuments(circleId: circleId, modelContext: modelContext)
 
             try modelContext.save()
             lastError = nil
@@ -280,13 +281,37 @@ final class BackendHydrator {
         )
     }
 
+    private func hydrateDocuments(circleId: UUID, modelContext: ModelContext) async throws {
+        guard localCount(of: Document.self, in: circleId, modelContext: modelContext) == 0 else {
+            AppLogger.backend.debug("Documents skipped — local store is not empty.")
+            return
+        }
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+
+        let response: DocumentsResponse = try await apiClient.send(
+            method: .get,
+            path: "/v1/circles/\(circleId.uuidString.lowercased())/documents",
+            authenticated: true
+        )
+        for dto in response.documents {
+            let document = BackendHydratorMappers.makeDocumentPlaceholder(from: dto)
+            document.circle = circle
+            modelContext.insert(document)
+        }
+        AppLogger.backend.info(
+            "Hydrated \(response.documents.count, privacy: .public) document placeholders."
+        )
+    }
+
     // MARK: - Local count + circle lookup
 
     private func localCount<Model: PersistentModel>(
         of _: Model.Type,
         in circleId: UUID,
         modelContext: ModelContext
-    ) -> Int {
+    )
+        -> Int
+    {
         // Predicate over a `Circle?` relationship is awkward for the SwiftData
         // macro; fetching the typed list and counting matching `circle?.id`
         // values is correct and equally fast for the small per-circle row
@@ -307,14 +332,15 @@ final class BackendHydrator {
 
     private static func circleId(of row: any PersistentModel) -> UUID? {
         switch row {
-        case let row as Activity: return row.circle?.id
-        case let row as Medication: return row.circle?.id
-        case let row as Appointment: return row.circle?.id
-        case let row as EmergencyContact: return row.circle?.id
-        case let row as Member: return row.circle?.id
-        case let row as CareMinuteEntry: return row.circle?.id
-        case let row as SOSEvent: return row.circle?.id
-        default: return nil
+        case let row as Activity: row.circle?.id
+        case let row as Medication: row.circle?.id
+        case let row as Appointment: row.circle?.id
+        case let row as EmergencyContact: row.circle?.id
+        case let row as Member: row.circle?.id
+        case let row as CareMinuteEntry: row.circle?.id
+        case let row as SOSEvent: row.circle?.id
+        case let row as Document: row.circle?.id
+        default: nil
         }
     }
 

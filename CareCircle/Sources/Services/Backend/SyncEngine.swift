@@ -233,26 +233,6 @@ final class SyncEngine {
         )
     }
 
-    func enqueueDocumentCreate(_ document: Document) {
-        enqueue(
-            operationType: SyncOperationType.createDocument,
-            circleId: document.circle?.id,
-            payload: CreateDocumentPayload(
-                documentId: document.id,
-                title: document.title,
-                type: document.type.rawValue,
-                mimeType: document.mimeType,
-                sizeBytes: document.sizeBytes,
-                issuedAt: document.issuedAt,
-                expiresAt: document.expiresAt,
-                visibilityRoles: document.visibilityRoles.map(\.rawValue),
-                uploadedByAppleUserID: document.uploadedByAppleUserID,
-                uploadedByDisplayName: document.uploadedByDisplayName,
-                createdAt: document.createdAt
-            )
-        )
-    }
-
     private func enqueue(
         operationType: String,
         circleId: UUID?,
@@ -367,7 +347,9 @@ final class SyncEngine {
     private func sendChunk(
         _ chunk: [PendingOperation],
         context: ModelContext
-    ) async -> ChunkOutcome {
+    ) async
+        -> ChunkOutcome
+    {
         let bodyData: Data
         do {
             bodyData = try buildBatchBody(operations: chunk)
@@ -407,7 +389,9 @@ final class SyncEngine {
         _ error: APIError,
         chunk: [PendingOperation],
         context: ModelContext
-    ) -> ChunkOutcome {
+    )
+        -> ChunkOutcome
+    {
         let message = error.errorDescription ?? "Sync failed."
         if error.isAuthFailure {
             AppLogger.sync.notice("Sync deferred: \(message, privacy: .public)")

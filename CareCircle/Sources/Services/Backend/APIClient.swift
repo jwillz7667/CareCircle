@@ -210,7 +210,9 @@ actor APIClient {
         path: String,
         body: Data?,
         authenticated: Bool
-    ) async throws(APIError) -> URLRequest {
+    ) async throws(APIError)
+        -> URLRequest
+    {
         let url = configuration.baseURL.appendingPathComponent(path)
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
@@ -228,7 +230,9 @@ actor APIClient {
 
     private func executeRequest(
         _ request: URLRequest
-    ) async throws(APIError) -> (Data, HTTPURLResponse) {
+    ) async throws(APIError)
+        -> (Data, HTTPURLResponse)
+    {
         do {
             let (data, response) = try await urlSession.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse else {

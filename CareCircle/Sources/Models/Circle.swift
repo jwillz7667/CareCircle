@@ -13,10 +13,10 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \CareRecipient.circle)
     var careRecipient: CareRecipient?
 
-    // SwiftData + CloudKit requires to-many relationships to be optional.
-    // We keep optional `*Store` properties as the CloudKit-facing storage
-    // and expose non-optional `members`, `activities`, ... via computed
-    // accessors so the rest of the app reads them as ordinary `[Foo]`.
+    /// SwiftData + CloudKit requires to-many relationships to be optional.
+    /// We keep optional `*Store` properties as the CloudKit-facing storage
+    /// and expose non-optional `members`, `activities`, ... via computed
+    /// accessors so the rest of the app reads them as ordinary `[Foo]`.
     @Relationship(deleteRule: .cascade, inverse: \Member.circle)
     var membersStore: [Member]?
 

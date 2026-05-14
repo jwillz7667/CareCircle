@@ -15,7 +15,6 @@ enum SyncOperationType {
     static let createEmergencyContact = "create_emergency_contact"
     static let createCareMinuteEntry = "create_care_minute_entry"
     static let createSOSEvent = "create_sos_event"
-    static let createDocument = "create_document"
 }
 
 // MARK: - Activity
@@ -135,25 +134,6 @@ nonisolated struct CreateSOSEventPayload: Codable, Sendable, Equatable {
     let latitude: Double?
     let longitude: Double?
     let locationAccuracyMeters: Double?
-}
-
-// MARK: - Documents
-
-/// Metadata-only mirror. The encrypted blob still lives on CloudKit;
-/// MinIO presign upload flow ships in a later phase, at which point
-/// the backend row will be patched with the resulting object key.
-nonisolated struct CreateDocumentPayload: Codable, Sendable, Equatable {
-    let documentId: UUID
-    let title: String
-    let type: String
-    let mimeType: String
-    let sizeBytes: Int
-    let issuedAt: Date?
-    let expiresAt: Date?
-    let visibilityRoles: [String]
-    let uploadedByAppleUserID: String
-    let uploadedByDisplayName: String
-    let createdAt: Date
 }
 
 // MARK: - Sync wire format

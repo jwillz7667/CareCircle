@@ -9,6 +9,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @Environment(BackendHydrator.self) private var hydrator
+    @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
     @State private var didHydrateThisLaunch = false
 
     var body: some View {
@@ -35,6 +36,7 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active, isSignedIn {
                 MedicationOverdueSweeper().sweep(in: modelContext)
+                documentSweeper.triggerSweep(modelContext: modelContext)
                 Task {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
@@ -49,6 +51,7 @@ struct RootView: View {
               authState.lastVerifiedProfile != nil else { return }
         didHydrateThisLaunch = true
         hydrator.triggerHydrateAll(modelContext: modelContext)
+        documentSweeper.triggerSweep(modelContext: modelContext)
     }
 
     private var isSignedIn: Bool {

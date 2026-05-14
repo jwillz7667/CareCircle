@@ -17,7 +17,7 @@ struct AddDocumentView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(SyncEngine.self) private var syncEngine
+    @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
 
     @State private var draft = DocumentDraft()
     @State private var plaintext: Data?
@@ -276,7 +276,7 @@ struct AddDocumentView: View {
             document.circle = circle
             modelContext.insert(document)
             try modelContext.save()
-            syncEngine.enqueueDocumentCreate(document)
+            documentSweeper.triggerSweep(modelContext: modelContext)
             dismiss()
         } catch let error as DocumentVault.VaultError {
             errorMessage = error.errorDescription

@@ -27,6 +27,13 @@ final class Document {
     var updatedAt = Date.now
     var deletedAt: Date?
 
+    /// Object key of the encrypted blob in the backend's `cc-documents`
+    /// bucket. `nil` means the blob has not yet been mirrored to MinIO —
+    /// `BackendDocumentRetrySweeper` will pick it up on the next launch.
+    /// Set to a non-empty key once `POST /v1/circles/:id/documents`
+    /// returns 201.
+    var backendObjectKey: String?
+
     var circle: Circle?
 
     var type: DocumentType {
@@ -53,7 +60,8 @@ final class Document {
         visibilityRoles: [MemberRole] = DocumentVisibility.defaultRoles,
         uploadedByAppleUserID: String,
         uploadedByDisplayName: String,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        backendObjectKey: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -70,10 +78,18 @@ final class Document {
         self.uploadedByDisplayName = uploadedByDisplayName
         self.createdAt = createdAt
         updatedAt = createdAt
+        self.backendObjectKey = backendObjectKey
     }
 
     var isReadable: Bool {
         deletedAt == nil && !ciphertext.isEmpty && !nonce.isEmpty && !tag.isEmpty
+    }
+
+    /// `true` when the row was hydrated from the backend but the blob
+    /// hasn't been pulled / decrypted yet. Drives the "Backend only"
+    /// badge in `DocumentRowView`.
+    var isBackendPlaceholder: Bool {
+        backendObjectKey != nil && ciphertext.isEmpty
     }
 }
 

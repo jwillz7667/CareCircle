@@ -20,7 +20,7 @@ struct DocumentListView: View {
     private var visibleDocuments: [Document] {
         let role = viewerRole
         return circle.documents
-            .filter { $0.deletedAt == nil && $0.isReadable }
+            .filter { $0.deletedAt == nil && ($0.isReadable || $0.isBackendPlaceholder) }
             .filter { document in
                 guard let role else { return false }
                 return document.visibilityRoles.contains(role)

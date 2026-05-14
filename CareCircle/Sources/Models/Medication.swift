@@ -21,9 +21,9 @@ final class Medication {
 
     var circle: Circle?
 
-    // SwiftData + CloudKit requires to-many relationships to be optional.
-    // `doseEventsStore` is the CloudKit-facing storage; `doseEvents` is a
-    // non-optional computed accessor so call sites read it as `[DoseEvent]`.
+    /// SwiftData + CloudKit requires to-many relationships to be optional.
+    /// `doseEventsStore` is the CloudKit-facing storage; `doseEvents` is a
+    /// non-optional computed accessor so call sites read it as `[DoseEvent]`.
     @Relationship(deleteRule: .cascade, inverse: \DoseEvent.medication)
     var doseEventsStore: [DoseEvent]?
 

@@ -9,6 +9,7 @@ struct MoreView: View {
     @Environment(SimplifiedModePreference.self) private var simplifiedPreference
     @Environment(SyncEngine.self) private var syncEngine
     @Environment(BackendHydrator.self) private var hydrator
+    @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
 
@@ -161,6 +162,20 @@ struct MoreView: View {
                         .foregroundStyle(Color.ccPrimary)
                     }
                     .disabled(hydrator.isRunning)
+
+                    LabeledContent("Documents waiting", value: documentUploadLabel)
+                        .foregroundStyle(documentSweeper.lastError == nil ? Color.ccText : Color.ccDanger)
+
+                    Button {
+                        documentSweeper.triggerSweep(modelContext: modelContext)
+                    } label: {
+                        Label(
+                            documentSweeper.isRunning ? "Uploading documents…" : "Retry document uploads",
+                            systemImage: "icloud.and.arrow.up"
+                        )
+                        .foregroundStyle(Color.ccPrimary)
+                    }
+                    .disabled(documentSweeper.isRunning)
                 }
 
                 Section("About") {
@@ -173,6 +188,9 @@ struct MoreView: View {
             .navigationTitle("More")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Color.ccBackground, for: .navigationBar)
+            .onAppear {
+                documentSweeper.refreshPendingCount(modelContext: modelContext)
+            }
         }
     }
 
@@ -219,6 +237,19 @@ struct MoreView: View {
             return lastRun.formatted(.relative(presentation: .named))
         }
         return "Not yet pulled"
+    }
+
+    private var documentUploadLabel: String {
+        if let error = documentSweeper.lastError {
+            return error
+        }
+        if documentSweeper.pendingCount > 0 {
+            return "\(documentSweeper.pendingCount) pending"
+        }
+        if let lastRun = documentSweeper.lastRunAt {
+            return "Caught up \(lastRun.formatted(.relative(presentation: .named)))"
+        }
+        return "Up to date"
     }
 
     private static var appVersion: String {

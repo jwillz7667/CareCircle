@@ -10,8 +10,14 @@ struct CareCircleApp: App {
     @State private var authState: AuthState
     @State private var syncEngine: SyncEngine
     @State private var hydrator: BackendHydrator
+    @State private var documentSweeper: BackendDocumentRetrySweeper
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
+
+    /// `BackendDocumentService` is an actor, so it isn't itself
+    /// observable. The sweeper owns it; only the sweeper is exposed
+    /// to views.
+    private let documentService: BackendDocumentService
 
     let modelContainer: ModelContainer
     let apiClient: APIClient
@@ -28,6 +34,9 @@ struct CareCircleApp: App {
         let engine = SyncEngine(apiClient: client, modelContainer: container)
         _syncEngine = State(initialValue: engine)
         _hydrator = State(initialValue: BackendHydrator(apiClient: client))
+        let docService = BackendDocumentService(apiClient: client)
+        documentService = docService
+        _documentSweeper = State(initialValue: BackendDocumentRetrySweeper(service: docService))
         _authState = State(initialValue: AuthState(
             backendAuthService: authService,
             syncEngine: engine
@@ -78,6 +87,7 @@ struct CareCircleApp: App {
                 .environment(simplifiedPreference)
                 .environment(syncEngine)
                 .environment(hydrator)
+                .environment(documentSweeper)
                 .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)

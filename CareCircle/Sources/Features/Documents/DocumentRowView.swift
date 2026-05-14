@@ -26,6 +26,12 @@ struct DocumentRowView: View {
                         .foregroundStyle(Color.ccSecondary)
                 }
 
+                if document.isBackendPlaceholder {
+                    Label("Backend only — waiting for a shared key", systemImage: "lock.shield")
+                        .font(.footnote)
+                        .foregroundStyle(Color.ccSecondary)
+                }
+
                 if let expiresAt = document.expiresAt {
                     Label(expiryDescription(from: expiresAt), systemImage: "calendar.badge.exclamationmark")
                         .font(.footnote)
@@ -71,6 +77,9 @@ struct DocumentRowView: View {
 
     private var accessibilityDescription: String {
         var parts: [String] = [document.title, document.type.displayName, sizeDescription]
+        if document.isBackendPlaceholder {
+            parts.append("Backend only, waiting for a shared key")
+        }
         if let expiresAt = document.expiresAt {
             parts.append(expiryDescription(from: expiresAt))
         }
