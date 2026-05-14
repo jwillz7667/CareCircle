@@ -236,3 +236,84 @@ export const syncBatchSchema = z.object({
 export const acceptInvitationSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
 });
+
+export const extractionConfidenceSchema = z.enum(['low', 'medium', 'high']);
+export type ExtractionConfidenceT = z.infer<typeof extractionConfidenceSchema>;
+
+export const extractedEntitySchema = z.object({
+  id: uuidSchema,
+  name: z.string().min(1).max(200),
+  details: z.string().max(500).nullable().optional(),
+  confidence: extractionConfidenceSchema,
+});
+export type ExtractedEntityT = z.infer<typeof extractedEntitySchema>;
+
+export const extractedEntitiesSchema = z.object({
+  medications: z.array(extractedEntitySchema).max(50).default([]),
+  vitals: z.array(extractedEntitySchema).max(50).default([]),
+  appointments: z.array(extractedEntitySchema).max(50).default([]),
+  meals: z.array(extractedEntitySchema).max(50).default([]),
+  symptoms: z.array(extractedEntitySchema).max(50).default([]),
+  generalNotes: z.array(extractedEntitySchema).max(50).default([]),
+  summary: z.string().max(280).nullable().optional(),
+});
+export type ExtractedEntitiesT = z.infer<typeof extractedEntitiesSchema>;
+
+export const inferenceExtractSchema = z.object({
+  redactedTranscript: z.string().min(1).max(8_000),
+  locale: z.string().min(2).max(20).optional(),
+});
+
+export const shiftDigestDoseArtifactSchema = z.object({
+  id: uuidSchema,
+  medicationName: z.string().min(1).max(200),
+  dosage: z.string().max(120).nullable().optional(),
+  scheduledAt: isoTimestampSchema,
+  takenAt: isoTimestampSchema.nullable().optional(),
+  status: doseStatusSchema,
+});
+
+export const shiftDigestAppointmentArtifactSchema = z.object({
+  id: uuidSchema,
+  title: z.string().min(1).max(200),
+  startsAt: isoTimestampSchema,
+  durationMinutes: z.number().int().min(0).max(24 * 60),
+  attended: z.boolean().nullable().optional(),
+});
+
+export const shiftDigestVitalArtifactSchema = z.object({
+  id: uuidSchema,
+  kind: z.string().min(1).max(40),
+  value: z.string().min(1).max(120),
+  unit: z.string().max(40).nullable().optional(),
+  recordedAt: isoTimestampSchema,
+});
+
+export const shiftDigestJournalArtifactSchema = z.object({
+  id: uuidSchema,
+  mood: z.string().max(40).nullable().optional(),
+  summary: z.string().min(1).max(280),
+  recordedAt: isoTimestampSchema,
+});
+
+export const shiftDigestArtifactsSchema = z.object({
+  doses: z.array(shiftDigestDoseArtifactSchema).max(200).default([]),
+  appointments: z.array(shiftDigestAppointmentArtifactSchema).max(50).default([]),
+  vitals: z.array(shiftDigestVitalArtifactSchema).max(100).default([]),
+  journal: z.array(shiftDigestJournalArtifactSchema).max(50).default([]),
+});
+export type ShiftDigestArtifactsT = z.infer<typeof shiftDigestArtifactsSchema>;
+
+export const createShiftDigestSchema = z.object({
+  shiftStartAt: isoTimestampSchema,
+  shiftEndAt: isoTimestampSchema,
+  transcript: z.string().max(20_000).optional(),
+  summary: z.string().max(2_000).optional(),
+  entities: extractedEntitiesSchema.optional(),
+  artifacts: shiftDigestArtifactsSchema.optional(),
+  voiceObjectKey: z.string().max(500).optional(),
+  audioDurationSeconds: z.number().min(0).max(60 * 60).default(0),
+  relatedShiftId: uuidSchema.optional(),
+  clientOpId: uuidSchema.optional(),
+});
+export type CreateShiftDigestT = z.infer<typeof createShiftDigestSchema>;

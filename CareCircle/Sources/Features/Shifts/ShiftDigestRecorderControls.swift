@@ -1,52 +1,22 @@
-import OSLog
-import SwiftData
 import SwiftUI
 
-// MARK: - VoiceComposerView
+// MARK: - ShiftDigestRecorderControls
 
-struct VoiceComposerView: View {
-    let circle: Circle
-    let author: ActivityAuthorContext
-
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    @Environment(BackendInferenceClient.self) private var inferenceClient
-
-    @State private var service = VoiceCaptureService()
-    @State private var isSubmitting = false
+/// Compact recorder UI used inside the shift-digest composer. Wraps
+/// the shared `VoiceCaptureService` state machine in the same way
+/// `VoiceComposerView` does, but rendered inside a card alongside the
+/// shift-window pickers so the caregiver sees the full handoff context
+/// at a glance.
+struct ShiftDigestRecorderControls: View {
+    @Bindable var service: VoiceCaptureService
+    let isSubmitting: Bool
+    let onSubmit: () -> Void
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: Theme.spacing) {
-                statusHeader
-
-                Spacer(minLength: 0)
-
-                transcriptArea
-
-                Spacer(minLength: 0)
-
-                bottomControls
-            }
-            .padding(.horizontal, Theme.spacing)
-            .padding(.vertical, Theme.looseSpacing)
-            .background(Color.ccBackground)
-            .navigationTitle("Voice note")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.ccBackground, for: .navigationBar)
-            .toolbar { toolbar }
-            .interactiveDismissDisabled(service.state.isBusy || isSubmitting)
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") {
-                service.cancel()
-                dismiss()
-            }
-            .disabled(isSubmitting)
+        VStack(spacing: Theme.spacing) {
+            statusHeader
+            transcriptArea
+            actions
         }
     }
 
@@ -68,7 +38,7 @@ struct VoiceComposerView: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.ccDanger)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, Theme.looseSpacing)
+                    .padding(.horizontal, Theme.spacing)
             }
         }
     }
@@ -81,7 +51,6 @@ struct VoiceComposerView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.ccSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-
                 Text(result.transcript.isEmpty
                     ? "(Transcript unavailable — your audio is still attached.)"
                     : result.transcript)
@@ -91,8 +60,8 @@ struct VoiceComposerView: View {
             }
             .padding(Theme.spacing)
             .background(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                    .fill(Color.ccSurface)
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .fill(Color.ccBackground)
             )
         } else if service.state.isRecording, !service.liveTranscript.isEmpty {
             ScrollView {
@@ -102,10 +71,10 @@ struct VoiceComposerView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(Theme.spacing)
             }
-            .frame(maxHeight: 180)
+            .frame(maxHeight: 160)
             .background(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                    .fill(Color.ccSurface)
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .fill(Color.ccBackground)
             )
         } else if case .processing = service.state {
             ProgressView("Finishing up…")
@@ -114,7 +83,7 @@ struct VoiceComposerView: View {
     }
 
     @ViewBuilder
-    private var bottomControls: some View {
+    private var actions: some View {
         switch service.state {
         case .ready:
             HStack(spacing: Theme.spacing) {
@@ -128,17 +97,14 @@ struct VoiceComposerView: View {
                 .tint(Color.ccDanger)
                 .disabled(isSubmitting)
 
-                Button {
-                    submit()
-                } label: {
-                    Label("Send", systemImage: "paperplane.fill")
+                Button(action: onSubmit) {
+                    Label("Save digest", systemImage: "paperplane.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Color.ccPrimary)
                 .disabled(isSubmitting)
             }
-
         case .failed:
             Button {
                 Task { await service.start() }
@@ -149,9 +115,8 @@ struct VoiceComposerView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Color.ccPrimary)
-
         default:
-            MicButton(state: service.state) {
+            MicButtonRow(state: service.state) {
                 if service.state.isRecording {
                     Task { await service.stop() }
                 } else {
@@ -163,11 +128,11 @@ struct VoiceComposerView: View {
 
     private var headlineForState: String {
         switch service.state {
-        case .idle: "Hold the mic and speak"
+        case .idle: "Hold the mic and narrate the handoff"
         case .requestingPermission: "Requesting permission…"
         case .recording: "Listening…"
         case .processing: "Wrapping up…"
-        case .ready: "Ready to send"
+        case .ready: "Ready to save"
         case .failed: "Something went wrong"
         }
     }
@@ -178,63 +143,11 @@ struct VoiceComposerView: View {
         let seconds = total % 60
         return String(format: "%d:%02d", minutes, seconds)
     }
-
-    private func submit() {
-        guard case let .ready(result) = service.state else { return }
-        guard author.hasIdentity else {
-            service.reset()
-            return
-        }
-        isSubmitting = true
-
-        let activity = Activity(
-            authorAppleUserID: author.appleUserID,
-            authorDisplayName: author.displayName,
-            type: .voiceNote,
-            body: result.transcript,
-            audioData: result.audioData,
-            audioDurationSeconds: result.durationSeconds
-        )
-        activity.circle = circle
-        modelContext.insert(activity)
-
-        do {
-            try modelContext.save()
-            scheduleExtraction(for: activity, transcript: result.transcript)
-            dismiss()
-        } catch {
-            modelContext.delete(activity)
-            AppLogger.persistence.error(
-                "Failed to save voice Activity: \(String(describing: error), privacy: .public)"
-            )
-            isSubmitting = false
-            service.reset()
-        }
-    }
-
-    private func scheduleExtraction(for activity: Activity, transcript: String) {
-        let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        let redactor = PHIRedactor(
-            circle: circle,
-            currentCaregiverDisplayName: author.displayName
-        )
-        let extractor = EntityExtractorFactory.makeDefault(
-            redactor: redactor,
-            inferenceClient: inferenceClient
-        )
-        ActivityExtractionService.enqueue(
-            activityID: activity.id,
-            text: trimmed,
-            extractor: extractor,
-            in: modelContext
-        )
-    }
 }
 
-// MARK: - MicButton
+// MARK: - MicButtonRow
 
-private struct MicButton: View {
+private struct MicButtonRow: View {
     let state: VoiceCaptureState
     let action: () -> Void
 
@@ -243,11 +156,10 @@ private struct MicButton: View {
             ZStack {
                 SwiftUI.Circle()
                     .fill(buttonColor)
-                    .frame(width: 120, height: 120)
+                    .frame(width: 96, height: 96)
                     .shadow(color: Color.black.opacity(0.18), radius: 12, x: 0, y: 6)
-
                 Image(systemName: state.isRecording ? "stop.fill" : "mic.fill")
-                    .font(.system(size: 44, weight: .semibold))
+                    .font(.system(size: 36, weight: .semibold))
                     .foregroundStyle(Color.white)
             }
         }

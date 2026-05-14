@@ -217,6 +217,27 @@ final class SyncEngine {
         )
     }
 
+    func enqueueShiftDigestCreate(_ digest: ShiftDigest) {
+        enqueue(
+            operationType: SyncOperationType.createShiftDigest,
+            circleId: digest.circle?.id,
+            payload: CreateShiftDigestPayload(
+                digestId: digest.id,
+                shiftStartAt: digest.shiftStartAt,
+                shiftEndAt: digest.shiftEndAt,
+                narratorAppleUserID: digest.narratorAppleUserID,
+                narratorDisplayName: digest.narratorDisplayName,
+                transcript: digest.transcript.isEmpty ? nil : digest.transcript,
+                summary: digest.summary,
+                audioDurationSeconds: digest.audioDurationSeconds,
+                extractedEntitiesJSON: digest.extractedEntitiesJSON,
+                structuredArtifactsJSON: digest.structuredArtifactsJSON,
+                relatedShiftID: digest.relatedShiftID,
+                createdAt: digest.createdAt
+            )
+        )
+    }
+
     func enqueueSOSEventCreate(_ event: SOSEvent) {
         enqueue(
             operationType: SyncOperationType.createSOSEvent,

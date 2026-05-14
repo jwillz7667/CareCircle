@@ -11,6 +11,7 @@ import { createTokenService } from './services/tokens.js';
 import { createObjectStorage } from './services/minio.js';
 import { createQueueClient } from './services/queues.js';
 import { createRealtimeBroker } from './services/realtime.js';
+import { createInferenceService, type InferenceService } from './services/inference.js';
 import { CircleKeyService } from './services/circleKeys.js';
 import authPlugin from './plugins/auth.js';
 import errorsPlugin from './plugins/errors.js';
@@ -31,11 +32,16 @@ import { sosRoutes } from './routes/sos.js';
 import { careMinuteRoutes } from './routes/careMinutes.js';
 import { syncRoutes } from './routes/sync.js';
 import { realtimeRoutes } from './routes/realtime.js';
+import { inferenceRoutes } from './routes/inference.js';
+import { digestRoutes } from './routes/digests.js';
 import type { AppContext } from './types.js';
 
 export type BuildOptions = {
   config?: Config;
   skipStartupTasks?: boolean;
+  overrides?: {
+    inference?: InferenceService;
+  };
 };
 
 export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance> {
@@ -50,6 +56,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
   const realtime = createRealtimeBroker(config, logger);
   const circleKeys = new CircleKeyService(pool, config);
   const queues = createQueueClient(config);
+  const inference = opts.overrides?.inference ?? createInferenceService(config, logger);
   const ctx: AppContext = {
     config,
     pool,
@@ -60,6 +67,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     realtime,
     circleKeys,
     queues,
+    inference,
   };
 
   const app = Fastify({
@@ -103,6 +111,8 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     await careMinuteRoutes(instance);
     await syncRoutes(instance);
     await realtimeRoutes(instance);
+    await inferenceRoutes(instance);
+    await digestRoutes(instance);
   });
 
   if (!opts.skipStartupTasks) {

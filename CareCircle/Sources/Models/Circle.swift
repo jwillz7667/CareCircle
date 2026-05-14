@@ -41,6 +41,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \CareMinuteEntry.circle)
     var careMinuteEntriesStore: [CareMinuteEntry]?
 
+    @Relationship(deleteRule: .cascade, inverse: \ShiftDigest.circle)
+    var shiftDigestsStore: [ShiftDigest]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -81,6 +84,11 @@ final class Circle {
         set { careMinuteEntriesStore = newValue }
     }
 
+    var shiftDigests: [ShiftDigest] {
+        get { shiftDigestsStore ?? [] }
+        set { shiftDigestsStore = newValue }
+    }
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -94,7 +102,8 @@ final class Circle {
         documents: [Document] = [],
         sosEvents: [SOSEvent] = [],
         emergencyContacts: [EmergencyContact] = [],
-        careMinuteEntries: [CareMinuteEntry] = []
+        careMinuteEntries: [CareMinuteEntry] = [],
+        shiftDigests: [ShiftDigest] = []
     ) {
         self.id = id
         self.name = name
@@ -109,5 +118,6 @@ final class Circle {
         sosEventsStore = sosEvents
         emergencyContactsStore = emergencyContacts
         careMinuteEntriesStore = careMinuteEntries
+        shiftDigestsStore = shiftDigests
     }
 }

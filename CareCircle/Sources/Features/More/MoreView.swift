@@ -27,6 +27,13 @@ struct MoreView: View {
         return ""
     }
 
+    private var authorContext: ActivityAuthorContext {
+        guard case let .signedIn(user) = authState.status else {
+            return ActivityAuthorContext(appleUserID: "", displayName: "")
+        }
+        return ActivityAuthorContext(appleUserID: user.id, displayName: user.displayName)
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -51,6 +58,13 @@ struct MoreView: View {
                             AppointmentListView(circle: circle)
                         } label: {
                             Label("Calendar", systemImage: "calendar")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
+                            ShiftDigestListView(circle: circle, author: authorContext)
+                        } label: {
+                            Label("Shift digests", systemImage: "waveform.path.ecg")
                                 .foregroundStyle(Color.ccText)
                         }
 

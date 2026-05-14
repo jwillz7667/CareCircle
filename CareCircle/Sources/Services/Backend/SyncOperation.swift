@@ -15,6 +15,7 @@ enum SyncOperationType {
     static let createEmergencyContact = "create_emergency_contact"
     static let createCareMinuteEntry = "create_care_minute_entry"
     static let createSOSEvent = "create_sos_event"
+    static let createShiftDigest = "create_shift_digest"
 }
 
 // MARK: - Activity
@@ -134,6 +135,23 @@ nonisolated struct CreateSOSEventPayload: Codable, Sendable, Equatable {
     let latitude: Double?
     let longitude: Double?
     let locationAccuracyMeters: Double?
+}
+
+// MARK: - Shift digests
+
+nonisolated struct CreateShiftDigestPayload: Codable, Sendable, Equatable {
+    let digestId: UUID
+    let shiftStartAt: Date
+    let shiftEndAt: Date
+    let narratorAppleUserID: String
+    let narratorDisplayName: String
+    let transcript: String?
+    let summary: String?
+    let audioDurationSeconds: Double
+    let extractedEntitiesJSON: String?
+    let structuredArtifactsJSON: String?
+    let relatedShiftID: UUID?
+    let createdAt: Date
 }
 
 // MARK: - Sync wire format

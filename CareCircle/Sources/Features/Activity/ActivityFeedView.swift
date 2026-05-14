@@ -11,7 +11,12 @@ struct ActivityFeedView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var isComposingText = false
     @State private var isComposingVoice = false
+    @State private var isComposingShiftDigest = false
     @State private var filter = ActivityFeedFilter()
+
+    private var latestShiftDigest: ShiftDigest? {
+        circle.shiftDigests.max { $0.shiftEndAt < $1.shiftEndAt }
+    }
 
     private var permissions: CirclePermissions {
         CirclePermissions.resolve(circle: circle, appleUserID: author.appleUserID)
@@ -71,6 +76,9 @@ struct ActivityFeedView: View {
         .sheet(isPresented: $isComposingVoice) {
             VoiceComposerView(circle: circle, author: author)
         }
+        .sheet(isPresented: $isComposingShiftDigest) {
+            ShiftDigestComposerView(circle: circle, author: author)
+        }
     }
 
     private var scrollContent: some View {
@@ -78,6 +86,16 @@ struct ActivityFeedView: View {
             VStack(spacing: Theme.spacing) {
                 CircleHero(circleName: circle.name, recipient: circle.careRecipient)
                     .padding(.horizontal, Theme.spacing)
+
+                if let digest = latestShiftDigest {
+                    NavigationLink {
+                        ShiftDigestDetailView(digest: digest, author: author)
+                    } label: {
+                        ShiftDigestRow(digest: digest, author: author)
+                            .padding(.horizontal, Theme.spacing)
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 if !sortedActivities.isEmpty {
                     ActivityFilterBar(
@@ -167,6 +185,11 @@ struct ActivityFeedView: View {
                 isComposingVoice = true
             } label: {
                 Label("Voice note", systemImage: "mic.fill")
+            }
+            Button {
+                isComposingShiftDigest = true
+            } label: {
+                Label("End-of-shift digest", systemImage: "waveform.path.ecg")
             }
         } label: {
             Label("Post", systemImage: "plus")

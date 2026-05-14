@@ -280,6 +280,42 @@ enum BackendHydratorMappers {
         dose.updatedAt = .now
     }
 
+    static func makeShiftDigest(from dto: ShiftDigestDTO) -> ShiftDigest {
+        let extractedJSON = dto.entities?.encodedJSON()
+        let artifactsJSON = dto.artifacts?.encodedJSON()
+        return ShiftDigest(
+            id: parseUUID(dto.id) ?? UUID(),
+            shiftStartAt: dto.shiftStartAt,
+            shiftEndAt: dto.shiftEndAt,
+            narratorAppleUserID: dto.narratorUserId,
+            narratorDisplayName: "",
+            transcript: dto.transcript ?? "",
+            summary: dto.summary,
+            audioData: nil,
+            audioDurationSeconds: dto.audioDurationSeconds,
+            extractedEntitiesJSON: extractedJSON,
+            structuredArtifactsJSON: artifactsJSON,
+            relatedShiftID: parseUUID(dto.relatedShiftId ?? ""),
+            createdAt: dto.createdAt
+        )
+    }
+
+    static func updateShiftDigest(_ digest: ShiftDigest, from dto: ShiftDigestDTO) {
+        digest.shiftStartAt = dto.shiftStartAt
+        digest.shiftEndAt = dto.shiftEndAt
+        digest.narratorAppleUserID = dto.narratorUserId
+        digest.transcript = dto.transcript ?? ""
+        digest.summary = dto.summary
+        digest.audioDurationSeconds = dto.audioDurationSeconds
+        if let entities = dto.entities {
+            digest.extractedEntitiesJSON = entities.encodedJSON()
+        }
+        if let artifacts = dto.artifacts {
+            digest.structuredArtifactsJSON = artifacts.encodedJSON()
+        }
+        digest.relatedShiftID = parseUUID(dto.relatedShiftId ?? "")
+    }
+
     // MARK: - Parsing helpers
 
     static func parseUUID(_ raw: String) -> UUID? {

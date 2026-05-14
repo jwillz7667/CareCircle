@@ -75,5 +75,8 @@ extension BackendRealtimeClient {
         group.addTask { [weak self] in
             await self?.applyCareMinuteChange(circleId: circleId, modelContext: modelContext)
         }
+        group.addTask { [weak self] in
+            await self?.applyShiftDigestChange(circleId: circleId, modelContext: modelContext)
+        }
     }
 }

@@ -5,6 +5,8 @@ export type ErrorCode =
   | 'conflict'
   | 'validation_failed'
   | 'rate_limited'
+  | 'service_unavailable'
+  | 'upstream_error'
   | 'apple_jwt_invalid'
   | 'apple_jwks_unavailable'
   | 'circle_member_cap_reached'
@@ -37,3 +39,8 @@ export const conflict = (msg: string, details?: Record<string, unknown>) =>
 export const validationFailed = (details: Record<string, unknown>) =>
   new HttpError(422, 'validation_failed', 'Validation failed', details);
 export const internal = (msg = 'Internal error') => new HttpError(500, 'internal_error', msg);
+export const rateLimited = (msg = 'Rate limit exceeded') => new HttpError(429, 'rate_limited', msg);
+export const serviceUnavailable = (msg = 'Service unavailable') =>
+  new HttpError(503, 'service_unavailable', msg);
+export const upstreamError = (msg = 'Upstream provider error') =>
+  new HttpError(502, 'upstream_error', msg);

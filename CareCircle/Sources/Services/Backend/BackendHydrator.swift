@@ -35,6 +35,8 @@ final class BackendHydrator {
     /// demand once Phase 17 introduces full inbound merge.
     private static let activityPageLimit = 50
     private static let activityMaxPages = 5
+    private static let shiftDigestPageLimit = 50
+    private static let shiftDigestMaxPages = 5
 
     init(apiClient: APIClient) {
         self.apiClient = apiClient
@@ -102,6 +104,7 @@ final class BackendHydrator {
                 modelContext: modelContext
             )
             try await hydrateDocuments(circleId: circleId, modelContext: modelContext)
+            try await hydrateShiftDigests(circleId: circleId, modelContext: modelContext)
 
             try modelContext.save()
             retractStaleSOSNotifications(identifiers: sosRetractIDs)
@@ -321,6 +324,38 @@ final class BackendHydrator {
         )
     }
 
+    private func hydrateShiftDigests(circleId: UUID, modelContext: ModelContext) async throws {
+        guard localCount(of: ShiftDigest.self, in: circleId, modelContext: modelContext) == 0 else {
+            AppLogger.backend.debug("Shift digests skipped — local store is not empty.")
+            return
+        }
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+
+        var cursor: String?
+        var pageCount = 0
+        var inserted = 0
+        while pageCount < Self.shiftDigestMaxPages {
+            let path = shiftDigestListPath(circleId: circleId, cursor: cursor)
+            let response: ShiftDigestsResponse = try await apiClient.send(
+                method: .get,
+                path: path,
+                authenticated: true
+            )
+            for dto in response.digests {
+                let digest = BackendHydratorMappers.makeShiftDigest(from: dto)
+                digest.circle = circle
+                modelContext.insert(digest)
+                inserted += 1
+            }
+            cursor = response.nextCursor
+            pageCount += 1
+            if cursor == nil { break }
+        }
+        AppLogger.backend.info(
+            "Hydrated \(inserted, privacy: .public) shift digests over \(pageCount, privacy: .public) pages."
+        )
+    }
+
     // MARK: - Local count + circle lookup
 
     private func localCount<Model: PersistentModel>(
@@ -349,6 +384,11 @@ final class BackendHydrator {
     }
 
     private static func circleId(of row: any PersistentModel) -> UUID? {
+        if let dose = row as? DoseEvent { return dose.medication?.circle?.id }
+        return circleScopedRowID(of: row)
+    }
+
+    private static func circleScopedRowID(of row: any PersistentModel) -> UUID? {
         switch row {
         case let row as Activity: row.circle?.id
         case let row as Medication: row.circle?.id
@@ -358,7 +398,7 @@ final class BackendHydrator {
         case let row as CareMinuteEntry: row.circle?.id
         case let row as SOSEvent: row.circle?.id
         case let row as Document: row.circle?.id
-        case let row as DoseEvent: row.medication?.circle?.id
+        case let row as ShiftDigest: row.circle?.id
         default: nil
         }
     }
@@ -387,6 +427,19 @@ final class BackendHydrator {
         components.queryItems = items
         // `URLComponents` percent-encodes both pieces; combine them by hand
         // because `APIClient` takes a single path string.
+        let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
+        return "\(base)\(query)"
+    }
+
+    private func shiftDigestListPath(circleId: UUID, cursor: String?) -> String {
+        let base = "/v1/circles/\(circleId.uuidString.lowercased())/digests"
+        var components = URLComponents()
+        components.path = base
+        var items = [URLQueryItem(name: "limit", value: "\(Self.shiftDigestPageLimit)")]
+        if let cursor {
+            items.append(URLQueryItem(name: "cursor", value: cursor))
+        }
+        components.queryItems = items
         let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
         return "\(base)\(query)"
     }

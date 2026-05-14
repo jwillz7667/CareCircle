@@ -30,6 +30,10 @@ const defaults: Record<string, string> = {
   AUTH_RATE_LIMIT_PER_MIN: '10000',
   APNS_BUNDLE_ID: 'Res.CareCircle',
   APNS_MOCK_MODE: 'true',
+  INFERENCE_ENABLED: 'false',
+  INFERENCE_MAX_PER_HOUR: '10000',
+  OPENAI_MODEL: 'gpt-4o-mini',
+  OPENAI_BASE_URL: 'http://127.0.0.1:1/mock',
 };
 for (const [key, value] of Object.entries(defaults)) {
   if (!process.env[key]) {

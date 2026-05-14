@@ -12,6 +12,7 @@ const TABLES = [
   'activity_reactions',
   'activity_comments',
   'activities',
+  'shift_digests',
   'dose_events',
   'medications',
   'appointment_attendees',

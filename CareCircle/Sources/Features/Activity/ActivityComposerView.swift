@@ -13,6 +13,7 @@ struct ActivityComposerView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(SyncEngine.self) private var syncEngine
+    @Environment(BackendInferenceClient.self) private var inferenceClient
 
     @State private var noteBody = ""
     @State private var pickerItem: PhotosPickerItem?
@@ -196,7 +197,10 @@ struct ActivityComposerView: View {
             circle: circle,
             currentCaregiverDisplayName: author.displayName
         )
-        let extractor = EntityExtractorFactory.makeDefault(redactor: redactor)
+        let extractor = EntityExtractorFactory.makeDefault(
+            redactor: redactor,
+            inferenceClient: inferenceClient
+        )
         ActivityExtractionService.enqueue(
             activityID: activity.id,
             text: trimmedBody,

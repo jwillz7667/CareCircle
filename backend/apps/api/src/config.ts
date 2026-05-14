@@ -38,6 +38,17 @@ const ConfigSchema = z.object({
 
   RATE_LIMIT_PER_MIN: z.coerce.number().int().default(100),
   AUTH_RATE_LIMIT_PER_MIN: z.coerce.number().int().default(10),
+
+  INFERENCE_ENABLED: z
+    .union([z.string(), z.boolean()])
+    .default(false)
+    .transform((v) => v === true || v === 'true'),
+  INFERENCE_MAX_PER_HOUR: z.coerce.number().int().min(1).default(30),
+  INFERENCE_PROMPT_CHAR_LIMIT: z.coerce.number().int().min(1).max(20_000).default(8_000),
+  INFERENCE_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(60_000).default(20_000),
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_MODEL: z.string().min(1).default('gpt-4o-mini'),
+  OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

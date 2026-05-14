@@ -248,6 +248,30 @@ nonisolated struct DoseByIdResponse: Decodable, Sendable, Equatable {
     }
 }
 
+// MARK: - Shift digests
+
+nonisolated struct ShiftDigestsResponse: Decodable, Sendable, Equatable {
+    let digests: [ShiftDigestDTO]
+    let nextCursor: String?
+}
+
+nonisolated struct ShiftDigestDTO: Decodable, Sendable, Equatable {
+    let id: String
+    let circleId: String
+    let narratorUserId: String
+    let shiftStartAt: Date
+    let shiftEndAt: Date
+    let transcript: String?
+    let summary: String?
+    let entities: ExtractedEntities?
+    let artifacts: ShiftDigestArtifactsSnapshot?
+    let voiceObjectKey: String?
+    let audioDurationSeconds: Double
+    let relatedShiftId: String?
+    let createdAt: Date
+    let version: Int
+}
+
 // MARK: - JSONValue
 
 /// Minimal JSON value used to round-trip the medication `schedule`

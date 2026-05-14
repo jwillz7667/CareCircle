@@ -285,6 +285,24 @@ final class BackendRealtimeClient {
         op _: String,
         modelContext: ModelContext
     ) async {
+        if table == "dose_events" {
+            await applyDoseChange(rowId: rowId, modelContext: modelContext)
+            return
+        }
+        await dispatchCircleScopedChange(
+            table: table,
+            circleId: circleId,
+            rowId: rowId,
+            modelContext: modelContext
+        )
+    }
+
+    private func dispatchCircleScopedChange(
+        table: String,
+        circleId: UUID,
+        rowId: UUID,
+        modelContext: ModelContext
+    ) async {
         switch table {
         case "activities":
             await applyActivityChange(circleId: circleId, modelContext: modelContext)
@@ -300,10 +318,10 @@ final class BackendRealtimeClient {
             await applyDocumentChange(circleId: circleId, modelContext: modelContext)
         case "sos_events":
             await applySosChange(circleId: circleId, modelContext: modelContext)
-        case "dose_events":
-            await applyDoseChange(rowId: rowId, modelContext: modelContext)
         case "care_minute_entries":
             await applyCareMinuteChange(circleId: circleId, modelContext: modelContext)
+        case "shift_digests":
+            await applyShiftDigestChange(circleId: circleId, modelContext: modelContext)
         default:
             AppLogger.backend.debug(
                 "Realtime: \(table, privacy: .public) row \(rowId.uuidString, privacy: .public) — no applicator yet."

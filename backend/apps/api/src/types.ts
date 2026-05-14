@@ -3,6 +3,7 @@ import type { Logger } from '@carecircle/shared';
 import type { Config } from './config.js';
 import type { AppleVerifier } from './services/apple.js';
 import type { CircleKeyService } from './services/circleKeys.js';
+import type { InferenceService } from './services/inference.js';
 import type { ObjectStorage } from './services/minio.js';
 import type { QueueClient } from './services/queues.js';
 import type { RealtimeBroker } from './services/realtime.js';
@@ -18,6 +19,7 @@ export type AppContext = {
   realtime: RealtimeBroker;
   circleKeys: CircleKeyService;
   queues: QueueClient;
+  inference: InferenceService;
 };
 
 declare module 'fastify' {
