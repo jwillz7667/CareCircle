@@ -96,6 +96,7 @@ struct CareCircleApp: App {
             HealthRecord.self,
             DirectThread.self,
             DirectMessage.self,
+            JournalEntry.self,
             PendingOperation.self,
         ])
         let configuration = ModelConfiguration(

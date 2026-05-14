@@ -85,6 +85,13 @@ struct MoreView: View {
                             Label("Direct messages", systemImage: "lock.bubble")
                                 .foregroundStyle(Color.ccText)
                         }
+
+                        NavigationLink {
+                            JournalListView(circle: circle, author: authorContext)
+                        } label: {
+                            Label("Symptom journal", systemImage: "heart.text.square")
+                                .foregroundStyle(Color.ccText)
+                        }
                     }
 
                     Section("Records") {

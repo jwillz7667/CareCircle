@@ -62,6 +62,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \DirectThread.circle)
     var directThreadsStore: [DirectThread]?
 
+    @Relationship(deleteRule: .cascade, inverse: \JournalEntry.circle)
+    var journalEntriesStore: [JournalEntry]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -135,6 +138,11 @@ final class Circle {
     var directThreads: [DirectThread] {
         get { directThreadsStore ?? [] }
         set { directThreadsStore = newValue }
+    }
+
+    var journalEntries: [JournalEntry] {
+        get { journalEntriesStore ?? [] }
+        set { journalEntriesStore = newValue }
     }
 
     init(
