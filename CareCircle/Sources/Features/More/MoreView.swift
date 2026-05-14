@@ -72,6 +72,13 @@ struct MoreView: View {
                             Label("Insights", systemImage: "sparkles")
                                 .foregroundStyle(Color.ccText)
                         }
+
+                        NavigationLink {
+                            CaregiverLoadView(circle: circle)
+                        } label: {
+                            Label("Care load", systemImage: "person.3.sequence.fill")
+                                .foregroundStyle(Color.ccText)
+                        }
                     }
 
                     Section("Communication") {
