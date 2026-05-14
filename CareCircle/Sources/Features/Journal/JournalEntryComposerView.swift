@@ -22,12 +22,17 @@ struct JournalEntryComposerView: View {
     @State private var notes: String = ""
     @State private var saveError: String?
 
-    init(circle: Circle, author: ActivityAuthorContext, existing: JournalEntry? = nil) {
+    init(
+        circle: Circle,
+        author: ActivityAuthorContext,
+        existing: JournalEntry? = nil,
+        initialMood: Mood? = nil
+    ) {
         self.circle = circle
         self.author = author
         self.existing = existing
         _recordedAt = State(initialValue: existing?.recordedAt ?? .now)
-        _mood = State(initialValue: existing?.mood ?? .neutral)
+        _mood = State(initialValue: existing?.mood ?? initialMood ?? .neutral)
         _selectedSymptoms = State(initialValue: Set(existing?.symptoms ?? []))
         _notes = State(initialValue: existing?.notes ?? "")
     }

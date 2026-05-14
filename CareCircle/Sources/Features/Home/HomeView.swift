@@ -85,6 +85,9 @@ struct HomeView: View {
             .padding(.top, Theme.tightSpacing)
             .padding(.bottom, Theme.tightSpacing)
 
+            JournalTodayCard(circle: circle, author: authorContext)
+                .padding(.bottom, Theme.tightSpacing)
+
             ActivityFeedView(circle: circle, author: authorContext)
         }
         .background(Color.ccBackground)
