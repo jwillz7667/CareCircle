@@ -7,6 +7,9 @@ struct SOSHistoryView: View {
     let circle: Circle
     let viewerAppleUserID: String
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
+
     private var events: [SOSEvent] {
         (circle.sosEvents).sorted { $0.triggeredAt > $1.triggeredAt }
     }
@@ -28,6 +31,12 @@ struct SOSHistoryView: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .refreshable {
+                    await realtimeClient.snapshotResync(
+                        circleIds: [circle.id],
+                        modelContext: modelContext
+                    )
+                }
             }
         }
         .navigationTitle("SOS history")

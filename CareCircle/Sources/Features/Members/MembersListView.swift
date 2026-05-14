@@ -7,6 +7,8 @@ struct MembersListView: View {
     let circle: Circle
     let signedInAppleUserID: String
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
     @State private var isAddingMember = false
 
     private var permissions: CirclePermissions {
@@ -39,6 +41,12 @@ struct MembersListView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .refreshable {
+            await realtimeClient.snapshotResync(
+                circleIds: [circle.id],
+                modelContext: modelContext
+            )
+        }
         .background(Color.ccBackground)
         .navigationTitle("Members")
         .navigationBarTitleDisplayMode(.inline)

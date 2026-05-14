@@ -8,6 +8,7 @@ struct EmergencyContactsView: View {
     let circle: Circle
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
     @State private var isPresentingAdd = false
 
     private var contacts: [EmergencyContact] {
@@ -34,6 +35,12 @@ struct EmergencyContactsView: View {
                     .onDelete(perform: deleteContacts)
                 }
                 .listStyle(.insetGrouped)
+                .refreshable {
+                    await realtimeClient.snapshotResync(
+                        circleIds: [circle.id],
+                        modelContext: modelContext
+                    )
+                }
             }
         }
         .navigationTitle("Emergency contacts")

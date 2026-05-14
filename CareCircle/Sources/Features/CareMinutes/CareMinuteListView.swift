@@ -10,6 +10,8 @@ struct CareMinuteListView: View {
     let circle: Circle
     let viewerAppleUserID: String
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
     @State private var weekAnchor: Date = .now
     @State private var isAdding = false
     @State private var isExporting = false
@@ -96,6 +98,12 @@ struct CareMinuteListView: View {
             .padding(.horizontal, Theme.spacing)
             .padding(.top, Theme.spacing)
             .padding(.bottom, Theme.looseSpacing * 2)
+        }
+        .refreshable {
+            await realtimeClient.snapshotResync(
+                circleIds: [circle.id],
+                modelContext: modelContext
+            )
         }
     }
 
