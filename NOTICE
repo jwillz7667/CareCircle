@@ -1,0 +1,81 @@
+CareCircle
+
+Copyright (c) 2026 Viral Venture LLC, Maple Grove, Minnesota, USA.
+All rights reserved.
+
+This product includes software developed by Viral Venture LLC
+(https://viral-ventures-llc.com).
+
+CareCircle is proprietary software. Use is governed by the LICENSE file in
+the root of this repository. Any use of the Software outside the terms of
+that LICENSE, or outside the terms of a separate written agreement signed
+by an authorized officer of Viral Venture LLC, is prohibited.
+
+--------------------------------------------------------------------------------
+
+THIRD-PARTY SOFTWARE
+
+The Software incorporates or links against the following third-party
+components. Each is used under the terms of its own license, as identified
+below. The text of each license is reproduced in the corresponding entry of
+docs/third-party-licenses/ (created on first use; see CONTRIBUTING.md for
+the process to add a new dependency).
+
+  - Swift programming language and standard libraries
+    Apache License 2.0 with Runtime Library Exception
+    https://www.swift.org/LICENSE.txt
+
+  - Apple SwiftUI, SwiftData, CloudKit, HealthKit, MapKit, CoreLocation,
+    AVFoundation, AVSpeechSynthesis, Combine, OSLog, UIKit, CryptoKit
+    Used under the Apple Developer Program License Agreement.
+
+  - Node.js
+    MIT-style license
+    https://github.com/nodejs/node/blob/main/LICENSE
+
+  - Fastify
+    MIT License
+    https://github.com/fastify/fastify/blob/main/LICENSE
+
+  - Prisma
+    Apache License 2.0
+    https://github.com/prisma/prisma/blob/main/LICENSE
+
+  - PostgreSQL
+    PostgreSQL License (BSD-style)
+    https://www.postgresql.org/about/licence/
+
+  - Redis
+    Source Available, BSD-3-Clause, or RSALv2 depending on version.
+    https://redis.io/legal/licenses/
+
+  - MinIO
+    GNU Affero General Public License v3.0 (server)
+    Apache License 2.0 (Go SDK and tooling)
+    https://github.com/minio/minio/blob/master/LICENSE
+
+  - BullMQ
+    MIT License
+    https://github.com/taskforcesh/bullmq/blob/master/LICENSE
+
+  - Zod
+    MIT License
+    https://github.com/colinhacks/zod/blob/main/LICENSE
+
+  - Vitest
+    MIT License
+    https://github.com/vitest-dev/vitest/blob/main/LICENSE
+
+Inclusion of a component in this NOTICE does not imply endorsement by, or
+affiliation with, the component's authors. Trademarks belong to their
+respective owners.
+
+--------------------------------------------------------------------------------
+
+NOT A MEDICAL DEVICE
+
+CareCircle is a record-keeping and coordination tool for family caregivers.
+It is not a medical device, is not intended to diagnose, cure, mitigate,
+treat, or prevent any disease or medical condition, and is not a substitute
+for professional medical advice. Always consult a qualified healthcare
+provider before making care decisions.

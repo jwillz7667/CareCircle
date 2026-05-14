@@ -1,0 +1,95 @@
+name: Bug report
+description: Report a defect in CareCircle iOS or the backend.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Two reminders before you continue:
+
+        - **Security vulnerabilities** must be reported through the process in [SECURITY.md](../../SECURITY.md), not here.
+        - **Health information** — please redact any personal details from screenshots, logs, and reproduction steps.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      options:
+        - iOS app
+        - Backend API
+        - Backend worker
+        - Realtime / WebSocket
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: App build number, commit SHA, or release tag where you observed the bug.
+      placeholder: "TestFlight 33.0 (build 412) — commit abc1234"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Device / environment
+      placeholder: "iPhone 15 Pro, iOS 18.2 — or 'production backend'"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One or two sentences describing what's broken.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Be specific. Number the steps.
+      placeholder: |
+        1. Sign in as the Primary Caregiver.
+        2. Open the Meds tab.
+        3. Tap "Add medication" and …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, screenshots, or recordings
+      description: |
+        Redact personal information. iOS console output is most useful; for backend issues, include the relevant request ID.
+      render: markdown
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched the existing issues and have not found a duplicate.
+          required: true
+        - label: I have redacted personal health information from this report.
+          required: true

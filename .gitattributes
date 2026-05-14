@@ -1,0 +1,92 @@
+# Auto-detect text files and perform LF normalization.
+* text=auto eol=lf
+
+# Source files — always LF, never CRLF.
+*.swift           text eol=lf diff=swift
+*.ts              text eol=lf
+*.tsx             text eol=lf
+*.js              text eol=lf
+*.jsx             text eol=lf
+*.mjs             text eol=lf
+*.cjs             text eol=lf
+*.json            text eol=lf
+*.yml             text eol=lf
+*.yaml            text eol=lf
+*.toml            text eol=lf
+*.md              text eol=lf
+*.mdx             text eol=lf
+*.html            text eol=lf
+*.css             text eol=lf
+*.scss            text eol=lf
+*.xml             text eol=lf
+*.plist           text eol=lf
+*.entitlements    text eol=lf
+*.xcconfig        text eol=lf
+*.sh              text eol=lf
+*.py              text eol=lf
+*.sql             text eol=lf
+*.graphql         text eol=lf
+*.proto           text eol=lf
+Dockerfile        text eol=lf
+*.dockerfile      text eol=lf
+Makefile          text eol=lf
+.editorconfig     text eol=lf
+.gitignore        text eol=lf
+.gitattributes    text eol=lf
+.swiftformat      text eol=lf
+.swiftlint.yml    text eol=lf
+
+# Binary files — never normalize, never diff.
+*.png             binary
+*.jpg             binary
+*.jpeg            binary
+*.gif             binary
+*.heic            binary
+*.ico             binary
+*.icns            binary
+*.pdf             binary
+*.zip             binary
+*.tar             binary
+*.gz              binary
+*.tgz             binary
+*.bz2             binary
+*.xz              binary
+*.7z              binary
+*.dmg             binary
+*.iso             binary
+*.so              binary
+*.dylib           binary
+*.a               binary
+*.lib             binary
+*.framework       binary
+*.xcframework     binary
+*.car             binary
+*.mlmodel         binary
+*.mlmodelc        binary
+*.coremldata      binary
+*.nib             binary
+*.storyboardc     binary
+*.usdz            binary
+
+# Xcode / Apple — generated files should not be diffed in PRs by default.
+*.pbxproj         text eol=lf merge=union linguist-generated=true
+*.xcworkspacedata text eol=lf linguist-generated=true
+*.xcsettings      text eol=lf linguist-generated=true
+*.xcscheme        text eol=lf linguist-generated=true
+Package.resolved  text eol=lf linguist-generated=true
+
+# Lockfiles — checked in, generated, hide diff noise in PRs.
+pnpm-lock.yaml    text eol=lf linguist-generated=true
+package-lock.json text eol=lf linguist-generated=true
+yarn.lock         text eol=lf linguist-generated=true
+Cartfile.resolved text eol=lf linguist-generated=true
+Podfile.lock      text eol=lf linguist-generated=true
+
+# Generated TypeScript / GraphQL artifacts.
+*.d.ts            text eol=lf linguist-generated=true
+**/dist/**        linguist-generated=true
+**/build/**       linguist-generated=true
+
+# GitHub linguist — exclude vendored/spec content from language stats.
+docs/**           linguist-documentation
+spec-docs/**      linguist-documentation

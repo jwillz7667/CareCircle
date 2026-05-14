@@ -1,0 +1,50 @@
+# EditorConfig — https://editorconfig.org
+# Top-most EditorConfig for the CareCircle repository.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# Swift uses 4-space indentation (matches .swiftformat / Apple's Swift API style).
+[*.swift]
+indent_size = 4
+max_line_length = 120
+
+# Objective-C / C-family files in any iOS bridging headers.
+[*.{h,m,mm,c,cpp}]
+indent_size = 4
+
+# Python (build scripts, codegen).
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# Makefiles require tabs.
+[{Makefile,*.mk}]
+indent_style = tab
+indent_size = 4
+
+# Go (any backend tooling — currently unused but reserved).
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# JSON, YAML, TOML, Markdown — 2 spaces.
+[*.{json,yml,yaml,toml,md,mdx}]
+indent_size = 2
+
+# Plist files are XML.
+[*.plist]
+indent_size = 4
+
+# Don't trim trailing whitespace in Markdown — two-space soft line breaks
+# are meaningful.
+[*.{md,mdx}]
+trim_trailing_whitespace = false

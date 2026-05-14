@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability disclosure
+    url: https://github.com/jwillz7667/CareCircle/blob/main/SECURITY.md
+    about: |
+      Do not open a public issue for security vulnerabilities. Follow the coordinated disclosure process described in SECURITY.md.
+  - name: General support and partnerships
+    url: mailto:support@viral-ventures-llc.com
+    about: |
+      For general questions, integrations, or partnership inquiries, email support@viral-ventures-llc.com.
+  - name: Code of Conduct concerns
+    url: mailto:conduct@viral-ventures-llc.com
+    about: |
+      Reports about conduct in project spaces.

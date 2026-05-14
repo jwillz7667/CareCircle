@@ -1,0 +1,220 @@
+CARECIRCLE PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2026 Viral Venture LLC. All rights reserved.
+
+Viral Venture LLC
+Maple Grove, Minnesota 55369
+United States of America
+https://viral-ventures-llc.com
+
+================================================================================
+
+1. DEFINITIONS
+
+   "Software" means the CareCircle source code, compiled binaries, assets,
+   data schemas, build scripts, documentation, configuration files, and any
+   other materials contained in this repository or distributed under the
+   CareCircle name, including all modifications, derivative works, updates,
+   patches, and successor versions thereof.
+
+   "Licensor" means Viral Venture LLC, a limited liability company organized
+   under the laws of the State of Minnesota, U.S.A., having its principal
+   place of business in Maple Grove, Minnesota.
+
+   "You" (or "Licensee") means the individual or legal entity exercising
+   permissions granted by an executed written agreement with Licensor.
+
+   "Authorized Use" means use of the Software pursuant to, and within the
+   scope of, a separate written license agreement signed by an authorized
+   officer of Viral Venture LLC. No Authorized Use is granted by this file
+   alone.
+
+================================================================================
+
+2. GRANT
+
+   No license, express or implied, is granted under this file. All rights
+   to the Software are reserved by Licensor. The presence of source code
+   in this repository, including any availability on public source-code
+   hosting platforms, does not constitute publication for the purposes of
+   conferring any license, waiver, or estoppel against Licensor.
+
+   Authorized Use is granted only under, and is subject in all respects to,
+   the terms of a separate written agreement signed by Licensor and
+   Licensee. In the absence of such an agreement, You have no right to
+   use, copy, modify, merge, publish, distribute, sublicense, sell, lease,
+   rent, host, perform, transmit, display, prepare derivative works of, or
+   create competing products from the Software or any portion thereof.
+
+================================================================================
+
+3. RESTRICTIONS
+
+   Without limiting the foregoing, You shall not, and shall not permit any
+   third party to:
+
+   (a) reverse engineer, decompile, disassemble, or otherwise attempt to
+       derive the source code, underlying ideas, algorithms, file formats,
+       or non-public APIs of the Software, except to the limited extent
+       expressly permitted by applicable law notwithstanding this
+       prohibition;
+
+   (b) remove, alter, or obscure any proprietary notice, copyright legend,
+       trademark, license terms, or attribution contained in the Software,
+       including in the NOTICE file or in any in-product credits screen;
+
+   (c) use the Software, or any output derived from it, to develop,
+       train, evaluate, benchmark, or improve any machine-learning model,
+       large language model, or competing product, except with Licensor's
+       prior written authorization;
+
+   (d) use the Software in any manner that violates applicable law,
+       including without limitation healthcare-information,
+       privacy, export-control, or sanctions law;
+
+   (e) represent the Software, or any product built using the Software,
+       as a medical device, as HIPAA-compliant, or as offering clinical
+       diagnosis, treatment, or advice;
+
+   (f) sublicense, sell, lease, rent, distribute, host as a service, or
+       otherwise make the Software available to any third party, whether
+       for a fee or otherwise; or
+
+   (g) circumvent any technical measure intended to enforce the terms of
+       this license or any separate agreement.
+
+================================================================================
+
+4. OWNERSHIP
+
+   The Software is licensed, not sold. Licensor and its licensors retain
+   all right, title, and interest in and to the Software, including all
+   intellectual property rights therein. All rights not expressly granted
+   under a separate written agreement are reserved.
+
+   "CareCircle," "Viral Venture," and the CareCircle logo are trademarks
+   of Viral Venture LLC. No right to use the trademarks of Licensor is
+   granted under this license; trademark usage is governed by Licensor's
+   trademark policy as published from time to time.
+
+================================================================================
+
+5. CONTRIBUTIONS
+
+   Contributions submitted to this repository are governed by the
+   Contribution License Agreement set forth in CONTRIBUTING.md. By
+   submitting a Contribution, You assign to Licensor a perpetual,
+   irrevocable, worldwide, royalty-free, transferable, sublicensable
+   license to use, reproduce, modify, prepare derivative works of,
+   publicly display, publicly perform, sublicense, and distribute the
+   Contribution and any derivative works thereof, subject to the
+   representations and warranties stated in CONTRIBUTING.md.
+
+================================================================================
+
+6. CONFIDENTIALITY
+
+   The Software and any non-public information disclosed by Licensor
+   under this license, including without limitation source code,
+   product roadmaps, architecture, security designs, and unpublished
+   documentation, constitute confidential and proprietary information of
+   Licensor. You shall protect such information using a degree of care
+   no less than the degree of care You use to protect Your own most
+   sensitive confidential information, and in no event less than a
+   reasonable degree of care.
+
+================================================================================
+
+7. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS, IMPLIED, OR STATUTORY, INCLUDING WITHOUT LIMITATION ANY
+   WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+   TITLE, NON-INFRINGEMENT, ACCURACY, RELIABILITY, AVAILABILITY,
+   SECURITY, OR THAT THE SOFTWARE WILL OPERATE WITHOUT ERROR OR
+   INTERRUPTION. THE ENTIRE RISK ARISING OUT OF THE USE OR PERFORMANCE
+   OF THE SOFTWARE REMAINS WITH YOU.
+
+   THE SOFTWARE IS NOT A MEDICAL DEVICE AND IS NOT INTENDED FOR USE IN
+   THE DIAGNOSIS, CURE, MITIGATION, TREATMENT, OR PREVENTION OF DISEASE
+   OR ANY OTHER MEDICAL CONDITION. THE SOFTWARE IS NOT A SUBSTITUTE FOR
+   PROFESSIONAL MEDICAL ADVICE. RELIANCE ON THE SOFTWARE IS SOLELY AT
+   YOUR OWN RISK.
+
+================================================================================
+
+8. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL LICENSOR, ITS AFFILIATES, OFFICERS, DIRECTORS,
+   EMPLOYEES, CONTRACTORS, AGENTS, OR LICENSORS BE LIABLE FOR ANY
+   INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY
+   DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS, LOST REVENUE,
+   LOST DATA, BUSINESS INTERRUPTION, PERSONAL INJURY, OR DEATH) ARISING
+   OUT OF OR IN CONNECTION WITH THIS LICENSE OR THE USE OF, OR
+   INABILITY TO USE, THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+   OF SUCH DAMAGES.
+
+   LICENSOR'S TOTAL CUMULATIVE LIABILITY ARISING OUT OF OR RELATED TO
+   THIS LICENSE SHALL NOT EXCEED THE GREATER OF (A) THE AMOUNT ACTUALLY
+   PAID BY YOU TO LICENSOR FOR THE SOFTWARE IN THE TWELVE (12) MONTH
+   PERIOD IMMEDIATELY PRECEDING THE EVENT GIVING RISE TO LIABILITY OR
+   (B) ONE HUNDRED U.S. DOLLARS (USD $100.00).
+
+   THE FOREGOING LIMITATIONS APPLY TO THE MAXIMUM EXTENT PERMITTED BY
+   APPLICABLE LAW, NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF
+   ANY LIMITED REMEDY.
+
+================================================================================
+
+9. EXPORT AND SANCTIONS
+
+   You shall comply with all applicable export-control and sanctions
+   laws and regulations of the United States and any other relevant
+   jurisdiction in Your use of the Software. You shall not export,
+   re-export, transfer, or make available the Software to any country,
+   person, entity, or end-use that is the subject of U.S. economic
+   sanctions or an applicable export prohibition without the prior
+   authorization of the U.S. Government and any other applicable
+   authority.
+
+================================================================================
+
+10. TERMINATION
+
+    Any rights granted under a separate written agreement terminate
+    automatically and without notice if You breach this license. Upon
+    termination, You shall immediately cease all use of the Software,
+    destroy all copies in Your possession or control, and certify such
+    destruction in writing to Licensor upon request. Sections 3, 4, 6,
+    7, 8, 9, 10, and 11 survive termination.
+
+================================================================================
+
+11. GOVERNING LAW; JURISDICTION
+
+    This license and any dispute arising under or related to it shall be
+    governed by, and construed in accordance with, the laws of the State
+    of Minnesota, U.S.A., excluding its conflict-of-laws principles. The
+    United Nations Convention on Contracts for the International Sale of
+    Goods does not apply.
+
+    The exclusive venue for any action or proceeding arising under or
+    relating to this license shall be the state or federal courts
+    located in Hennepin County, Minnesota, and You consent to the
+    personal jurisdiction of those courts and waive any objection based
+    on inconvenient forum.
+
+================================================================================
+
+12. CONTACT
+
+    Licensing inquiries:        licensing@viral-ventures-llc.com
+    Legal notices:              legal@viral-ventures-llc.com
+    Security disclosure:        security@viral-ventures-llc.com
+    Company:                    Viral Venture LLC
+                                Maple Grove, Minnesota, U.S.A.
+                                https://viral-ventures-llc.com
+
+================================================================================
+
+END OF LICENSE

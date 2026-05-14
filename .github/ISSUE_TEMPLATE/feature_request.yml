@@ -1,0 +1,64 @@
+name: Feature request
+description: Propose a new capability or enhancement.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What's the user struggling with? Whose problem is this — Primary Caregiver, Family Member, Paid Aide, Care Recipient?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should change? Keep it short — implementation comes later.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else did you think about, and why is the proposal better?
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Primary surface
+      options:
+        - iOS — Home
+        - iOS — Today
+        - iOS — Meds
+        - iOS — Pulse
+        - iOS — Vitals
+        - iOS — Find (location)
+        - iOS — Wall (chat)
+        - iOS — Activity feed
+        - iOS — Appointments
+        - iOS — Documents
+        - iOS — SOS
+        - iOS — Settings / More
+        - iOS — Simplified Mode
+        - Backend API
+        - Documentation
+        - Cross-cutting
+    validations:
+      required: true
+
+  - type: textarea
+    id: success
+    attributes:
+      label: How would we know this worked?
+      description: User outcome, not technical metric.
+
+  - type: checkboxes
+    id: alignment
+    attributes:
+      label: Spec alignment
+      description: Optional — link to the relevant section of [`docs/CARECIRCLE_SPEC.md`](../../docs/CARECIRCLE_SPEC.md) if you've already cross-referenced.
+      options:
+        - label: I have reviewed the product spec and this is consistent with the product's positioning.

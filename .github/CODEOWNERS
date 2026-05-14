@@ -1,0 +1,40 @@
+# CareCircle — CODEOWNERS
+#
+# Each line is a file pattern followed by one or more reviewers.
+# The last matching pattern wins. Required-review enforcement is configured
+# in branch-protection rules.
+
+# Default — every change requires maintainer review.
+*                                       @jwillz7667
+
+# Spec, policy, and license documents — maintainer review required.
+/LICENSE                                @jwillz7667
+/NOTICE                                 @jwillz7667
+/CONTRIBUTING.md                        @jwillz7667
+/CODE_OF_CONDUCT.md                     @jwillz7667
+/SECURITY.md                            @jwillz7667
+/docs/                                  @jwillz7667
+/spec-docs/                             @jwillz7667
+/CLAUDE.md                              @jwillz7667
+
+# iOS — entitlements, Info.plist, project config.
+/CareCircle/CareCircle.entitlements     @jwillz7667
+/CareCircle/Info.plist                  @jwillz7667
+/CareCircle.xcodeproj/                  @jwillz7667
+/.swiftlint.yml                         @jwillz7667
+/.swiftformat                           @jwillz7667
+
+# iOS — sensitive feature surfaces.
+/CareCircle/Sources/Features/Auth/      @jwillz7667
+/CareCircle/Sources/Features/SOS/       @jwillz7667
+/CareCircle/Sources/Features/Pulse/     @jwillz7667
+/CareCircle/Sources/Services/           @jwillz7667
+/CareCircle/Sources/Models/             @jwillz7667
+
+# Backend — schema, migrations, RLS.
+/backend/packages/db/                   @jwillz7667
+/backend/apps/api/src/features/auth/    @jwillz7667
+/backend/apps/api/src/shared/security/  @jwillz7667
+
+# GitHub config — workflows, CODEOWNERS, templates.
+/.github/                               @jwillz7667

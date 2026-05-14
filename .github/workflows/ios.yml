@@ -1,0 +1,91 @@
+name: iOS
+
+on:
+  pull_request:
+    paths:
+      - "CareCircle/**"
+      - "CareCircle.xcodeproj/**"
+      - ".swiftformat"
+      - ".swiftlint.yml"
+      - ".github/workflows/ios.yml"
+  push:
+    branches: [main]
+    paths:
+      - "CareCircle/**"
+      - "CareCircle.xcodeproj/**"
+      - ".swiftformat"
+      - ".swiftlint.yml"
+      - ".github/workflows/ios.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DESTINATION: platform=iOS Simulator,name=iPhone 16 Pro Max
+  SCHEME: CareCircle
+
+jobs:
+  lint:
+    name: Lint (swiftformat + swiftlint)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Homebrew
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/Cellar/swiftformat
+            /opt/homebrew/Cellar/swiftlint
+          key: brew-${{ runner.os }}-swift-${{ hashFiles('.swiftformat', '.swiftlint.yml') }}
+
+      - name: Install tools
+        run: |
+          brew install swiftformat swiftlint || true
+
+      - name: swiftformat --lint
+        run: swiftformat --lint .
+
+      - name: swiftlint --strict
+        run: swiftlint --strict --reporter github-actions-logging
+
+  build:
+    name: Build (xcodebuild)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          ls /Applications | grep -i Xcode
+          sudo xcode-select -s /Applications/Xcode_16.app || true
+          xcodebuild -version
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: derived-data-${{ runner.os }}-${{ hashFiles('CareCircle.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            derived-data-${{ runner.os }}-
+
+      - name: List simulators (for diagnostics)
+        run: xcrun simctl list devices available | head -50
+
+      - name: xcodebuild build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project CareCircle.xcodeproj \
+            -scheme "${SCHEME}" \
+            -destination "${DESTINATION}" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            build \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions

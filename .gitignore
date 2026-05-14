@@ -1,4 +1,15 @@
+# =============================================================================
+# CareCircle .gitignore
+#
+# Conventions
+#   - Be explicit about what gets ignored.
+#   - Never commit secrets (.env*, .p8, .p12, mobileprovision, keys, etc.).
+#   - Never commit OS, editor, or local caches.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
 # Xcode
+# -----------------------------------------------------------------------------
 build/
 DerivedData/
 *.pbxuser
@@ -14,8 +25,16 @@ xcuserdata/
 *.moved-aside
 *.xcuserstate
 *.xcscmblueprint
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
 
+# -----------------------------------------------------------------------------
 # Swift Package Manager
+# -----------------------------------------------------------------------------
 .build/
 .swiftpm/
 Packages/
@@ -25,54 +44,144 @@ Package.resolved
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Thumbs.db
+# -----------------------------------------------------------------------------
+# CocoaPods / Carthage
+# -----------------------------------------------------------------------------
+Pods/
+Carthage/Build/
+Carthage/Checkouts/
 
-# Editor
-.vscode/
-.idea/
-*.swp
-*~
-.netrwhist
-
-# Secrets — never commit
-.env
-.env.*
-*.p8
-*.p12
-*.mobileprovision
-
-# Logs
-*.log
-
+# -----------------------------------------------------------------------------
 # Fastlane
+# -----------------------------------------------------------------------------
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+fastlane/test_output/**
+fastlane/*.cache
 
-# CocoaPods
-Pods/
+# -----------------------------------------------------------------------------
+# macOS / Windows / Linux OS junk
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
-# Carthage
-Carthage/Build/
+# -----------------------------------------------------------------------------
+# Editors / IDEs
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.netrwhist
+*.sublime-project
+*.sublime-workspace
+.tags
+TAGS
+.history/
 
-# SourceKit / IDE caches
-.sourcekit-lsp/
-.cache/
+# -----------------------------------------------------------------------------
+# Secrets — never commit
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!*.env.example
+*.p8
+*.p12
+*.pem
+*.key
+*.cer
+*.cert
+*.crt
+*.mobileprovision
+*.provisionprofile
+*.keystore
+*.jks
+GoogleService-Info.plist
+google-services.json
+firebase-credentials.json
+AuthKey_*.p8
 
+# -----------------------------------------------------------------------------
+# Logs / runtime
+# -----------------------------------------------------------------------------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# -----------------------------------------------------------------------------
 # Node / pnpm (backend)
+# -----------------------------------------------------------------------------
 node_modules/
 dist/
-.tsbuildinfo
-coverage/
+build/
+out/
+.next/
 .turbo/
+.cache/
+.tsbuildinfo
+*.tsbuildinfo
+coverage/
+.nyc_output/
+.vitest-cache/
+.eslintcache
+.stylelintcache
 
-# Docker compose local volumes
+# -----------------------------------------------------------------------------
+# Docker / local infrastructure
+# -----------------------------------------------------------------------------
 backend/.data/
+backend/.docker/
+docker-compose.override.yml
+*.pid
 
-# Claude scheduled-task runtime
+# -----------------------------------------------------------------------------
+# Prisma
+# -----------------------------------------------------------------------------
+backend/packages/db/.prisma/
+
+# -----------------------------------------------------------------------------
+# SourceKit / language servers
+# -----------------------------------------------------------------------------
+.sourcekit-lsp/
+.metals/
+.bloop/
+
+# -----------------------------------------------------------------------------
+# Test artifacts
+# -----------------------------------------------------------------------------
+**/__snapshots__/__diff_output__/
+test-results/
+playwright-report/
+.playwright/
+
+# -----------------------------------------------------------------------------
+# Local Claude / AI tooling runtime
+# -----------------------------------------------------------------------------
 .claude/scheduled_tasks.lock
+.claude/cache/
+.claude/transcripts/
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+*.bak
+*.orig
+*.rej
+*.tmp
+*.temp
