@@ -52,6 +52,14 @@ struct RootView: View {
         didHydrateThisLaunch = true
         hydrator.triggerHydrateAll(modelContext: modelContext)
         documentSweeper.triggerSweep(modelContext: modelContext)
+        await pullDocumentKeys()
+    }
+
+    private func pullDocumentKeys() async {
+        let descriptor = FetchDescriptor<Circle>(sortBy: [SortDescriptor(\.createdAt)])
+        let circleIDs = (try? modelContext.fetch(descriptor))?.map(\.id) ?? []
+        guard !circleIDs.isEmpty else { return }
+        await CircleDocumentKeySyncService.shared.pullForAllCircles(circleIDs)
     }
 
     private var isSignedIn: Bool {

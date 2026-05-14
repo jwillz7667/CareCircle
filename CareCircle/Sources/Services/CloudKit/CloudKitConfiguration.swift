@@ -19,6 +19,20 @@ nonisolated enum CloudKitConfiguration {
 
     static let circleRecordType = "Circle"
 
+    /// CKRecord type that carries the per-circle document DEK across
+    /// share participants. One per circle, in the per-circle zone.
+    /// The DEK rides on `encryptedValues["dek"]` so CloudKit applies
+    /// end-to-end encryption on top of the share's access controls.
+    static let dekEnvelopeRecordType = "DocumentKeyEnvelope"
+
+    /// Predictable record name for the DEK envelope so members can
+    /// fetch it without enumerating the zone.
+    static let dekEnvelopeRecordName = "dek-envelope"
+
+    static func dekEnvelopeRecordID(for circleID: UUID) -> CKRecord.ID {
+        CKRecord.ID(recordName: dekEnvelopeRecordName, zoneID: recordZoneID(for: circleID))
+    }
+
     /// Notification posted by `CircleSceneDelegate` when an inbound share acceptance completes.
     static let shareAcceptedNotification = Notification.Name("Res.CareCircle.shareAccepted")
 }

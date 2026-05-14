@@ -76,6 +76,40 @@ nonisolated final class DocumentKeyStore: Sendable {
         return key
     }
 
+    /// Persists a DEK that arrived from outside this device (e.g. a
+    /// CKShare-sealed envelope). No-op if a key already exists — the
+    /// owner's local key is authoritative and never overwritten by an
+    /// envelope pulled later on the same device.
+    @discardableResult
+    func persist(rawKey: Data, circleID: UUID) throws -> SymmetricKey {
+        guard rawKey.count == 32 else {
+            throw KeyStoreError.unexpectedDataLength(rawKey.count)
+        }
+        if let existing = try loadKey(circleID: circleID) {
+            return existing
+        }
+
+        var attributes = baseQuery(circleID: circleID)
+        attributes[kSecValueData as String] = rawKey
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+
+        let status = SecItemAdd(attributes as CFDictionary, nil)
+        guard status == errSecSuccess else {
+            throw KeyStoreError.keychainStatus(status, action: "persist")
+        }
+        AppLogger.persistence.notice(
+            "Persisted incoming document key for circle \(circleID.uuidString, privacy: .public)"
+        )
+        return SymmetricKey(data: rawKey)
+    }
+
+    /// Owner-side helper: returns the raw 32 bytes of the local DEK so
+    /// the sync service can stage them into a `CKRecord` envelope.
+    func rawKeyBytes(circleID: UUID) throws -> Data? {
+        guard let key = try loadKey(circleID: circleID) else { return nil }
+        return key.withUnsafeBytes { Data($0) }
+    }
+
     func forget(circleID: UUID) throws {
         let status = SecItemDelete(baseQuery(circleID: circleID) as CFDictionary)
         switch status {

@@ -41,11 +41,25 @@ final class CircleSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 try await CircleSharingService.shared.acceptShare(metadata: metadata)
                 AppLogger.cloudKit
                     .info("Share accepted for record \(metadata.share.recordID.recordName, privacy: .public)")
+                if let circleID = Self.circleID(from: metadata) {
+                    await CircleDocumentKeySyncService.shared.pullIfMissing(circleID: circleID)
+                }
             } catch {
                 AppLogger.cloudKit.error(
                     "Share acceptance failed: \(error.localizedDescription, privacy: .public)"
                 )
             }
         }
+    }
+
+    /// Parses the shared zone name (`circle-<uuid>`) out of the metadata
+    /// so we can target a DEK pull at the just-accepted circle. Returns
+    /// nil for any zone the app didn't create.
+    private static func circleID(from metadata: CKShare.Metadata) -> UUID? {
+        let zoneName = metadata.share.recordID.zoneID.zoneName
+        let prefix = "circle-"
+        guard zoneName.hasPrefix(prefix) else { return nil }
+        let suffix = String(zoneName.dropFirst(prefix.count))
+        return UUID(uuidString: suffix)
     }
 }

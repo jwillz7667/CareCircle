@@ -277,6 +277,17 @@ struct AddDocumentView: View {
             modelContext.insert(document)
             try modelContext.save()
             documentSweeper.triggerSweep(modelContext: modelContext)
+            if isOwner {
+                Task {
+                    do {
+                        try await CircleDocumentKeySyncService.shared.publishIfNeeded(circleID: circleID)
+                    } catch {
+                        AppLogger.cloudKit.error(
+                            "DEK publish failed: \(String(describing: error), privacy: .public)"
+                        )
+                    }
+                }
+            }
             dismiss()
         } catch let error as DocumentVault.VaultError {
             errorMessage = error.errorDescription

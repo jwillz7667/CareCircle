@@ -198,6 +198,29 @@ nonisolated struct DocumentCreateResponse: Decodable, Sendable, Equatable {
     let id: String
 }
 
+/// Response from `GET /v1/documents/:id/download-url`.
+nonisolated struct DocumentDownloadURLResponse: Decodable, Sendable, Equatable {
+    let url: String
+    let objectKey: String
+    let encryptionNonce: String
+    let encryptionTag: String
+}
+
+// MARK: - Medication dose events
+
+nonisolated struct MedicationDosesResponse: Decodable, Sendable, Equatable {
+    let doses: [DoseDTO]
+}
+
+nonisolated struct DoseDTO: Decodable, Sendable, Equatable {
+    let id: String
+    let scheduledAt: Date
+    let takenAt: Date?
+    let markedBy: String?
+    let status: String
+    let notes: String?
+}
+
 // MARK: - JSONValue
 
 /// Minimal JSON value used to round-trip the medication `schedule`

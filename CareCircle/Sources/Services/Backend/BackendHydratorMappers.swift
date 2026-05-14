@@ -122,6 +122,18 @@ enum BackendHydratorMappers {
         return event
     }
 
+    static func makeDoseEvent(from dto: DoseDTO) -> DoseEvent {
+        DoseEvent(
+            id: parseUUID(dto.id) ?? UUID(),
+            scheduledAt: dto.scheduledAt,
+            status: DoseStatus(rawValue: dto.status) ?? .scheduled,
+            takenAt: dto.takenAt,
+            markedByAppleUserID: dto.markedBy,
+            markedByDisplayName: nil,
+            notes: dto.notes
+        )
+    }
+
     /// Documents hydrate as **placeholders**: backend metadata is
     /// authoritative but the encrypted blob still lives in MinIO. The
     /// caller's `BackendDocumentService` would have to GET the

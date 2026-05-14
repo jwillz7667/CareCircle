@@ -64,6 +64,30 @@ actor BackendDocumentService {
         }
     }
 
+    enum DownloadError: LocalizedError, Sendable {
+        case invalidPresignURL
+        case requestFailed(String)
+        case fetchFailed(status: Int?)
+        case malformedEnvelope
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidPresignURL:
+                "Backend returned an unusable download URL."
+            case let .requestFailed(message):
+                "Couldn't reach the backend for this document: \(message)"
+            case let .fetchFailed(status):
+                if let status {
+                    "Document download rejected by storage (HTTP \(status))."
+                } else {
+                    "Document download from storage failed."
+                }
+            case .malformedEnvelope:
+                "Document encryption metadata is unreadable."
+            }
+        }
+    }
+
     /// Owner-side input. Plaintext never leaves the caller — only the
     /// already-sealed ciphertext + nonce + tag travel here.
     struct UploadRequest: Sendable {
@@ -212,6 +236,69 @@ actor BackendDocumentService {
         } catch {
             throw .createMetadataFailed(error.errorDescription ?? "Create metadata failed")
         }
+    }
+
+    // MARK: - Download (member-side fetch for backend-only documents)
+
+    /// Sealed payload returned from a download. The nonce + tag come
+    /// from the backend metadata row so the caller can decrypt without
+    /// trusting the local placeholder's empty fields. The DEK still
+    /// lives only in the local Keychain — the backend never sees it.
+    struct DownloadedPayload: Sendable, Equatable {
+        let ciphertext: Data
+        let nonce: Data
+        let tag: Data
+        let mimeType: String?
+    }
+
+    /// Fetches ciphertext for a backend-stored document. Issues a
+    /// presigned-URL request via `APIClient` (which carries the bearer
+    /// token), then follows the presign with a plain `URLSession.data`
+    /// call so the signed URL isn't double-encrypted.
+    func downloadCiphertext(documentId: UUID) async throws(DownloadError) -> DownloadedPayload {
+        let envelope: DocumentDownloadURLResponse
+        do {
+            envelope = try await apiClient.send(
+                method: .get,
+                path: "/v1/documents/\(documentId.uuidString.lowercased())/download-url"
+            )
+        } catch {
+            throw .requestFailed(error.errorDescription ?? "Download presign failed")
+        }
+
+        guard let url = URL(string: envelope.url) else {
+            throw .invalidPresignURL
+        }
+        guard
+            let nonce = Data(base64Encoded: envelope.encryptionNonce),
+            let tag = Data(base64Encoded: envelope.encryptionTag) else
+        {
+            throw .malformedEnvelope
+        }
+
+        let ciphertext: Data
+        let response: URLResponse
+        do {
+            (ciphertext, response) = try await urlSession.data(from: url)
+        } catch {
+            AppLogger.backend.error(
+                "Presigned GET failed: \(String(describing: error), privacy: .public)"
+            )
+            throw .fetchFailed(status: nil)
+        }
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw .fetchFailed(status: nil)
+        }
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw .fetchFailed(status: httpResponse.statusCode)
+        }
+
+        return DownloadedPayload(
+            ciphertext: ciphertext,
+            nonce: nonce,
+            tag: tag,
+            mimeType: httpResponse.value(forHTTPHeaderField: "Content-Type")
+        )
     }
 
     // MARK: - Helpers

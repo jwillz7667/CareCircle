@@ -48,6 +48,17 @@ final class BackendDocumentRetrySweeper {
         pendingCount = fetchPending(modelContext: modelContext).count
     }
 
+    /// Member-side fetch for a backend-only placeholder. Delegates to
+    /// the underlying actor so views don't need a direct reference to
+    /// the service.
+    func downloadCiphertext(
+        documentId: UUID
+    ) async throws(BackendDocumentService.DownloadError)
+        -> BackendDocumentService.DownloadedPayload
+    {
+        try await service.downloadCiphertext(documentId: documentId)
+    }
+
     private func sweep(modelContext: ModelContext) async {
         isRunning = true
         defer { isRunning = false }

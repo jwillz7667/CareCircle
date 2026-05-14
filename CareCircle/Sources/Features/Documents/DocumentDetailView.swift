@@ -17,6 +17,7 @@ struct DocumentDetailView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
 
     @State private var decryptedData: Data?
     @State private var decryptionError: String?
@@ -214,19 +215,41 @@ struct DocumentDetailView: View {
     }
 
     private func decryptIfNeeded() async {
-        guard decryptedData == nil, document.isReadable else { return }
+        guard decryptedData == nil else { return }
         guard let circleID = document.circle?.id else {
             decryptionError = "This document isn't linked to a Circle."
             return
         }
+        guard document.isReadable || document.isBackendPlaceholder else { return }
+
         isDecrypting = true
         defer { isDecrypting = false }
 
-        let payload = DocumentVault.SealedPayload(
-            ciphertext: document.ciphertext,
-            nonce: document.nonce,
-            tag: document.tag
-        )
+        let payload: DocumentVault.SealedPayload
+        if document.isReadable {
+            payload = DocumentVault.SealedPayload(
+                ciphertext: document.ciphertext,
+                nonce: document.nonce,
+                tag: document.tag
+            )
+        } else {
+            do {
+                let downloaded = try await documentSweeper.downloadCiphertext(documentId: document.id)
+                payload = DocumentVault.SealedPayload(
+                    ciphertext: downloaded.ciphertext,
+                    nonce: downloaded.nonce,
+                    tag: downloaded.tag
+                )
+            } catch {
+                decryptionError = error.errorDescription
+                    ?? "Couldn't fetch this document from the backend."
+                AppLogger.backend.error(
+                    "Document download failed: \(String(describing: error), privacy: .public)"
+                )
+                return
+            }
+        }
+
         do {
             decryptedData = try DocumentVault.shared.open(payload: payload, circleID: circleID)
             decryptionError = nil

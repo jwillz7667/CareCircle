@@ -88,6 +88,7 @@ final class BackendHydrator {
         do {
             try await hydrateActivities(circleId: circleId, modelContext: modelContext)
             try await hydrateMedications(circleId: circleId, modelContext: modelContext)
+            try await hydrateDoseEvents(circleId: circleId, modelContext: modelContext)
             try await hydrateAppointments(circleId: circleId, modelContext: modelContext)
             try await hydrateEmergencyContacts(circleId: circleId, modelContext: modelContext)
             try await hydrateMembers(circleId: circleId, modelContext: modelContext)
@@ -168,6 +169,37 @@ final class BackendHydrator {
         }
         AppLogger.backend.info(
             "Hydrated \(response.medications.count, privacy: .public) medications."
+        )
+    }
+
+    private func hydrateDoseEvents(circleId: UUID, modelContext: ModelContext) async throws {
+        guard localCount(of: DoseEvent.self, in: circleId, modelContext: modelContext) == 0 else {
+            AppLogger.backend.debug("Dose events skipped — local store is not empty.")
+            return
+        }
+
+        let medications = fetchMedications(circleId: circleId, modelContext: modelContext)
+        guard !medications.isEmpty else {
+            AppLogger.backend.debug("Dose events skipped — no local medications.")
+            return
+        }
+
+        var totalInserted = 0
+        for medication in medications {
+            let response: MedicationDosesResponse = try await apiClient.send(
+                method: .get,
+                path: "/v1/medications/\(medication.id.uuidString.lowercased())/doses",
+                authenticated: true
+            )
+            for dto in response.doses {
+                let dose = BackendHydratorMappers.makeDoseEvent(from: dto)
+                dose.medication = medication
+                modelContext.insert(dose)
+                totalInserted += 1
+            }
+        }
+        AppLogger.backend.info(
+            "Hydrated \(totalInserted, privacy: .public) dose events across \(medications.count, privacy: .public) medications."
         )
     }
 
@@ -340,6 +372,7 @@ final class BackendHydrator {
         case let row as CareMinuteEntry: row.circle?.id
         case let row as SOSEvent: row.circle?.id
         case let row as Document: row.circle?.id
+        case let row as DoseEvent: row.medication?.circle?.id
         default: nil
         }
     }
@@ -347,6 +380,12 @@ final class BackendHydrator {
     private func fetchCircle(id: UUID, modelContext: ModelContext) -> Circle? {
         let descriptor = FetchDescriptor<Circle>(predicate: #Predicate { $0.id == id })
         return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    private func fetchMedications(circleId: UUID, modelContext: ModelContext) -> [Medication] {
+        let descriptor = FetchDescriptor<Medication>(sortBy: [SortDescriptor(\.createdAt)])
+        let all = (try? modelContext.fetch(descriptor)) ?? []
+        return all.filter { $0.circle?.id == circleId }
     }
 
     // MARK: - URL helpers
