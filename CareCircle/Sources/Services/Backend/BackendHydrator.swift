@@ -445,5 +445,4 @@ final class BackendHydrator {
         let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
         return "\(base)\(query)"
     }
-
 }

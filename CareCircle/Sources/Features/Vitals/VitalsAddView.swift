@@ -23,8 +23,8 @@ struct VitalsAddView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var kind: VitalKind = .heartRate
-    @State private var valueString: String = ""
-    @State private var notes: String = ""
+    @State private var valueString = ""
+    @State private var notes = ""
     @State private var recordedAt: Date = .now
     @State private var saveError: String?
 

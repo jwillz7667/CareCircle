@@ -57,7 +57,7 @@ final class HealthKitVitalsReader {
         .init(.falls, .numberOfTimesFallen, .count(), 1),
     ]
 
-    private static let milligramPerDeciliter: HKUnit =
+    private static let milligramPerDeciliter =
         HKUnit.gramUnit(with: .milli).unitDivided(by: HKUnit.literUnit(with: .deci))
 
     private let store: HKHealthStore?
@@ -65,7 +65,9 @@ final class HealthKitVitalsReader {
     private let syncEngine: SyncEngine
     private let currentBackendUserID: @MainActor () -> String?
 
-    var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
+    var isAvailable: Bool {
+        HKHealthStore.isHealthDataAvailable()
+    }
 
     init(
         syncEngine: SyncEngine,
@@ -159,7 +161,9 @@ final class HealthKitVitalsReader {
         circleID: UUID,
         backendUserID: String,
         modelContext: ModelContext
-    ) async -> Int {
+    ) async
+        -> Int
+    {
         guard let hkType = HKQuantityType.quantityType(forIdentifier: spec.identifier) else {
             return 0
         }
@@ -222,7 +226,9 @@ final class HealthKitVitalsReader {
         circleID: UUID,
         backendUserID: String,
         modelContext: ModelContext
-    ) async -> Int {
+    ) async
+        -> Int
+    {
         guard let hkType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else {
             return 0
         }
@@ -316,7 +322,7 @@ final class HealthKitVitalsReader {
                 }
                 return NightAggregate(
                     nightStart: nightStart,
-                    hours: seconds / 3600.0,
+                    hours: seconds / 3_600.0,
                     samples: samples
                 )
             }

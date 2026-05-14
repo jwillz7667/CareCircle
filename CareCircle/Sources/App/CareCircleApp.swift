@@ -14,6 +14,7 @@ struct CareCircleApp: App {
     @State private var realtimeClient: BackendRealtimeClient
     @State private var inferenceClient: BackendInferenceClient
     @State private var healthKitReader: HealthKitVitalsReader
+    @State private var locationService: LocationSharingService
     @State private var insightsEngine = InsightsEngine()
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
@@ -57,6 +58,13 @@ struct CareCircleApp: App {
             syncEngine: engine,
             currentBackendUserID: { [auth] in auth.lastVerifiedProfile?.id }
         ))
+        _locationService = State(initialValue: LocationSharingService(
+            modelContainer: container,
+            currentAuthor: { [auth] in
+                guard case let .signedIn(user) = auth.status else { return nil }
+                return ActivityAuthorContext(appleUserID: user.id, displayName: user.displayName)
+            }
+        ))
 
         MainActor.assumeIsolated {
             MedicationServices.shared.install(modelContainer: container)
@@ -81,6 +89,8 @@ struct CareCircleApp: App {
             ShiftDigest.self,
             Insight.self,
             Vital.self,
+            LocationSnapshot.self,
+            ChatMessage.self,
             PendingOperation.self,
         ])
         let configuration = ModelConfiguration(
@@ -110,6 +120,7 @@ struct CareCircleApp: App {
                 .environment(realtimeClient)
                 .environment(inferenceClient)
                 .environment(healthKitReader)
+                .environment(locationService)
                 .environment(insightsEngine)
                 .preferredColorScheme(.light)
         }

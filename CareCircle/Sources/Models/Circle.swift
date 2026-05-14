@@ -50,6 +50,12 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \Vital.circle)
     var vitalsStore: [Vital]?
 
+    @Relationship(deleteRule: .cascade, inverse: \LocationSnapshot.circle)
+    var locationSnapshotsStore: [LocationSnapshot]?
+
+    @Relationship(deleteRule: .cascade, inverse: \ChatMessage.circle)
+    var chatMessagesStore: [ChatMessage]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -103,6 +109,16 @@ final class Circle {
     var vitals: [Vital] {
         get { vitalsStore ?? [] }
         set { vitalsStore = newValue }
+    }
+
+    var locationSnapshots: [LocationSnapshot] {
+        get { locationSnapshotsStore ?? [] }
+        set { locationSnapshotsStore = newValue }
+    }
+
+    var chatMessages: [ChatMessage] {
+        get { chatMessagesStore ?? [] }
+        set { chatMessagesStore = newValue }
     }
 
     init(

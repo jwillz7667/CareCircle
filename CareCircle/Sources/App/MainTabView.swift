@@ -12,14 +12,19 @@ struct MainTabView: View {
                     Label("Home", systemImage: "house.fill")
                 }
 
-            TodayView(authState: authState)
+            PulseDashboardView(authState: authState)
                 .tabItem {
-                    Label("Today", systemImage: "list.bullet.clipboard.fill")
+                    Label("Vitals", systemImage: "heart.fill")
                 }
 
             MedsView(authState: authState)
                 .tabItem {
                     Label("Meds", systemImage: "pills.fill")
+                }
+
+            ChatRoomView(authState: authState)
+                .tabItem {
+                    Label("Wall", systemImage: "bubble.left.and.bubble.right.fill")
                 }
 
             MoreView(authState: authState)

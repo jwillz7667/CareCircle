@@ -146,7 +146,8 @@ struct VitalsListView: View {
             Image(systemName: "heart.text.square")
                 .font(.system(size: 44, weight: .light))
                 .foregroundStyle(Color.ccPrimary)
-            Text(selectedKind == nil ? "No vitals yet." : "No \(selectedKind?.displayName.lowercased() ?? "") readings.")
+            Text(selectedKind == nil ? "No vitals yet." :
+                "No \(selectedKind?.displayName.lowercased() ?? "") readings.")
                 .font(.headline)
                 .foregroundStyle(Color.ccText)
             Text(permissions.canPostActivity

@@ -28,7 +28,9 @@ enum VitalKind: String, CaseIterable, Codable, Sendable, Identifiable {
     case restingHeartRate = "resting_heart_rate"
     case stepCount = "step_count"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     /// Kinds the user can manually enter from the Add Vital sheet.
     /// HealthKit-only kinds (falls, walking steadiness, sleep, resting
