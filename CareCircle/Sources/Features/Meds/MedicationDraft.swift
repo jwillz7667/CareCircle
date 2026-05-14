@@ -54,6 +54,32 @@ struct MedicationDraft: Equatable {
         fdaIngredients = medication.fdaIngredients
     }
 
+    init(identification: PillIdentificationResult) {
+        name = identification.displayName
+        dosage = ""
+        form = Self.form(forDosageForms: identification.dosageForms)
+        status = .active
+        schedule = MedicationSchedule()
+        instructions = ""
+        colorHex = nil
+        startDate = nil
+        endDate = nil
+        fdaIngredients = identification.activeIngredients
+    }
+
+    private static func form(forDosageForms dosageForms: [String]) -> MedicationForm {
+        guard let first = dosageForms.first?.lowercased() else { return .tablet }
+        if first.contains("tablet") { return .tablet }
+        if first.contains("capsule") { return .capsule }
+        if first.contains("solution") || first.contains("liquid") || first.contains("syrup") { return .liquid }
+        if first.contains("injection") { return .injection }
+        if first.contains("patch") { return .patch }
+        if first.contains("inhal") || first.contains("aerosol") { return .inhaler }
+        if first.contains("cream") || first.contains("ointment") || first.contains("gel") { return .cream }
+        if first.contains("drop") { return .drops }
+        return .other
+    }
+
     var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }

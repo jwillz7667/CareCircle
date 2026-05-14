@@ -39,6 +39,59 @@ struct OpenFDAClient: Sendable {
         return url
     }()
 
+    private static let ndcEndpoint: URL = {
+        guard let url = URL(string: "https://api.fda.gov/drug/ndc.json") else {
+            preconditionFailure("Hardcoded openFDA NDC endpoint URL is invalid.")
+        }
+        return url
+    }()
+
+    /// Looks the medication up by its NDC product code (e.g. "12345-6789").
+    /// Returns nil when openFDA responds with HTTP 404 or an empty results
+    /// array — both are normal for unmapped/over-the-counter codes.
+    func lookup(ndc: String) async throws -> OpenFDANDCResult? {
+        let trimmed = ndc.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        guard var components = URLComponents(url: Self.ndcEndpoint, resolvingAgainstBaseURL: false) else {
+            throw LookupError.invalidURL
+        }
+        components.queryItems = [
+            URLQueryItem(name: "search", value: "product_ndc:\"\(trimmed)\""),
+            URLQueryItem(name: "limit", value: "1"),
+        ]
+        guard let url = components.url else { throw LookupError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.cachePolicy = .returnCacheDataElseLoad
+        request.timeoutInterval = 12
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw LookupError.transport(error.localizedDescription)
+        }
+
+        if let http = response as? HTTPURLResponse {
+            if http.statusCode == 404 { return nil }
+            guard (200 ..< 300).contains(http.statusCode) else {
+                throw LookupError.httpStatus(http.statusCode)
+            }
+        }
+
+        do {
+            let decoded = try JSONDecoder().decode(OpenFDANDCResponse.self, from: data)
+            return decoded.firstResult()
+        } catch {
+            AppLogger.app.error(
+                "openFDA NDC decode failed: \(String(describing: error), privacy: .public)"
+            )
+            return nil
+        }
+    }
+
     func lookup(name: String) async throws -> OpenFDALabelResult? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -162,5 +215,51 @@ private extension String {
     func titlecased() -> String {
         let lower = lowercased()
         return lower.prefix(1).uppercased() + lower.dropFirst()
+    }
+}
+
+// MARK: - OpenFDANDCResponse
+
+private struct OpenFDANDCResponse: Decodable {
+    var results: [Entry]?
+
+    struct Entry: Decodable {
+        var productNDC: String?
+        var brandName: String?
+        var genericName: String?
+        var dosageForm: String?
+        var route: [String]?
+        var activeIngredients: [ActiveIngredient]?
+
+        enum CodingKeys: String, CodingKey {
+            case productNDC = "product_ndc"
+            case brandName = "brand_name"
+            case genericName = "generic_name"
+            case dosageForm = "dosage_form"
+            case route
+            case activeIngredients = "active_ingredients"
+        }
+    }
+
+    struct ActiveIngredient: Decodable {
+        var name: String?
+        var strength: String?
+    }
+
+    func firstResult() -> OpenFDANDCResult? {
+        guard let entry = results?.first else { return nil }
+        let brand = entry.brandName.map { [$0.titlecased()] } ?? []
+        let generic = entry.genericName.map { [$0.titlecased()] } ?? []
+        let ingredients = (entry.activeIngredients ?? [])
+            .compactMap(\.name)
+            .map { $0.titlecased() }
+        return OpenFDANDCResult(
+            productNDC: entry.productNDC ?? "",
+            brandNames: dedup(brand),
+            genericNames: dedup(generic),
+            activeIngredients: dedup(ingredients),
+            routes: entry.route ?? [],
+            dosageForms: entry.dosageForm.map { [$0] } ?? []
+        )
     }
 }

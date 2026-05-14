@@ -12,6 +12,7 @@ struct MedicationListView: View {
     @Environment(BackendRealtimeClient.self) private var realtimeClient
     @Environment(\.modelContext) private var modelContext
     @State private var isAddingMedication = false
+    @State private var isIdentifyingPill = false
 
     private var grouped: [(status: MedicationStatus, items: [Medication])] {
         let allMeds = circle.medications
@@ -30,8 +31,21 @@ struct MedicationListView: View {
                 .padding(.bottom, Theme.spacing)
         }
         .background(Color.ccBackground)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isIdentifyingPill = true
+                } label: {
+                    Label("Identify pill", systemImage: "barcode.viewfinder")
+                }
+                .accessibilityLabel("Identify pill by scanning its barcode")
+            }
+        }
         .sheet(isPresented: $isAddingMedication) {
             AddMedicationView(circle: circle)
+        }
+        .sheet(isPresented: $isIdentifyingPill) {
+            PillIdentifierView(circle: circle)
         }
     }
 

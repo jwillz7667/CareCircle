@@ -21,18 +21,13 @@ struct AddMedicationView: View {
     @State private var hasEndDate: Bool
     @State private var isPresentingScanner = false
 
-    init(circle: Circle, editing: Medication? = nil) {
+    init(circle: Circle, editing: Medication? = nil, initialDraft: MedicationDraft? = nil) {
         self.circle = circle
         self.editing = editing
-        if let editing {
-            _draft = State(initialValue: MedicationDraft(medication: editing))
-            _hasStartDate = State(initialValue: editing.startDate != nil)
-            _hasEndDate = State(initialValue: editing.endDate != nil)
-        } else {
-            _draft = State(initialValue: MedicationDraft())
-            _hasStartDate = State(initialValue: false)
-            _hasEndDate = State(initialValue: false)
-        }
+        let seed = editing.map { MedicationDraft(medication: $0) } ?? initialDraft ?? MedicationDraft()
+        _draft = State(initialValue: seed)
+        _hasStartDate = State(initialValue: seed.startDate != nil)
+        _hasEndDate = State(initialValue: seed.endDate != nil)
     }
 
     private var isEditing: Bool {
