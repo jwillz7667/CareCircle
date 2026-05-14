@@ -121,6 +121,16 @@ actor APIClient {
         )
     }
 
+    /// Returns a guaranteed-fresh access token. Used by callers that
+    /// can't piggy-back on the request pipeline — currently the
+    /// realtime WebSocket, which needs to embed the token in the
+    /// connect URL because URLSessionWebSocketTask has no per-request
+    /// Authorization header hook before the upgrade.
+    func freshAccessToken() async throws(APIError) -> String {
+        let tokens = try await ensureFreshAccessToken()
+        return tokens.accessToken
+    }
+
     /// Sends a pre-encoded JSON body. Used by `SyncEngine` so it can
     /// assemble heterogeneous operation payloads with
     /// `JSONSerialization` without having to model every payload type at

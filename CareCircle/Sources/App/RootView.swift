@@ -10,6 +10,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(BackendHydrator.self) private var hydrator
     @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
     @State private var didHydrateThisLaunch = false
 
     var body: some View {
@@ -38,10 +39,13 @@ struct RootView: View {
                 MedicationOverdueSweeper().sweep(in: modelContext)
                 documentSweeper.triggerSweep(modelContext: modelContext)
                 documentSweeper.triggerPrefetch(modelContext: modelContext)
+                realtimeClient.start(modelContext: modelContext)
                 Task {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
                 }
+            } else if newPhase == .background || newPhase == .inactive {
+                realtimeClient.stop()
             }
         }
     }
@@ -55,6 +59,7 @@ struct RootView: View {
         documentSweeper.triggerSweep(modelContext: modelContext)
         await pullDocumentKeys()
         documentSweeper.triggerPrefetch(modelContext: modelContext)
+        realtimeClient.start(modelContext: modelContext)
     }
 
     private func pullDocumentKeys() async {

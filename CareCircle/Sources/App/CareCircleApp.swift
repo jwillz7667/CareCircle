@@ -11,6 +11,7 @@ struct CareCircleApp: App {
     @State private var syncEngine: SyncEngine
     @State private var hydrator: BackendHydrator
     @State private var documentSweeper: BackendDocumentRetrySweeper
+    @State private var realtimeClient: BackendRealtimeClient
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
 
@@ -27,7 +28,8 @@ struct CareCircleApp: App {
         let container = Self.makeModelContainer()
         modelContainer = container
 
-        let client = APIClient(configuration: BackendConfiguration.resolveFromBundle())
+        let configuration = BackendConfiguration.resolveFromBundle()
+        let client = APIClient(configuration: configuration)
         apiClient = client
         let authService = BackendAuthService(apiClient: client)
         backendAuthService = authService
@@ -37,6 +39,10 @@ struct CareCircleApp: App {
         let docService = BackendDocumentService(apiClient: client)
         documentService = docService
         _documentSweeper = State(initialValue: BackendDocumentRetrySweeper(service: docService))
+        _realtimeClient = State(initialValue: BackendRealtimeClient(
+            apiClient: client,
+            configuration: configuration
+        ))
         _authState = State(initialValue: AuthState(
             backendAuthService: authService,
             syncEngine: engine
@@ -88,6 +94,7 @@ struct CareCircleApp: App {
                 .environment(syncEngine)
                 .environment(hydrator)
                 .environment(documentSweeper)
+                .environment(realtimeClient)
                 .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)
