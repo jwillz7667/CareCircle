@@ -1,7 +1,8 @@
 # Phase 15 — Outbound sync expansion + backend session proof-of-life
 
-**Status:** in progress
+**Status:** shipped
 **Started:** 2026-05-13
+**Shipped:** 2026-05-13 (commit 817105b)
 
 ## What this is
 
