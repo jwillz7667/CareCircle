@@ -149,7 +149,7 @@ final class BackendRealtimeClient {
         @unknown default:
             return
         }
-        guard let frame = Frame.decode(from: data) else {
+        guard let frame = BackendRealtimeFrame.decode(from: data) else {
             AppLogger.backend.notice("Realtime: dropped undecodable frame")
             return
         }
@@ -253,13 +253,18 @@ final class BackendRealtimeClient {
     ) async {
         switch table {
         case "activities":
-            await applyActivityChange(
-                circleId: circleId,
-                modelContext: modelContext
-            )
+            await applyActivityChange(circleId: circleId, modelContext: modelContext)
+        case "medications":
+            await applyMedicationChange(circleId: circleId, modelContext: modelContext)
+        case "appointments":
+            await applyAppointmentChange(circleId: circleId, modelContext: modelContext)
+        case "circle_members":
+            await applyMemberChange(circleId: circleId, modelContext: modelContext)
+        case "emergency_contacts":
+            await applyEmergencyContactChange(circleId: circleId, modelContext: modelContext)
+        case "documents":
+            await applyDocumentChange(circleId: circleId, modelContext: modelContext)
         default:
-            // Phase 20: only activities. Other tables ignored until
-            // Phase 21 wires per-domain applicators.
             AppLogger.backend.debug(
                 "Realtime: \(table, privacy: .public) row \(rowId.uuidString, privacy: .public) — no applicator yet."
             )
@@ -337,41 +342,189 @@ final class BackendRealtimeClient {
     }
 }
 
-// MARK: - Frame
+// MARK: - Per-domain applicators
 
-extension BackendRealtimeClient {
-    enum Frame {
-        case subscribed(circles: [UUID])
-        case change(circleId: UUID, table: String, rowId: UUID, op: String)
+private extension BackendRealtimeClient {
+    func applyMedicationChange(
+        circleId: UUID,
+        modelContext: ModelContext
+    ) async {
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+        let response: MedicationsResponse
+        do {
+            response = try await apiClient.send(
+                method: .get,
+                path: "/v1/circles/\(circleId.uuidString.lowercased())/medications",
+                authenticated: true
+            )
+        } catch {
+            logRefetchFailure(domain: "medications", error: error)
+            return
+        }
+        let existing = fetchExistingIDs(Medication.self, circleId: circleId, modelContext: modelContext) {
+            $0.circle?.id
+        }
+        var inserted = 0
+        for dto in response.medications {
+            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
+            let row = BackendHydratorMappers.makeMedication(from: dto)
+            row.circle = circle
+            modelContext.insert(row)
+            inserted += 1
+        }
+        saveIfInserted(inserted, domain: "medications", circleId: circleId, modelContext: modelContext)
+    }
 
-        static func decode(from data: Data) -> Frame? {
-            guard let envelope = try? JSONDecoder().decode(Envelope.self, from: data) else {
-                return nil
-            }
-            switch envelope.type {
-            case "subscribed":
-                let circles = (envelope.circles ?? []).compactMap(UUID.init(uuidString:))
-                return .subscribed(circles: circles)
-            case "change":
-                guard let circleRaw = envelope.circleId,
-                      let circleId = UUID(uuidString: circleRaw),
-                      let table = envelope.table,
-                      let rowRaw = envelope.rowId,
-                      let rowId = UUID(uuidString: rowRaw),
-                      let op = envelope.op else { return nil }
-                return .change(circleId: circleId, table: table, rowId: rowId, op: op)
-            default:
-                return nil
-            }
+    func applyAppointmentChange(
+        circleId: UUID,
+        modelContext: ModelContext
+    ) async {
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+        let response: AppointmentsResponse
+        do {
+            response = try await apiClient.send(
+                method: .get,
+                path: "/v1/circles/\(circleId.uuidString.lowercased())/appointments",
+                authenticated: true
+            )
+        } catch {
+            logRefetchFailure(domain: "appointments", error: error)
+            return
+        }
+        let existing = fetchExistingIDs(Appointment.self, circleId: circleId, modelContext: modelContext) {
+            $0.circle?.id
+        }
+        var inserted = 0
+        for dto in response.appointments {
+            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
+            let row = BackendHydratorMappers.makeAppointment(from: dto)
+            row.circle = circle
+            modelContext.insert(row)
+            inserted += 1
+        }
+        saveIfInserted(inserted, domain: "appointments", circleId: circleId, modelContext: modelContext)
+    }
+
+    func applyMemberChange(
+        circleId: UUID,
+        modelContext: ModelContext
+    ) async {
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+        let response: MembersResponse
+        do {
+            response = try await apiClient.send(
+                method: .get,
+                path: "/v1/circles/\(circleId.uuidString.lowercased())/members",
+                authenticated: true
+            )
+        } catch {
+            logRefetchFailure(domain: "members", error: error)
+            return
+        }
+        let existing = fetchExistingIDs(Member.self, circleId: circleId, modelContext: modelContext) { $0.circle?.id }
+        var inserted = 0
+        for dto in response.members {
+            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
+            let row = BackendHydratorMappers.makeMember(from: dto)
+            row.circle = circle
+            modelContext.insert(row)
+            inserted += 1
+        }
+        saveIfInserted(inserted, domain: "members", circleId: circleId, modelContext: modelContext)
+    }
+
+    func applyEmergencyContactChange(
+        circleId: UUID,
+        modelContext: ModelContext
+    ) async {
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+        let response: EmergencyContactsResponse
+        do {
+            response = try await apiClient.send(
+                method: .get,
+                path: "/v1/circles/\(circleId.uuidString.lowercased())/emergency-contacts",
+                authenticated: true
+            )
+        } catch {
+            logRefetchFailure(domain: "emergency-contacts", error: error)
+            return
+        }
+        let existing = fetchExistingIDs(EmergencyContact.self, circleId: circleId, modelContext: modelContext) {
+            $0.circle?.id
+        }
+        var inserted = 0
+        for dto in response.contacts {
+            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
+            let row = BackendHydratorMappers.makeEmergencyContact(from: dto)
+            row.circle = circle
+            modelContext.insert(row)
+            inserted += 1
+        }
+        saveIfInserted(inserted, domain: "emergency-contacts", circleId: circleId, modelContext: modelContext)
+    }
+
+    func applyDocumentChange(
+        circleId: UUID,
+        modelContext: ModelContext
+    ) async {
+        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
+        let response: DocumentsResponse
+        do {
+            response = try await apiClient.send(
+                method: .get,
+                path: "/v1/circles/\(circleId.uuidString.lowercased())/documents",
+                authenticated: true
+            )
+        } catch {
+            logRefetchFailure(domain: "documents", error: error)
+            return
+        }
+        let existing = fetchExistingIDs(Document.self, circleId: circleId, modelContext: modelContext) { $0.circle?.id }
+        var inserted = 0
+        for dto in response.documents {
+            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
+            let row = BackendHydratorMappers.makeDocumentPlaceholder(from: dto)
+            row.circle = circle
+            modelContext.insert(row)
+            inserted += 1
+        }
+        saveIfInserted(inserted, domain: "documents", circleId: circleId, modelContext: modelContext)
+    }
+
+    func fetchExistingIDs<M: PersistentModel & Identifiable>(
+        _: M.Type,
+        circleId: UUID,
+        modelContext: ModelContext,
+        circleIDOf: (M) -> UUID?
+    )
+        -> Set<UUID> where M.ID == UUID
+    {
+        let all = (try? modelContext.fetch(FetchDescriptor<M>())) ?? []
+        return Set(all.compactMap { circleIDOf($0) == circleId ? $0.id : nil })
+    }
+
+    func saveIfInserted(
+        _ inserted: Int,
+        domain: String,
+        circleId: UUID,
+        modelContext: ModelContext
+    ) {
+        guard inserted > 0 else { return }
+        do {
+            try modelContext.save()
+            AppLogger.backend.info(
+                "Realtime: inserted \(inserted, privacy: .public) \(domain, privacy: .public) for circle \(circleId.uuidString, privacy: .public)"
+            )
+        } catch {
+            AppLogger.backend.error(
+                "Realtime: save failed after \(domain, privacy: .public) merge: \(String(describing: error), privacy: .public)"
+            )
         }
     }
 
-    private struct Envelope: Decodable {
-        let type: String
-        let circles: [String]?
-        let circleId: String?
-        let table: String?
-        let rowId: String?
-        let op: String?
+    func logRefetchFailure(domain: String, error: Error) {
+        AppLogger.backend.error(
+            "Realtime: \(domain, privacy: .public) refetch failed: \(String(describing: error), privacy: .public)"
+        )
     }
 }
