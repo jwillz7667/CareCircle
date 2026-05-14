@@ -38,13 +38,14 @@ extension BackendRealtimeClient {
             circleId: circleId,
             modelContext: modelContext
         )
-        guard !merged.insertedRows.isEmpty || merged.updatedCount > 0 else { return }
+        guard merged.hasWork else { return }
         guard saveSOSMerge(
             modelContext: modelContext,
             circleId: circleId,
             insertedCount: merged.insertedRows.count,
             updatedCount: merged.updatedCount
         ) else { return }
+        retractCanceledSOSNotifications(identifiers: merged.canceledNotificationIDs)
         let currentUserId = currentBackendUserId()
         for (event, dto) in merged.insertedRows {
             guard shouldNotifyForIncomingSOS(dto: dto, currentUserId: currentUserId) else { continue }
@@ -132,10 +133,17 @@ extension BackendRealtimeClient {
     /// Outcome of merging a `/sos` refetch into SwiftData. The caller
     /// uses `insertedRows` to drive the incoming-SOS notification fan
     /// out (only new events trigger a notification — updates to
-    /// existing rows, e.g. cancellation, must not re-alert).
+    /// existing rows, e.g. cancellation, must not re-alert) and
+    /// `canceledNotificationIDs` to retract notifications for rows
+    /// that just transitioned from active to canceled.
     struct SOSMergeResult {
         let insertedRows: [(event: SOSEvent, dto: SOSEventDTO)]
         let updatedCount: Int
+        let canceledNotificationIDs: [String]
+
+        var hasWork: Bool {
+            !insertedRows.isEmpty || updatedCount > 0
+        }
     }
 
     private func mergeSOSEvents(
@@ -149,6 +157,7 @@ extension BackendRealtimeClient {
         let localMap = fetchLocalSOSMap(circleId: circleId, modelContext: modelContext)
         var insertedRows: [(event: SOSEvent, dto: SOSEventDTO)] = []
         var updatedCount = 0
+        var canceledNotificationIDs: [String] = []
         for dto in dtos {
             guard let dtoID = BackendHydratorMappers.parseUUID(dto.id) else { continue }
             let displayName = lookupMemberDisplayName(
@@ -157,7 +166,16 @@ extension BackendRealtimeClient {
                 modelContext: modelContext
             )
             if let existing = localMap[dtoID] {
+                // Capture the cancellation transition *before* the
+                // mapper writes the new `canceledAt` — otherwise the
+                // wasActive check would always be false after the
+                // first cancel UPDATE.
+                let wasActive = existing.canceledAt == nil
+                let nowCanceled = dto.canceledAt != nil
                 BackendHydratorMappers.updateSOSEvent(existing, from: dto, displayName: displayName)
+                if wasActive, nowCanceled {
+                    canceledNotificationIDs.append(Self.sosNotificationID(for: existing.id))
+                }
                 updatedCount += 1
             } else {
                 let event = BackendHydratorMappers.makeSOSEvent(from: dto)
@@ -169,7 +187,31 @@ extension BackendRealtimeClient {
                 insertedRows.append((event: event, dto: dto))
             }
         }
-        return SOSMergeResult(insertedRows: insertedRows, updatedCount: updatedCount)
+        return SOSMergeResult(
+            insertedRows: insertedRows,
+            updatedCount: updatedCount,
+            canceledNotificationIDs: canceledNotificationIDs
+        )
+    }
+
+    /// Single source of truth for the SOS notification identifier.
+    /// `postIncomingSOSNotification` and `retractCanceledSOSNotifications`
+    /// both go through this so the two paths can never drift.
+    static func sosNotificationID(for eventID: UUID) -> String {
+        "sos.event.\(eventID.uuidString)"
+    }
+
+    /// Removes SOS notifications from both the delivered tray and the
+    /// pending queue. Unknown identifiers are silently no-ops, so this
+    /// is safe to call even when nothing was posted on this device.
+    private func retractCanceledSOSNotifications(identifiers: [String]) {
+        guard !identifiers.isEmpty else { return }
+        let center = UNUserNotificationCenter.current()
+        center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        AppLogger.backend.info(
+            "Realtime: retracted \(identifiers.count, privacy: .public) SOS notification(s)"
+        )
     }
 
     /// Returns true when the save committed, so the caller can proceed
@@ -293,7 +335,7 @@ extension BackendRealtimeClient {
         content.userInfo = ["sos_event_id": event.id.uuidString]
 
         let request = UNNotificationRequest(
-            identifier: "sos.event.\(event.id.uuidString)",
+            identifier: Self.sosNotificationID(for: event.id),
             content: content,
             trigger: nil
         )
