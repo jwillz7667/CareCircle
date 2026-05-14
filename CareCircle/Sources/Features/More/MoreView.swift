@@ -69,6 +69,13 @@ struct MoreView: View {
                         }
 
                         NavigationLink {
+                            InsightsView(circle: circle, author: authorContext)
+                        } label: {
+                            Label("Insights", systemImage: "sparkles")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
                             DocumentListView(circle: circle, viewerAppleUserID: signedInAppleUserID)
                         } label: {
                             Label("Documents", systemImage: "folder.fill")

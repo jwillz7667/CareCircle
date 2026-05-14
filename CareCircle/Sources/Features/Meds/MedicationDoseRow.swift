@@ -31,6 +31,7 @@ struct MedicationDoseRow: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(SyncEngine.self) private var syncEngine
+    @Environment(InsightsEngine.self) private var insightsEngine
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.spacing) {
@@ -151,6 +152,9 @@ struct MedicationDoseRow: View {
             syncEngine.enqueueDoseSkipped(dose)
         case .scheduled, .missed:
             break
+        }
+        if let circle = medication.circle {
+            insightsEngine.recomputeDebounced(circle: circle, modelContext: modelContext)
         }
         onMarked(status)
     }

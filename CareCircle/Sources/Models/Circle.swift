@@ -44,6 +44,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \ShiftDigest.circle)
     var shiftDigestsStore: [ShiftDigest]?
 
+    @Relationship(deleteRule: .cascade, inverse: \Insight.circle)
+    var insightsStore: [Insight]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -87,6 +90,11 @@ final class Circle {
     var shiftDigests: [ShiftDigest] {
         get { shiftDigestsStore ?? [] }
         set { shiftDigestsStore = newValue }
+    }
+
+    var insights: [Insight] {
+        get { insightsStore ?? [] }
+        set { insightsStore = newValue }
     }
 
     init(

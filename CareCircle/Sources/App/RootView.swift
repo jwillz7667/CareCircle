@@ -11,6 +11,7 @@ struct RootView: View {
     @Environment(BackendHydrator.self) private var hydrator
     @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
     @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(InsightsEngine.self) private var insightsEngine
     @State private var didHydrateThisLaunch = false
 
     var body: some View {
@@ -40,6 +41,7 @@ struct RootView: View {
                 documentSweeper.triggerSweep(modelContext: modelContext)
                 documentSweeper.triggerPrefetch(modelContext: modelContext)
                 realtimeClient.start(modelContext: modelContext)
+                recomputeInsightsForAllCircles()
                 Task {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
@@ -60,6 +62,7 @@ struct RootView: View {
         await pullDocumentKeys()
         documentSweeper.triggerPrefetch(modelContext: modelContext)
         realtimeClient.start(modelContext: modelContext)
+        recomputeInsightsForAllCircles()
     }
 
     private func pullDocumentKeys() async {
@@ -67,6 +70,14 @@ struct RootView: View {
         let circleIDs = (try? modelContext.fetch(descriptor))?.map(\.id) ?? []
         guard !circleIDs.isEmpty else { return }
         await CircleDocumentKeySyncService.shared.pullForAllCircles(circleIDs)
+    }
+
+    private func recomputeInsightsForAllCircles() {
+        let descriptor = FetchDescriptor<Circle>(sortBy: [SortDescriptor(\.createdAt)])
+        let circles = (try? modelContext.fetch(descriptor)) ?? []
+        for circle in circles {
+            insightsEngine.recompute(circle: circle, modelContext: modelContext)
+        }
     }
 
     private var isSignedIn: Bool {

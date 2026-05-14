@@ -13,6 +13,7 @@ struct CareCircleApp: App {
     @State private var documentSweeper: BackendDocumentRetrySweeper
     @State private var realtimeClient: BackendRealtimeClient
     @State private var inferenceClient: BackendInferenceClient
+    @State private var insightsEngine = InsightsEngine()
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
 
@@ -73,6 +74,7 @@ struct CareCircleApp: App {
             EmergencyContact.self,
             CareMinuteEntry.self,
             ShiftDigest.self,
+            Insight.self,
             PendingOperation.self,
         ])
         let configuration = ModelConfiguration(
@@ -101,6 +103,7 @@ struct CareCircleApp: App {
                 .environment(documentSweeper)
                 .environment(realtimeClient)
                 .environment(inferenceClient)
+                .environment(insightsEngine)
                 .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)

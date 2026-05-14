@@ -27,10 +27,18 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack {
-            content
-                .navigationTitle("Today")
-                .navigationBarTitleDisplayMode(.large)
-                .toolbarBackground(Color.ccBackground, for: .navigationBar)
+            VStack(spacing: 0) {
+                if let circle = activeCircle {
+                    InsightsBanner(circle: circle, author: authorContext)
+                        .padding(.horizontal, Theme.spacing)
+                        .padding(.top, Theme.tightSpacing)
+                }
+                content
+            }
+            .background(Color.ccBackground)
+            .navigationTitle("Today")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(Color.ccBackground, for: .navigationBar)
         }
     }
 
