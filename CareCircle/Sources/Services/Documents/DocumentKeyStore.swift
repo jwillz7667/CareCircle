@@ -17,7 +17,7 @@ nonisolated final class DocumentKeyStore: Sendable {
 
     private let service: String
 
-    init(service: String = "Res.CareCircle.documents") {
+    init(service: String = "com.jwillz.carecircle.documents") {
         self.service = service
     }
 

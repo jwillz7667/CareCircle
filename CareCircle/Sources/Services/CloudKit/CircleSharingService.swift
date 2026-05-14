@@ -7,7 +7,7 @@ import OSLog
 /// Creates and accepts `CKShare`s for `Circle`s.
 ///
 /// The owner's SwiftData store syncs against the private database automatically once the
-/// `ModelContainer` is configured with `.private("iCloud.Res.CareCircle")`. This service
+/// `ModelContainer` is configured with `.private("iCloud.com.jwillz.carecircle")`. This service
 /// supplies the *sharing* half — it manages the per-circle `CKRecordZone`, mirrors the
 /// `Circle` into a `CKRecord` that can act as the share's root, and emits the resulting
 /// `CKShare.url` for handoff via the system share sheet.

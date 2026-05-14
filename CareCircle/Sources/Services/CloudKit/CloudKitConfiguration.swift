@@ -6,7 +6,7 @@ import Foundation
 /// Single source of truth for CloudKit identifiers and zone naming.
 nonisolated enum CloudKitConfiguration {
     /// Container identifier from `CareCircle.entitlements`.
-    static let containerIdentifier = "iCloud.Res.CareCircle"
+    static let containerIdentifier = "iCloud.com.jwillz.carecircle"
 
     /// Per-circle zone name. CKShares require a custom zone — the default zone cannot host shares.
     static func zoneName(for circleID: UUID) -> String {
@@ -34,5 +34,5 @@ nonisolated enum CloudKitConfiguration {
     }
 
     /// Notification posted by `CircleSceneDelegate` when an inbound share acceptance completes.
-    static let shareAcceptedNotification = Notification.Name("Res.CareCircle.shareAccepted")
+    static let shareAcceptedNotification = Notification.Name("com.jwillz.carecircle.shareAccepted")
 }

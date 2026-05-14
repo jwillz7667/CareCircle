@@ -6,7 +6,7 @@ import Security
 nonisolated struct KeychainStore: Sendable {
     let service: String
 
-    static let defaultService = "Res.CareCircle.auth"
+    static let defaultService = "com.jwillz.carecircle.auth"
 
     /// Key for the persisted `SignedInUser` payload.
     static let signedInUserKey = "signed-in-user"
