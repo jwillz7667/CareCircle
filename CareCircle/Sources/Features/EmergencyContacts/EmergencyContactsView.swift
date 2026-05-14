@@ -22,11 +22,20 @@ struct EmergencyContactsView: View {
     var body: some View {
         Group {
             if contacts.isEmpty {
-                EmptyStateView(
-                    systemImage: "phone.badge.plus",
-                    title: "No emergency contacts",
-                    message: "Add a primary contact so SOS knows who to call first."
-                )
+                ScrollView {
+                    EmptyStateView(
+                        systemImage: "phone.badge.plus",
+                        title: "No emergency contacts",
+                        message: "Add a primary contact so SOS knows who to call first."
+                    )
+                    .containerRelativeFrame(.vertical)
+                }
+                .refreshable {
+                    await realtimeClient.snapshotResync(
+                        circleIds: [circle.id],
+                        modelContext: modelContext
+                    )
+                }
             } else {
                 List {
                     ForEach(contacts, id: \.id) { contact in

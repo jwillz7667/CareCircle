@@ -17,11 +17,20 @@ struct SOSHistoryView: View {
     var body: some View {
         Group {
             if events.isEmpty {
-                EmptyStateView(
-                    systemImage: "sos.circle",
-                    title: "No SOS history",
-                    message: "Past SOS events will appear here once triggered."
-                )
+                ScrollView {
+                    EmptyStateView(
+                        systemImage: "sos.circle",
+                        title: "No SOS history",
+                        message: "Past SOS events will appear here once triggered."
+                    )
+                    .containerRelativeFrame(.vertical)
+                }
+                .refreshable {
+                    await realtimeClient.snapshotResync(
+                        circleIds: [circle.id],
+                        modelContext: modelContext
+                    )
+                }
             } else {
                 List(events, id: \.id) { event in
                     NavigationLink {

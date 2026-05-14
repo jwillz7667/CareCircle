@@ -38,14 +38,23 @@ struct MedicationListView: View {
     @ViewBuilder
     private var content: some View {
         if circle.medications.isEmpty {
-            VStack(spacing: 0) {
-                EmptyStateView(
-                    systemImage: "pills.fill",
-                    title: "No medications yet",
-                    message: "Add a medication to track doses, refills, and history."
-                )
+            ScrollView {
+                VStack(spacing: 0) {
+                    EmptyStateView(
+                        systemImage: "pills.fill",
+                        title: "No medications yet",
+                        message: "Add a medication to track doses, refills, and history."
+                    )
 
-                DisclaimerFooter()
+                    DisclaimerFooter()
+                }
+                .containerRelativeFrame(.vertical)
+            }
+            .refreshable {
+                await realtimeClient.snapshotResync(
+                    circleIds: [circle.id],
+                    modelContext: modelContext
+                )
             }
         } else {
             List {

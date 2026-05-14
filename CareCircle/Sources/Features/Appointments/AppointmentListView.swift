@@ -59,11 +59,20 @@ struct AppointmentListView: View {
     @ViewBuilder
     private var content: some View {
         if circle.appointments.isEmpty {
-            EmptyStateView(
-                systemImage: "calendar.badge.plus",
-                title: "No appointments yet",
-                message: "Add visits so the Circle can prep, drive, and follow up together."
-            )
+            ScrollView {
+                EmptyStateView(
+                    systemImage: "calendar.badge.plus",
+                    title: "No appointments yet",
+                    message: "Add visits so the Circle can prep, drive, and follow up together."
+                )
+                .containerRelativeFrame(.vertical)
+            }
+            .refreshable {
+                await realtimeClient.snapshotResync(
+                    circleIds: [circle.id],
+                    modelContext: modelContext
+                )
+            }
         } else {
             List {
                 ForEach(grouped) { group in

@@ -62,11 +62,20 @@ struct DocumentListView: View {
     @ViewBuilder
     private var content: some View {
         if visibleDocuments.isEmpty {
-            EmptyStateView(
-                systemImage: "doc.fill.badge.plus",
-                title: "No documents yet",
-                message: "Add insurance cards, advance directives, or lab results so the Circle has them when it counts."
-            )
+            ScrollView {
+                EmptyStateView(
+                    systemImage: "doc.fill.badge.plus",
+                    title: "No documents yet",
+                    message: "Add insurance cards, advance directives, or lab results so the Circle has them when it counts."
+                )
+                .containerRelativeFrame(.vertical)
+            }
+            .refreshable {
+                await realtimeClient.snapshotResync(
+                    circleIds: [circle.id],
+                    modelContext: modelContext
+                )
+            }
         } else {
             List {
                 ForEach(grouped, id: \.type) { group in
