@@ -14,6 +14,7 @@ struct CareCircleApp: App {
     @State private var realtimeClient: BackendRealtimeClient
     @State private var inferenceClient: BackendInferenceClient
     @State private var healthKitReader: HealthKitVitalsReader
+    @State private var healthRecordsImporter = HealthRecordsImporter()
     @State private var locationService: LocationSharingService
     @State private var insightsEngine = InsightsEngine()
     @State private var sosCenter = SOSCenter()
@@ -91,6 +92,7 @@ struct CareCircleApp: App {
             Vital.self,
             LocationSnapshot.self,
             ChatMessage.self,
+            HealthRecord.self,
             PendingOperation.self,
         ])
         let configuration = ModelConfiguration(
@@ -120,6 +122,7 @@ struct CareCircleApp: App {
                 .environment(realtimeClient)
                 .environment(inferenceClient)
                 .environment(healthKitReader)
+                .environment(healthRecordsImporter)
                 .environment(locationService)
                 .environment(insightsEngine)
                 .preferredColorScheme(.light)

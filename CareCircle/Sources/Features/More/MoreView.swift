@@ -76,6 +76,13 @@ struct MoreView: View {
 
                     Section("Records") {
                         NavigationLink {
+                            HealthRecordsView(circle: circle)
+                        } label: {
+                            Label("Health Records (Apple Health)", systemImage: "heart.text.square")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
                             DocumentListView(circle: circle, viewerAppleUserID: signedInAppleUserID)
                         } label: {
                             Label("Documents", systemImage: "folder.fill")

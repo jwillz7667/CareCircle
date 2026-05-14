@@ -56,6 +56,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \ChatMessage.circle)
     var chatMessagesStore: [ChatMessage]?
 
+    @Relationship(deleteRule: .cascade, inverse: \HealthRecord.circle)
+    var healthRecordsStore: [HealthRecord]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -119,6 +122,11 @@ final class Circle {
     var chatMessages: [ChatMessage] {
         get { chatMessagesStore ?? [] }
         set { chatMessagesStore = newValue }
+    }
+
+    var healthRecords: [HealthRecord] {
+        get { healthRecordsStore ?? [] }
+        set { healthRecordsStore = newValue }
     }
 
     init(
