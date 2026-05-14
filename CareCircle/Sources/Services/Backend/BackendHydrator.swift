@@ -1,6 +1,7 @@
 import Foundation
 import OSLog
 import SwiftData
+import UserNotifications
 
 // MARK: - BackendHydrator
 
@@ -23,7 +24,10 @@ final class BackendHydrator {
     private(set) var lastError: String?
     private(set) var isRunning = false
 
-    private let apiClient: APIClient
+    // Internal so the SOS reconcile extension in
+    // `BackendHydratorSOSReconcile.swift` can issue its own GET. Same
+    // visibility pattern as `BackendRealtimeClient.apiClient`.
+    let apiClient: APIClient
     private var inFlight: Task<Void, Never>?
 
     /// Bound on activity pagination so launch latency stays predictable
@@ -93,10 +97,14 @@ final class BackendHydrator {
             try await hydrateEmergencyContacts(circleId: circleId, modelContext: modelContext)
             try await hydrateMembers(circleId: circleId, modelContext: modelContext)
             try await hydrateCareMinutes(circleId: circleId, modelContext: modelContext)
-            try await hydrateSOSEvents(circleId: circleId, modelContext: modelContext)
+            let sosRetractIDs = try await reconcileSOSEvents(
+                circleId: circleId,
+                modelContext: modelContext
+            )
             try await hydrateDocuments(circleId: circleId, modelContext: modelContext)
 
             try modelContext.save()
+            retractStaleSOSNotifications(identifiers: sosRetractIDs)
             lastError = nil
             AppLogger.backend.info(
                 "Hydrate run complete for circle \(circleId.uuidString, privacy: .public)."
@@ -291,28 +299,6 @@ final class BackendHydrator {
         )
     }
 
-    private func hydrateSOSEvents(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(of: SOSEvent.self, in: circleId, modelContext: modelContext) == 0 else {
-            AppLogger.backend.debug("SOS events skipped — local store is not empty.")
-            return
-        }
-        guard let circle = fetchCircle(id: circleId, modelContext: modelContext) else { return }
-
-        let response: SOSEventsResponse = try await apiClient.send(
-            method: .get,
-            path: "/v1/circles/\(circleId.uuidString.lowercased())/sos",
-            authenticated: true
-        )
-        for dto in response.events {
-            let event = BackendHydratorMappers.makeSOSEvent(from: dto)
-            event.circle = circle
-            modelContext.insert(event)
-        }
-        AppLogger.backend.info(
-            "Hydrated \(response.events.count, privacy: .public) SOS events."
-        )
-    }
-
     private func hydrateDocuments(circleId: UUID, modelContext: ModelContext) async throws {
         guard localCount(of: Document.self, in: circleId, modelContext: modelContext) == 0 else {
             AppLogger.backend.debug("Documents skipped — local store is not empty.")
@@ -377,7 +363,7 @@ final class BackendHydrator {
         }
     }
 
-    private func fetchCircle(id: UUID, modelContext: ModelContext) -> Circle? {
+    func fetchCircle(id: UUID, modelContext: ModelContext) -> Circle? {
         let descriptor = FetchDescriptor<Circle>(predicate: #Predicate { $0.id == id })
         return (try? modelContext.fetch(descriptor))?.first
     }
