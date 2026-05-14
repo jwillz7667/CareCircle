@@ -103,6 +103,13 @@ struct MoreView: View {
 
                     Section("Records") {
                         NavigationLink {
+                            VitalsListView(circle: circle, author: authorContext)
+                        } label: {
+                            Label("Vitals history", systemImage: "list.bullet.rectangle")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
                             HealthRecordsView(circle: circle)
                         } label: {
                             Label("Health Records (Apple Health)", systemImage: "heart.text.square")
