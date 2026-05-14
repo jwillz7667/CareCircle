@@ -32,43 +32,21 @@ extension BackendRealtimeClient {
             logRefetchFailure(domain: "sos", error: error)
             return
         }
-
-        let existing = fetchExistingIDs(SOSEvent.self, circleId: circleId, modelContext: modelContext) {
-            $0.circle?.id
-        }
-
+        let merged = mergeSOSEvents(
+            dtos: response.events,
+            circle: circle,
+            circleId: circleId,
+            modelContext: modelContext
+        )
+        guard !merged.insertedRows.isEmpty || merged.updatedCount > 0 else { return }
+        guard saveSOSMerge(
+            modelContext: modelContext,
+            circleId: circleId,
+            insertedCount: merged.insertedRows.count,
+            updatedCount: merged.updatedCount
+        ) else { return }
         let currentUserId = currentBackendUserId()
-        var insertedRows: [(event: SOSEvent, dto: SOSEventDTO)] = []
-        for dto in response.events {
-            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
-            let event = BackendHydratorMappers.makeSOSEvent(from: dto)
-            event.circle = circle
-            let displayName = lookupMemberDisplayName(
-                backendUserId: dto.triggeredBy,
-                circleId: circleId,
-                modelContext: modelContext
-            )
-            if let displayName {
-                event.triggeredByDisplayName = displayName
-            }
-            modelContext.insert(event)
-            insertedRows.append((event: event, dto: dto))
-        }
-
-        guard !insertedRows.isEmpty else { return }
-        do {
-            try modelContext.save()
-            AppLogger.backend.info(
-                "Realtime: inserted \(insertedRows.count, privacy: .public) sos for circle \(circleId.uuidString, privacy: .public)"
-            )
-        } catch {
-            AppLogger.backend.error(
-                "Realtime: save failed after sos merge: \(String(describing: error), privacy: .public)"
-            )
-            return
-        }
-
-        for (event, dto) in insertedRows {
+        for (event, dto) in merged.insertedRows {
             guard shouldNotifyForIncomingSOS(dto: dto, currentUserId: currentUserId) else { continue }
             await postIncomingSOSNotification(event: event)
         }
@@ -86,7 +64,7 @@ extension BackendRealtimeClient {
                 authenticated: true
             )
         } catch {
-            logRefetchFailure(domain: "dose", error: error)
+            handleDoseFetchError(error: error, rowId: rowId, modelContext: modelContext)
             return
         }
         guard let medicationId = BackendHydratorMappers.parseUUID(response.medicationId),
@@ -97,20 +75,15 @@ extension BackendRealtimeClient {
             )
             return
         }
-        guard !doseEventExists(id: rowId, modelContext: modelContext) else { return }
 
-        let dose = BackendHydratorMappers.makeDoseEvent(from: response.asDoseDTO)
-        dose.medication = medication
-        modelContext.insert(dose)
-        do {
-            try modelContext.save()
-            AppLogger.backend.info(
-                "Realtime: inserted dose \(rowId.uuidString, privacy: .public) for medication \(medication.id.uuidString, privacy: .public)"
-            )
-        } catch {
-            AppLogger.backend.error(
-                "Realtime: save failed after dose insert: \(String(describing: error), privacy: .public)"
-            )
+        if let existing = fetchDoseEvent(id: rowId, modelContext: modelContext) {
+            BackendHydratorMappers.updateDoseEvent(existing, from: response.asDoseDTO)
+            saveDoseChange(rowId: rowId, action: "updated", modelContext: modelContext)
+        } else {
+            let dose = BackendHydratorMappers.makeDoseEvent(from: response.asDoseDTO)
+            dose.medication = medication
+            modelContext.insert(dose)
+            saveDoseChange(rowId: rowId, action: "inserted", modelContext: modelContext)
         }
     }
 
@@ -130,30 +103,159 @@ extension BackendRealtimeClient {
             logRefetchFailure(domain: "care-minutes", error: error)
             return
         }
-        let existing = fetchExistingIDs(CareMinuteEntry.self, circleId: circleId, modelContext: modelContext) {
-            $0.circle?.id
-        }
-        var inserted = 0
-        for dto in response.entries {
-            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id), !existing.contains(dtoID) else { continue }
-            let row = BackendHydratorMappers.makeCareMinuteEntry(from: dto)
-            row.circle = circle
-            modelContext.insert(row)
-            inserted += 1
-        }
-        saveIfInserted(inserted, domain: "care-minutes", circleId: circleId, modelContext: modelContext)
+        // 500-row response window: cold-start hydration owns soft-delete
+        // propagation. Upsert-only here.
+        upsertList(
+            response.entries,
+            spec: UpsertSpec(
+                circle: circle,
+                circleId: circleId,
+                domain: "care-minutes",
+                deleteAbsent: false,
+                circleIDOf: { (row: CareMinuteEntry) in row.circle?.id },
+                parseID: { BackendHydratorMappers.parseUUID($0.id) },
+                insert: { dto, parent in
+                    let row = BackendHydratorMappers.makeCareMinuteEntry(from: dto)
+                    row.circle = parent
+                    return row
+                },
+                update: { row, dto in
+                    BackendHydratorMappers.updateCareMinuteEntry(row, from: dto)
+                }
+            ),
+            modelContext: modelContext
+        )
     }
 
     // MARK: - Helpers
+
+    /// Outcome of merging a `/sos` refetch into SwiftData. The caller
+    /// uses `insertedRows` to drive the incoming-SOS notification fan
+    /// out (only new events trigger a notification — updates to
+    /// existing rows, e.g. cancellation, must not re-alert).
+    struct SOSMergeResult {
+        let insertedRows: [(event: SOSEvent, dto: SOSEventDTO)]
+        let updatedCount: Int
+    }
+
+    private func mergeSOSEvents(
+        dtos: [SOSEventDTO],
+        circle: Circle,
+        circleId: UUID,
+        modelContext: ModelContext
+    )
+        -> SOSMergeResult
+    {
+        let localMap = fetchLocalSOSMap(circleId: circleId, modelContext: modelContext)
+        var insertedRows: [(event: SOSEvent, dto: SOSEventDTO)] = []
+        var updatedCount = 0
+        for dto in dtos {
+            guard let dtoID = BackendHydratorMappers.parseUUID(dto.id) else { continue }
+            let displayName = lookupMemberDisplayName(
+                backendUserId: dto.triggeredBy,
+                circleId: circleId,
+                modelContext: modelContext
+            )
+            if let existing = localMap[dtoID] {
+                BackendHydratorMappers.updateSOSEvent(existing, from: dto, displayName: displayName)
+                updatedCount += 1
+            } else {
+                let event = BackendHydratorMappers.makeSOSEvent(from: dto)
+                event.circle = circle
+                if let displayName {
+                    event.triggeredByDisplayName = displayName
+                }
+                modelContext.insert(event)
+                insertedRows.append((event: event, dto: dto))
+            }
+        }
+        return SOSMergeResult(insertedRows: insertedRows, updatedCount: updatedCount)
+    }
+
+    /// Returns true when the save committed, so the caller can proceed
+    /// to fan out notifications. On save failure the merged inserts are
+    /// effectively rolled back (the next change frame re-fetches), so
+    /// notifying for them would be wrong.
+    private func saveSOSMerge(
+        modelContext: ModelContext,
+        circleId: UUID,
+        insertedCount: Int,
+        updatedCount: Int
+    )
+        -> Bool
+    {
+        let circleIdString = circleId.uuidString
+        do {
+            try modelContext.save()
+            AppLogger.backend.info(
+                "Realtime: sos for \(circleIdString, privacy: .public): +\(insertedCount, privacy: .public) ~\(updatedCount, privacy: .public)"
+            )
+            return true
+        } catch {
+            AppLogger.backend.error(
+                "Realtime: save failed after sos merge: \(String(describing: error), privacy: .public)"
+            )
+            return false
+        }
+    }
+
+    private func handleDoseFetchError(
+        error: Error,
+        rowId: UUID,
+        modelContext: ModelContext
+    ) {
+        if case let APIError.http(status, _) = error, status == 404 {
+            // The backend dose row is gone (hard-delete or never existed
+            // under this user's RLS view). Remove the local row if we
+            // had one — otherwise the change is a no-op.
+            guard let existing = fetchDoseEvent(id: rowId, modelContext: modelContext) else { return }
+            modelContext.delete(existing)
+            saveDoseChange(rowId: rowId, action: "deleted", modelContext: modelContext)
+        } else {
+            logRefetchFailure(domain: "dose", error: error)
+        }
+    }
+
+    private func saveDoseChange(
+        rowId: UUID,
+        action: String,
+        modelContext: ModelContext
+    ) {
+        let rowIdString = rowId.uuidString
+        do {
+            try modelContext.save()
+            AppLogger.backend.info(
+                "Realtime: \(action, privacy: .public) dose \(rowIdString, privacy: .public)"
+            )
+        } catch {
+            AppLogger.backend.error(
+                "Realtime: save failed after dose \(action, privacy: .public): \(String(describing: error), privacy: .public)"
+            )
+        }
+    }
 
     private func fetchMedication(id: UUID, modelContext: ModelContext) -> Medication? {
         let descriptor = FetchDescriptor<Medication>(predicate: #Predicate { $0.id == id })
         return (try? modelContext.fetch(descriptor))?.first
     }
 
-    private func doseEventExists(id: UUID, modelContext: ModelContext) -> Bool {
+    private func fetchDoseEvent(id: UUID, modelContext: ModelContext) -> DoseEvent? {
         let descriptor = FetchDescriptor<DoseEvent>(predicate: #Predicate { $0.id == id })
-        return ((try? modelContext.fetch(descriptor)) ?? []).isEmpty == false
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    private func fetchLocalSOSMap(
+        circleId: UUID,
+        modelContext: ModelContext
+    )
+        -> [UUID: SOSEvent]
+    {
+        let all = (try? modelContext.fetch(FetchDescriptor<SOSEvent>())) ?? []
+        var map: [UUID: SOSEvent] = [:]
+        for event in all where event.circle?.id == circleId {
+            map[event.id] = event
+        }
+        return map
     }
 
     private func lookupMemberDisplayName(
@@ -195,10 +297,11 @@ extension BackendRealtimeClient {
             content: content,
             trigger: nil
         )
+        let eventIdString = event.id.uuidString
         do {
             try await UNUserNotificationCenter.current().add(request)
             AppLogger.backend.info(
-                "Realtime: posted SOS notification for event \(event.id.uuidString, privacy: .public)"
+                "Realtime: posted SOS notification for event \(eventIdString, privacy: .public)"
             )
         } catch {
             AppLogger.backend.error(

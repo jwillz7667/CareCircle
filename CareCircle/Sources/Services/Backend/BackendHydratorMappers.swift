@@ -162,6 +162,124 @@ enum BackendHydratorMappers {
         )
     }
 
+    // MARK: - Update mappers (Phase 23)
+
+    // In-place updates that only touch fields the backend is
+    // authoritative for. CloudKit-only state — photo / audio blobs on
+    // `Activity`, the encrypted blob triple on `Document`,
+    // `milesDriven` on `CareMinuteEntry`, the dose-to-medication
+    // relationship, etc. — is left alone so realtime fan-out does not
+    // stomp on locally-set values.
+
+    static func updateActivity(_ activity: Activity, from dto: ActivityDTO) {
+        activity.authorAppleUserID = dto.authorUserId
+        activity.typeRaw = (ActivityType(rawValue: dto.type) ?? .system).rawValue
+        activity.body = dto.content ?? dto.headline ?? ""
+        activity.createdAt = dto.occurredAt
+    }
+
+    static func updateMedication(_ medication: Medication, from dto: MedicationDTO) {
+        medication.name = dto.name
+        medication.dosage = dto.dosage
+        medication.formRaw = (MedicationForm(rawValue: dto.form ?? "") ?? .other).rawValue
+        medication.statusRaw = (MedicationStatus(rawValue: dto.status) ?? .active).rawValue
+        medication.colorHex = dto.color
+        if let envelope = dto.schedule, !envelope.rawJSON.isEmpty {
+            medication.scheduleJSON = envelope.rawJSON
+        }
+        medication.startDate = parseShortDate(dto.startDate)
+        medication.endDate = parseShortDate(dto.endDate)
+        medication.updatedAt = .now
+    }
+
+    static func updateAppointment(_ appointment: Appointment, from dto: AppointmentDTO) {
+        appointment.title = dto.title
+        appointment.provider = dto.provider
+        appointment.location = dto.location
+        appointment.startsAt = dto.startsAt
+        appointment.durationMinutes = dto.durationMinutes
+        appointment.prepNotes = dto.prepNotes
+        appointment.transportResponsibleAppleUserID = dto.transportResponsible
+        appointment.reminderOffsetsMinutes = dto.reminderMinutesBefore
+        appointment.updatedAt = .now
+    }
+
+    static func updateMember(_ member: Member, from dto: MemberDTO) {
+        member.appleUserID = dto.userId
+        member.displayName = dto.displayName
+        member.roleRaw = (MemberRole(rawValue: dto.role) ?? .viewOnly).rawValue
+        member.statusRaw = (MemberStatus(rawValue: dto.status) ?? .active).rawValue
+        member.joinedAt = dto.joinedAt ?? dto.invitedAt
+        member.invitedAt = dto.invitedAt
+    }
+
+    static func updateEmergencyContact(
+        _ contact: EmergencyContact,
+        from dto: EmergencyContactDTO
+    ) {
+        contact.name = dto.name
+        contact.relationship = dto.relationship
+        contact.phoneE164 = dto.phone
+        contact.isPrimary = dto.isPrimary
+        contact.isMedical = dto.isMedical
+        contact.sortOrder = dto.sortOrder
+        contact.updatedAt = .now
+    }
+
+    static func updateDocument(_ document: Document, from dto: DocumentDTO) {
+        document.title = dto.title
+        document.typeRaw = (DocumentType(rawValue: dto.documentType) ?? .other).rawValue
+        document.mimeType = dto.mimeType
+        document.sizeBytes = dto.sizeBytes
+        document.issuedAt = parseShortDate(dto.issuedAt)
+        document.expiresAt = parseShortDate(dto.expiresAt)
+        document.uploadedByAppleUserID = dto.uploadedBy
+        document.backendObjectKey = dto.objectKey
+        document.updatedAt = .now
+    }
+
+    /// Updates an existing `SOSEvent`. `triggeredByDisplayName` is only
+    /// overwritten when the caller supplies a non-empty value; passing
+    /// `nil` keeps whatever name was resolved on the original insert.
+    static func updateSOSEvent(
+        _ event: SOSEvent,
+        from dto: SOSEventDTO,
+        displayName: String?
+    ) {
+        event.triggeredByAppleUserID = dto.triggeredBy
+        event.triggeredAt = dto.triggeredAt
+        event.latitude = dto.locationLat
+        event.longitude = dto.locationLng
+        event.canceledAt = dto.canceledAt
+        event.canceledByAppleUserID = dto.canceledBy
+        if let displayName, !displayName.isEmpty {
+            event.triggeredByDisplayName = displayName
+        }
+    }
+
+    static func updateCareMinuteEntry(
+        _ entry: CareMinuteEntry,
+        from dto: CareMinuteEntryDTO
+    ) {
+        entry.caregiverAppleUserID = dto.caregiverUserId
+        entry.serviceCodeRaw = (HCBSServiceCode(rawValue: dto.serviceCode) ?? .other).rawValue
+        entry.serviceDescription = dto.serviceDescription
+        entry.startedAt = dto.startedAt
+        entry.endedAt = dto.endedAt
+        entry.notes = dto.notes
+        entry.fiscalIntermediary = dto.fiscalIntermediary
+        entry.updatedAt = .now
+    }
+
+    static func updateDoseEvent(_ dose: DoseEvent, from dto: DoseDTO) {
+        dose.scheduledAt = dto.scheduledAt
+        dose.takenAt = dto.takenAt
+        dose.statusRaw = (DoseStatus(rawValue: dto.status) ?? .scheduled).rawValue
+        dose.markedByAppleUserID = dto.markedBy
+        dose.notes = dto.notes
+        dose.updatedAt = .now
+    }
+
     // MARK: - Parsing helpers
 
     static func parseUUID(_ raw: String) -> UUID? {
