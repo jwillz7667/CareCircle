@@ -221,6 +221,33 @@ nonisolated struct DoseDTO: Decodable, Sendable, Equatable {
     let notes: String?
 }
 
+/// Response from `GET /v1/doses/:id`. Same per-dose shape as `DoseDTO`
+/// plus the parent IDs so a realtime applicator can attach the row to
+/// the right local `Medication` without an additional round trip.
+nonisolated struct DoseByIdResponse: Decodable, Sendable, Equatable {
+    let id: String
+    let medicationId: String
+    let circleId: String
+    let scheduledAt: Date
+    let takenAt: Date?
+    let markedBy: String?
+    let status: String
+    let notes: String?
+
+    /// Lossy down-conversion to a `DoseDTO` for re-use of the existing
+    /// `BackendHydratorMappers.makeDoseEvent` mapper.
+    var asDoseDTO: DoseDTO {
+        DoseDTO(
+            id: id,
+            scheduledAt: scheduledAt,
+            takenAt: takenAt,
+            markedBy: markedBy,
+            status: status,
+            notes: notes
+        )
+    }
+}
+
 // MARK: - JSONValue
 
 /// Minimal JSON value used to round-trip the medication `schedule`

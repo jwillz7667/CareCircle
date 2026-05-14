@@ -229,4 +229,44 @@ export async function medicationRoutes(app: FastifyInstance): Promise<void> {
     }
     reply.send({ doses: data });
   });
+
+  app.get('/v1/doses/:id', async (req, reply) => {
+    const userId = await app.requireUser(req);
+    const { id } = req.params as { id: string };
+    const data = await withRls(pool, { userId, role: 'app_user' }, async (client) => {
+      const result = await client.query<{
+        id: string;
+        medication_id: string;
+        circle_id: string;
+        scheduled_at: Date;
+        taken_at: Date | null;
+        marked_by: string | null;
+        status: string;
+        notes_enc: Buffer | null;
+      }>(
+        `SELECT id, medication_id, circle_id, scheduled_at, taken_at, marked_by, status, notes_enc
+         FROM dose_events WHERE id = $1`,
+        [id],
+      );
+      const row = result.rows[0];
+      if (!row) {
+        return null;
+      }
+      const cipher = await cipherFor(circleKeys, row.circle_id);
+      return {
+        id: row.id,
+        medicationId: row.medication_id,
+        circleId: row.circle_id,
+        scheduledAt: row.scheduled_at.toISOString(),
+        takenAt: row.taken_at?.toISOString() ?? null,
+        markedBy: row.marked_by,
+        status: row.status,
+        notes: cipher.decryptOptional(row.notes_enc),
+      };
+    });
+    if (!data) {
+      throw notFound('Dose not found');
+    }
+    reply.send(data);
+  });
 }

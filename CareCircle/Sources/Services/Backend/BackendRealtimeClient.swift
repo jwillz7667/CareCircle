@@ -1,6 +1,7 @@
 import Foundation
 import OSLog
 import SwiftData
+import UserNotifications
 
 // MARK: - BackendRealtimeClient
 
@@ -38,9 +39,10 @@ final class BackendRealtimeClient {
     private(set) var subscribedCircleCount = 0
     private(set) var lastError: String?
 
-    private let apiClient: APIClient
+    let apiClient: APIClient
     private let configuration: BackendConfiguration
     private let urlSession: URLSession
+    private let currentBackendUserID: @MainActor () -> String?
     private var connectTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
     private var reconnectTask: Task<Void, Never>?
@@ -51,11 +53,13 @@ final class BackendRealtimeClient {
     init(
         apiClient: APIClient,
         configuration: BackendConfiguration,
-        urlSession: URLSession = .shared
+        urlSession: URLSession = .shared,
+        currentBackendUserID: @escaping @MainActor () -> String? = { nil }
     ) {
         self.apiClient = apiClient
         self.configuration = configuration
         self.urlSession = urlSession
+        self.currentBackendUserID = currentBackendUserID
     }
 
     /// Connects if not already connected. Idempotent: a second call
@@ -264,6 +268,12 @@ final class BackendRealtimeClient {
             await applyEmergencyContactChange(circleId: circleId, modelContext: modelContext)
         case "documents":
             await applyDocumentChange(circleId: circleId, modelContext: modelContext)
+        case "sos_events":
+            await applySosChange(circleId: circleId, modelContext: modelContext)
+        case "dose_events":
+            await applyDoseChange(rowId: rowId, modelContext: modelContext)
+        case "care_minute_entries":
+            await applyCareMinuteChange(circleId: circleId, modelContext: modelContext)
         default:
             AppLogger.backend.debug(
                 "Realtime: \(table, privacy: .public) row \(rowId.uuidString, privacy: .public) — no applicator yet."
@@ -325,9 +335,13 @@ final class BackendRealtimeClient {
         }
     }
 
-    private func fetchCircle(id: UUID, modelContext: ModelContext) -> Circle? {
+    func fetchCircle(id: UUID, modelContext: ModelContext) -> Circle? {
         let descriptor = FetchDescriptor<Circle>(predicate: #Predicate { $0.id == id })
         return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    func currentBackendUserId() -> String? {
+        currentBackendUserID()
     }
 
     private func fetchExistingActivityIDs(
@@ -344,7 +358,7 @@ final class BackendRealtimeClient {
 
 // MARK: - Per-domain applicators
 
-private extension BackendRealtimeClient {
+extension BackendRealtimeClient {
     func applyMedicationChange(
         circleId: UUID,
         modelContext: ModelContext

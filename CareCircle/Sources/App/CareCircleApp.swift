@@ -39,13 +39,15 @@ struct CareCircleApp: App {
         let docService = BackendDocumentService(apiClient: client)
         documentService = docService
         _documentSweeper = State(initialValue: BackendDocumentRetrySweeper(service: docService))
-        _realtimeClient = State(initialValue: BackendRealtimeClient(
-            apiClient: client,
-            configuration: configuration
-        ))
-        _authState = State(initialValue: AuthState(
+        let auth = AuthState(
             backendAuthService: authService,
             syncEngine: engine
+        )
+        _authState = State(initialValue: auth)
+        _realtimeClient = State(initialValue: BackendRealtimeClient(
+            apiClient: client,
+            configuration: configuration,
+            currentBackendUserID: { [auth] in auth.lastVerifiedProfile?.id }
         ))
 
         MainActor.assumeIsolated {

@@ -131,6 +131,7 @@ describe('Medications', () => {
       payload: { scheduledAt, status: 'taken', notes: 'with breakfast' },
     });
     expect(mark.statusCode).toBe(201);
+    const markedDoseId = JSON.parse(mark.body).id as string;
 
     const doses = await app.inject({
       method: 'GET',
@@ -144,6 +145,32 @@ describe('Medications', () => {
     expect(body.doses[0]!.status).toBe('taken');
     expect(body.doses[0]!.takenAt).not.toBeNull();
     expect(body.doses[0]!.notes).toBe('with breakfast');
+
+    const single = await app.inject({
+      method: 'GET',
+      url: `/v1/doses/${markedDoseId}`,
+      headers: bearer(token),
+    });
+    expect(single.statusCode).toBe(200);
+    const dose = JSON.parse(single.body) as {
+      id: string;
+      medicationId: string;
+      circleId: string;
+      status: string;
+      notes: string | null;
+    };
+    expect(dose.id).toBe(markedDoseId);
+    expect(dose.medicationId).toBe(medId);
+    expect(dose.circleId).toBe(circle.id);
+    expect(dose.status).toBe('taken');
+    expect(dose.notes).toBe('with breakfast');
+
+    const missing = await app.inject({
+      method: 'GET',
+      url: `/v1/doses/00000000-0000-0000-0000-000000000000`,
+      headers: bearer(token),
+    });
+    expect(missing.statusCode).toBe(404);
   });
 
   it('DELETE soft-deletes (status flips to discontinued, list excludes it)', async () => {
