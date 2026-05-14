@@ -9,6 +9,7 @@ struct CareCircleApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authState: AuthState
     @State private var syncEngine: SyncEngine
+    @State private var hydrator: BackendHydrator
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
 
@@ -26,6 +27,7 @@ struct CareCircleApp: App {
         backendAuthService = authService
         let engine = SyncEngine(apiClient: client, modelContainer: container)
         _syncEngine = State(initialValue: engine)
+        _hydrator = State(initialValue: BackendHydrator(apiClient: client))
         _authState = State(initialValue: AuthState(
             backendAuthService: authService,
             syncEngine: engine
@@ -75,6 +77,7 @@ struct CareCircleApp: App {
                 .environment(sosCenter)
                 .environment(simplifiedPreference)
                 .environment(syncEngine)
+                .environment(hydrator)
                 .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)

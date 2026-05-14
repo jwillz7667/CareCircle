@@ -8,6 +8,8 @@ struct MoreView: View {
 
     @Environment(SimplifiedModePreference.self) private var simplifiedPreference
     @Environment(SyncEngine.self) private var syncEngine
+    @Environment(BackendHydrator.self) private var hydrator
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
 
     private var activeCircle: Circle? {
@@ -145,6 +147,20 @@ struct MoreView: View {
                                 .foregroundStyle(Color.ccPrimary)
                         }
                     }
+
+                    LabeledContent("Last hydrate", value: hydrateStatusLabel)
+                        .foregroundStyle(hydrator.lastError == nil ? Color.ccText : Color.ccDanger)
+
+                    Button {
+                        hydrator.triggerHydrateAll(modelContext: modelContext)
+                    } label: {
+                        Label(
+                            hydrator.isRunning ? "Pulling from backend…" : "Pull from backend now",
+                            systemImage: "arrow.down.circle"
+                        )
+                        .foregroundStyle(Color.ccPrimary)
+                    }
+                    .disabled(hydrator.isRunning)
                 }
 
                 Section("About") {
@@ -193,6 +209,16 @@ struct MoreView: View {
         if case .error = syncEngine.status { return true }
         if syncEngine.pendingCount > 0, case .offline = syncEngine.status { return true }
         return false
+    }
+
+    private var hydrateStatusLabel: String {
+        if let error = hydrator.lastError {
+            return error
+        }
+        if let lastRun = hydrator.lastRunAt {
+            return lastRun.formatted(.relative(presentation: .named))
+        }
+        return "Not yet pulled"
     }
 
     private static var appVersion: String {

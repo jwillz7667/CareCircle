@@ -8,6 +8,8 @@ struct RootView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(BackendHydrator.self) private var hydrator
+    @State private var didHydrateThisLaunch = false
 
     var body: some View {
         Group {
@@ -25,13 +27,28 @@ struct RootView: View {
             if authState.status == .unknown {
                 await authState.bootstrap()
             }
+            await maybeHydrateOnce()
+        }
+        .onChange(of: authState.lastVerifiedProfile) { _, _ in
+            Task { await maybeHydrateOnce() }
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active, isSignedIn {
                 MedicationOverdueSweeper().sweep(in: modelContext)
-                Task { await authState.verifyBackendSession() }
+                Task {
+                    await authState.verifyBackendSession()
+                    await maybeHydrateOnce()
+                }
             }
         }
+    }
+
+    private func maybeHydrateOnce() async {
+        guard !didHydrateThisLaunch,
+              isSignedIn,
+              authState.lastVerifiedProfile != nil else { return }
+        didHydrateThisLaunch = true
+        hydrator.triggerHydrateAll(modelContext: modelContext)
     }
 
     private var isSignedIn: Bool {
