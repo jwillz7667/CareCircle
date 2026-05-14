@@ -29,6 +29,7 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active, isSignedIn {
                 MedicationOverdueSweeper().sweep(in: modelContext)
+                Task { await authState.verifyBackendSession() }
             }
         }
     }

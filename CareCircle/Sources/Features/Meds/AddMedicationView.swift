@@ -12,6 +12,7 @@ struct AddMedicationView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
 
     @State private var draft: MedicationDraft
     @State private var isSaving = false
@@ -238,6 +239,7 @@ struct AddMedicationView: View {
         modelContext.insert(medication)
         do {
             try modelContext.save()
+            syncEngine.enqueueMedicationCreate(medication)
             return medication
         } catch {
             modelContext.delete(medication)

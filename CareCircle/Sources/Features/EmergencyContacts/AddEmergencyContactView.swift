@@ -8,6 +8,7 @@ struct AddEmergencyContactView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
 
     @State private var name = ""
     @State private var phone = ""
@@ -91,6 +92,7 @@ struct AddEmergencyContactView: View {
         modelContext.insert(contact)
         do {
             try modelContext.save()
+            syncEngine.enqueueEmergencyContactCreate(contact)
             dismiss()
         } catch {
             errorMessage = "Couldn't save contact: \(error.localizedDescription)"

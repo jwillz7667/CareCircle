@@ -9,6 +9,8 @@ import OSLog
 final class AuthState {
     private(set) var status: AuthStatus = .unknown
     private(set) var lastError: AuthError?
+    private(set) var lastVerifiedProfile: BackendUserProfile?
+    private(set) var lastVerifyError: APIError?
 
     private let keychain: KeychainStore
     private let credentialProvider: ASAuthorizationAppleIDProvider
@@ -38,6 +40,7 @@ final class AuthState {
             status = .signedIn(stored)
             syncEngine.refreshPendingCount()
             syncEngine.triggerDrain()
+            await verifyBackendSession()
         case .revoked, .notFound, .transferred:
             AppLogger.auth
                 .notice(
@@ -45,11 +48,36 @@ final class AuthState {
                 )
             clearStoredUser()
             await backendAuthService.logout()
+            lastVerifiedProfile = nil
+            lastVerifyError = nil
             status = .signedOut
         @unknown default:
             AppLogger.auth
                 .error("Unknown ASAuthorizationAppleIDProvider credential state: \(state.rawValue, privacy: .public)")
             status = .signedOut
+        }
+    }
+
+    /// Pings `GET /v1/me` to confirm the backend recognizes the cached
+    /// session. Caches the response on `lastVerifiedProfile`; failure
+    /// clears the cached profile and stores the error for the UI to show.
+    /// Never throws — backend outages should not crash or sign the user out.
+    func verifyBackendSession() async {
+        guard await backendAuthService.isAuthenticatedToBackend() else {
+            lastVerifiedProfile = nil
+            lastVerifyError = nil
+            return
+        }
+        do {
+            let profile = try await backendAuthService.fetchMe()
+            lastVerifiedProfile = profile
+            lastVerifyError = nil
+        } catch {
+            lastVerifiedProfile = nil
+            lastVerifyError = error
+            AppLogger.backend.notice(
+                "Session verification failed: \(String(describing: error), privacy: .public)"
+            )
         }
     }
 
@@ -85,6 +113,8 @@ final class AuthState {
         clearStoredUser()
         status = .signedOut
         lastError = nil
+        lastVerifiedProfile = nil
+        lastVerifyError = nil
         Task { await backendAuthService.logout() }
         AppLogger.auth.info("User signed out.")
     }
@@ -111,6 +141,7 @@ final class AuthState {
             )
             syncEngine.refreshPendingCount()
             syncEngine.triggerDrain()
+            await verifyBackendSession()
         } catch {
             // Local Apple session is still valid; only the backend leg failed.
             // The user keeps CloudKit functionality and the next foreground

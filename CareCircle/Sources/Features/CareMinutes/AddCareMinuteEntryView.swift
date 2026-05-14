@@ -16,6 +16,7 @@ struct AddCareMinuteEntryView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
 
     @State private var serviceCode: HCBSServiceCode
     @State private var startedAt: Date
@@ -219,14 +220,19 @@ struct AddCareMinuteEntryView: View {
         isSaving = true
         defer { isSaving = false }
 
+        let inserted: CareMinuteEntry?
         if let editing {
             applyEdit(to: editing)
+            inserted = nil
         } else {
-            insertNew()
+            inserted = insertNew()
         }
 
         do {
             try modelContext.save()
+            if let inserted {
+                syncEngine.enqueueCareMinuteCreate(inserted)
+            }
             dismiss()
         } catch {
             errorMessage = "Couldn't save the entry. Please try again."
@@ -247,7 +253,7 @@ struct AddCareMinuteEntryView: View {
         entry.updatedAt = .now
     }
 
-    private func insertNew() {
+    private func insertNew() -> CareMinuteEntry {
         let entry = CareMinuteEntry(
             caregiverAppleUserID: viewerAppleUserID,
             caregiverDisplayName: viewerDisplayName,
@@ -261,5 +267,6 @@ struct AddCareMinuteEntryView: View {
         )
         entry.circle = circle
         modelContext.insert(entry)
+        return entry
     }
 }

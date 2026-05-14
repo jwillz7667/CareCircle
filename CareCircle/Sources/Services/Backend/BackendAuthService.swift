@@ -72,6 +72,18 @@ nonisolated struct BackendAuthService: Sendable {
         await apiClient.tokenStore.currentTokens()?.userId
     }
 
+    /// `GET /v1/me`. Used as a lightweight session proof-of-life — the
+    /// backend will refuse with 401 if the access token is dead, which
+    /// gives the UI a concrete signal that the session is healthy beyond
+    /// "we still have a token on disk."
+    func fetchMe() async throws(APIError) -> BackendUserProfile {
+        try await apiClient.send(
+            method: .get,
+            path: "/v1/me",
+            authenticated: true
+        )
+    }
+
     /// `true` when valid backend tokens are persisted on this device.
     func isAuthenticatedToBackend() async -> Bool {
         guard let tokens = await apiClient.tokenStore.currentTokens() else { return false }

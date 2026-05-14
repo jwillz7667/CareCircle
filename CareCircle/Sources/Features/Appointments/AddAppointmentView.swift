@@ -12,6 +12,7 @@ struct AddAppointmentView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
 
     @State private var draft: AppointmentDraft
     @State private var isSaving = false
@@ -228,6 +229,7 @@ struct AddAppointmentView: View {
         modelContext.insert(appointment)
         do {
             try modelContext.save()
+            syncEngine.enqueueAppointmentCreate(appointment)
             return appointment
         } catch {
             modelContext.delete(appointment)

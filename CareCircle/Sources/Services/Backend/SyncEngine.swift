@@ -76,31 +76,202 @@ final class SyncEngine {
     /// to SwiftData. Returns immediately — actual transport happens in
     /// the next drain pass.
     func enqueueActivityCreate(_ activity: Activity) {
-        let payload = CreateActivityPayload(
-            activityId: activity.id,
-            type: activity.type.rawValue,
-            body: activity.body,
-            createdAt: activity.createdAt,
-            authorAppleUserID: activity.authorAppleUserID,
-            authorDisplayName: activity.authorDisplayName,
-            audioDurationSeconds: activity.audioDurationSeconds,
-            extractedEntitiesJSON: activity.extractedEntitiesJSON
+        enqueue(
+            operationType: SyncOperationType.createActivity,
+            circleId: activity.circle?.id,
+            payload: CreateActivityPayload(
+                activityId: activity.id,
+                type: activity.type.rawValue,
+                body: activity.body,
+                createdAt: activity.createdAt,
+                authorAppleUserID: activity.authorAppleUserID,
+                authorDisplayName: activity.authorDisplayName,
+                audioDurationSeconds: activity.audioDurationSeconds,
+                extractedEntitiesJSON: activity.extractedEntitiesJSON
+            )
         )
+    }
 
+    func enqueueMedicationCreate(_ medication: Medication) {
+        enqueue(
+            operationType: SyncOperationType.createMedication,
+            circleId: medication.circle?.id,
+            payload: CreateMedicationPayload(
+                medicationId: medication.id,
+                name: medication.name,
+                dosage: medication.dosage,
+                form: medication.form.rawValue,
+                status: medication.status.rawValue,
+                scheduleJSON: medication.scheduleJSON,
+                startDate: medication.startDate,
+                endDate: medication.endDate,
+                instructions: medication.instructions,
+                colorHex: medication.colorHex,
+                fdaIngredients: medication.fdaIngredients,
+                createdAt: medication.createdAt
+            )
+        )
+    }
+
+    func enqueueDoseTaken(_ dose: DoseEvent) {
+        guard let medication = dose.medication else { return }
+        enqueue(
+            operationType: SyncOperationType.markDoseTaken,
+            circleId: medication.circle?.id,
+            payload: MarkDoseTakenPayload(
+                doseId: dose.id,
+                medicationId: medication.id,
+                takenAt: dose.takenAt ?? .now,
+                markedByAppleUserID: dose.markedByAppleUserID,
+                notes: dose.notes
+            )
+        )
+    }
+
+    func enqueueDoseSkipped(_ dose: DoseEvent) {
+        guard let medication = dose.medication else { return }
+        enqueue(
+            operationType: SyncOperationType.markDoseSkipped,
+            circleId: medication.circle?.id,
+            payload: MarkDoseSkippedPayload(
+                doseId: dose.id,
+                medicationId: medication.id,
+                skippedAt: dose.updatedAt,
+                markedByAppleUserID: dose.markedByAppleUserID,
+                notes: dose.notes
+            )
+        )
+    }
+
+    func enqueueAppointmentCreate(_ appointment: Appointment) {
+        enqueue(
+            operationType: SyncOperationType.createAppointment,
+            circleId: appointment.circle?.id,
+            payload: CreateAppointmentPayload(
+                appointmentId: appointment.id,
+                title: appointment.title,
+                provider: appointment.provider,
+                location: appointment.location,
+                startsAt: appointment.startsAt,
+                durationMinutes: appointment.durationMinutes,
+                prepNotes: appointment.prepNotes,
+                reminderOffsetsMinutes: appointment.reminderOffsetsMinutes,
+                createdByAppleUserID: appointment.createdByAppleUserID,
+                createdByDisplayName: appointment.createdByDisplayName,
+                createdAt: appointment.createdAt
+            )
+        )
+    }
+
+    func enqueueMemberCreate(_ member: Member) {
+        enqueue(
+            operationType: SyncOperationType.createMember,
+            circleId: member.circle?.id,
+            payload: CreateMemberPayload(
+                memberId: member.id,
+                appleUserID: member.appleUserID,
+                displayName: member.displayName,
+                role: member.role.rawValue,
+                status: member.status.rawValue,
+                joinedAt: member.joinedAt,
+                invitedAt: member.invitedAt,
+                invitedByAppleUserID: member.invitedByAppleUserID,
+                inviteShareURLString: member.inviteShareURLString
+            )
+        )
+    }
+
+    func enqueueEmergencyContactCreate(_ contact: EmergencyContact) {
+        enqueue(
+            operationType: SyncOperationType.createEmergencyContact,
+            circleId: contact.circle?.id,
+            payload: CreateEmergencyContactPayload(
+                contactId: contact.id,
+                name: contact.name,
+                relationship: contact.relationship,
+                phoneE164: contact.phoneE164,
+                isPrimary: contact.isPrimary,
+                isMedical: contact.isMedical,
+                sortOrder: contact.sortOrder,
+                createdAt: contact.createdAt
+            )
+        )
+    }
+
+    func enqueueCareMinuteCreate(_ entry: CareMinuteEntry) {
+        enqueue(
+            operationType: SyncOperationType.createCareMinuteEntry,
+            circleId: entry.circle?.id,
+            payload: CreateCareMinuteEntryPayload(
+                entryId: entry.id,
+                caregiverAppleUserID: entry.caregiverAppleUserID,
+                caregiverDisplayName: entry.caregiverDisplayName,
+                serviceCode: entry.serviceCode.rawValue,
+                serviceDescription: entry.serviceDescription,
+                startedAt: entry.startedAt,
+                endedAt: entry.endedAt,
+                notes: entry.notes,
+                milesDriven: entry.milesDriven,
+                fiscalIntermediary: entry.fiscalIntermediary
+            )
+        )
+    }
+
+    func enqueueSOSEventCreate(_ event: SOSEvent) {
+        enqueue(
+            operationType: SyncOperationType.createSOSEvent,
+            circleId: event.circle?.id,
+            payload: CreateSOSEventPayload(
+                eventId: event.id,
+                triggeredByAppleUserID: event.triggeredByAppleUserID,
+                triggeredByDisplayName: event.triggeredByDisplayName,
+                triggeredAt: event.triggeredAt,
+                latitude: event.latitude,
+                longitude: event.longitude,
+                locationAccuracyMeters: event.locationAccuracyMeters
+            )
+        )
+    }
+
+    func enqueueDocumentCreate(_ document: Document) {
+        enqueue(
+            operationType: SyncOperationType.createDocument,
+            circleId: document.circle?.id,
+            payload: CreateDocumentPayload(
+                documentId: document.id,
+                title: document.title,
+                type: document.type.rawValue,
+                mimeType: document.mimeType,
+                sizeBytes: document.sizeBytes,
+                issuedAt: document.issuedAt,
+                expiresAt: document.expiresAt,
+                visibilityRoles: document.visibilityRoles.map(\.rawValue),
+                uploadedByAppleUserID: document.uploadedByAppleUserID,
+                uploadedByDisplayName: document.uploadedByDisplayName,
+                createdAt: document.createdAt
+            )
+        )
+    }
+
+    private func enqueue(
+        operationType: String,
+        circleId: UUID?,
+        payload: some Encodable & Sendable
+    ) {
         let payloadData: Data
         do {
             payloadData = try encoder.encode(payload)
         } catch {
             AppLogger.sync.error(
-                "Failed to encode activity payload: \(String(describing: error), privacy: .public)"
+                "Failed to encode \(operationType, privacy: .public) payload: \(String(describing: error), privacy: .public)"
             )
             return
         }
 
         let context = modelContainer.mainContext
         let operation = PendingOperation(
-            operationType: SyncOperationType.createActivity,
-            circleId: activity.circle?.id,
+            operationType: operationType,
+            circleId: circleId,
             payloadJSON: payloadData
         )
         context.insert(operation)

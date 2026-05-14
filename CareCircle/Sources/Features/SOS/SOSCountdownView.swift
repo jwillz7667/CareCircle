@@ -17,6 +17,7 @@ struct SOSCountdownView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(SyncEngine.self) private var syncEngine
 
     var body: some View {
         ZStack {
@@ -112,7 +113,12 @@ struct SOSCountdownView: View {
         guard case .idle = center.state else { return }
         Task {
             do {
-                try await center.arm(in: circle, triggeredBy: user, modelContext: modelContext)
+                try await center.arm(
+                    in: circle,
+                    triggeredBy: user,
+                    modelContext: modelContext,
+                    syncEngine: syncEngine
+                )
             } catch {
                 AppLogger.sos.error(
                     "Failed to arm SOS: \(error.localizedDescription, privacy: .public)"

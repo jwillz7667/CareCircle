@@ -11,6 +11,7 @@ struct AddMemberView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.circleSharingService) private var sharingService
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
 
     @State private var displayName = ""
     @State private var role: MemberRole = .familyMember
@@ -159,6 +160,7 @@ struct AddMemberView: View {
                 errorMessage = "Couldn't save the invitation locally. Please try again."
                 return
             }
+            syncEngine.enqueueMemberCreate(invited)
             pendingSharePayload = payload
         } catch {
             errorMessage = error.errorDescription ?? "Couldn't create the invitation."

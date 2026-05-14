@@ -115,6 +115,9 @@ struct MoreView: View {
                     LabeledContent("Status", value: syncStatusLabel)
                         .foregroundStyle(Color.ccText)
 
+                    LabeledContent("Session", value: sessionStatusLabel)
+                        .foregroundStyle(sessionStatusColor)
+
                     if syncEngine.pendingCount > 0 {
                         LabeledContent("Pending", value: "\(syncEngine.pendingCount)")
                             .foregroundStyle(Color.ccText)
@@ -168,6 +171,22 @@ struct MoreView: View {
         case let .error(message):
             message
         }
+    }
+
+    private var sessionStatusLabel: String {
+        if let profile = authState.lastVerifiedProfile {
+            return "Verified as \(profile.displayName ?? "user")"
+        }
+        if authState.lastVerifyError != nil {
+            return "Unverified — check connection"
+        }
+        return "Not yet verified"
+    }
+
+    private var sessionStatusColor: Color {
+        if authState.lastVerifiedProfile != nil { return Color.ccText }
+        if authState.lastVerifyError != nil { return Color.ccDanger }
+        return Color.ccSecondary
     }
 
     private var shouldShowRetry: Bool {

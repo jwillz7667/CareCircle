@@ -30,6 +30,7 @@ struct MedicationDoseRow: View {
     }
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncEngine.self) private var syncEngine
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.spacing) {
@@ -135,7 +136,7 @@ struct MedicationDoseRow: View {
                 displayName: author.displayName
             )
             : nil
-        DoseEventApplicator.apply(
+        let dose = DoseEventApplicator.apply(
             status: status,
             scheduledAt: occurrence.date,
             medication: medication,
@@ -143,6 +144,14 @@ struct MedicationDoseRow: View {
             marker: marker
         )
         try? modelContext.save()
+        switch status {
+        case .taken, .late:
+            syncEngine.enqueueDoseTaken(dose)
+        case .skipped:
+            syncEngine.enqueueDoseSkipped(dose)
+        case .scheduled, .missed:
+            break
+        }
         onMarked(status)
     }
 

@@ -66,18 +66,25 @@ final class SOSCenter {
 
     /// Starts the 30-second countdown. Caller passes the model context and
     /// the user / circle so the orchestrator can write the SOSEvent at T=0
-    /// without reaching into SwiftUI environment values.
+    /// without reaching into SwiftUI environment values. `syncEngine` mirrors
+    /// the fired event to the backend queue.
     func arm(
         in circle: Circle,
         triggeredBy user: SignedInUser,
-        modelContext: ModelContext
+        modelContext: ModelContext,
+        syncEngine: SyncEngine
     ) async throws(SOSCenterError) {
         guard case .idle = state else { throw .alreadyArmed }
         await SOSNotificationAuthorizer.requestAuthorization()
 
         state = .arming(secondsRemaining: armDuration)
         countdownTask = Task { [weak self] in
-            await self?.runCountdown(circle: circle, user: user, modelContext: modelContext)
+            await self?.runCountdown(
+                circle: circle,
+                user: user,
+                modelContext: modelContext,
+                syncEngine: syncEngine
+            )
         }
     }
 
@@ -105,7 +112,8 @@ final class SOSCenter {
     private func runCountdown(
         circle: Circle,
         user: SignedInUser,
-        modelContext: ModelContext
+        modelContext: ModelContext,
+        syncEngine: SyncEngine
     ) async {
         hapticGenerator = UIImpactFeedbackGenerator(style: .heavy)
         hapticGenerator?.prepare()
@@ -123,7 +131,7 @@ final class SOSCenter {
         }
 
         if Task.isCancelled { return }
-        await fire(circle: circle, user: user, modelContext: modelContext)
+        await fire(circle: circle, user: user, modelContext: modelContext, syncEngine: syncEngine)
     }
 
     private func triggerHaptic(secondsRemaining: Int) {
@@ -137,7 +145,8 @@ final class SOSCenter {
     private func fire(
         circle: Circle,
         user: SignedInUser,
-        modelContext: ModelContext
+        modelContext: ModelContext,
+        syncEngine: SyncEngine
     ) async {
         let location = await locationProvider.requestFix()
         let event = SOSEvent(
@@ -153,6 +162,7 @@ final class SOSCenter {
         modelContext.insert(event)
         do {
             try modelContext.save()
+            syncEngine.enqueueSOSEventCreate(event)
         } catch {
             let described = String(describing: error)
             AppLogger.sos.error("Failed to persist SOSEvent: \(described, privacy: .public)")
