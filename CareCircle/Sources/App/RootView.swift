@@ -37,6 +37,7 @@ struct RootView: View {
             if newPhase == .active, isSignedIn {
                 MedicationOverdueSweeper().sweep(in: modelContext)
                 documentSweeper.triggerSweep(modelContext: modelContext)
+                documentSweeper.triggerPrefetch(modelContext: modelContext)
                 Task {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
@@ -53,6 +54,7 @@ struct RootView: View {
         hydrator.triggerHydrateAll(modelContext: modelContext)
         documentSweeper.triggerSweep(modelContext: modelContext)
         await pullDocumentKeys()
+        documentSweeper.triggerPrefetch(modelContext: modelContext)
     }
 
     private func pullDocumentKeys() async {

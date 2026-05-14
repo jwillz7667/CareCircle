@@ -22,11 +22,19 @@ final class BackendDocumentRetrySweeper {
     private(set) var pendingCount = 0
     private(set) var lastError: String?
 
-    private let service: BackendDocumentService
-    private var inFlight: Task<Void, Never>?
+    private(set) var isPrefetching = false
+    private(set) var lastPrefetchAt: Date?
+    private(set) var prefetchPendingCount = 0
+    private(set) var lastPrefetchError: String?
 
-    init(service: BackendDocumentService) {
+    private let service: BackendDocumentService
+    private let keyStore: DocumentKeyStore
+    private var inFlight: Task<Void, Never>?
+    private var inFlightPrefetch: Task<Void, Never>?
+
+    init(service: BackendDocumentService, keyStore: DocumentKeyStore = .shared) {
         self.service = service
+        self.keyStore = keyStore
     }
 
     /// Schedules a sweep unless one is already running. Safe to call
@@ -120,6 +128,91 @@ final class BackendDocumentRetrySweeper {
         pendingCount = fetchPending(modelContext: modelContext).count
         lastRunAt = .now
         lastError = lastFailure
+    }
+
+    /// Schedules a prefetch pass for every backend-only placeholder
+    /// document. Idempotent: skips if a prefetch is already running.
+    func triggerPrefetch(modelContext: ModelContext) {
+        guard inFlightPrefetch == nil else { return }
+        inFlightPrefetch = Task { [weak self] in
+            await self?.prefetch(modelContext: modelContext)
+            await MainActor.run {
+                self?.inFlightPrefetch = nil
+            }
+        }
+    }
+
+    private func prefetch(modelContext: ModelContext) async {
+        isPrefetching = true
+        defer { isPrefetching = false }
+
+        let placeholders = fetchPrefetchCandidates(modelContext: modelContext)
+        prefetchPendingCount = placeholders.count
+        guard !placeholders.isEmpty else {
+            lastPrefetchAt = .now
+            lastPrefetchError = nil
+            return
+        }
+
+        var successCount = 0
+        var lastFailure: String?
+
+        for document in placeholders {
+            do {
+                let payload = try await service.downloadCiphertext(documentId: document.id)
+                document.ciphertext = payload.ciphertext
+                document.nonce = payload.nonce
+                document.tag = payload.tag
+                document.updatedAt = .now
+                successCount += 1
+            } catch {
+                if case let .fetchFailed(status) = error, status == 404 {
+                    document.deletedAt = .now
+                    document.updatedAt = .now
+                    AppLogger.backend.info(
+                        "Soft-deleted missing backend placeholder \(document.id.uuidString, privacy: .public)"
+                    )
+                    continue
+                }
+                let message = error.errorDescription ?? "Prefetch failed"
+                AppLogger.backend.error(
+                    "Document prefetch failed for \(document.id.uuidString, privacy: .public): \(message, privacy: .public)"
+                )
+                lastFailure = message
+            }
+        }
+
+        if successCount > 0 {
+            do {
+                try modelContext.save()
+            } catch {
+                AppLogger.backend.error(
+                    "Failed to persist document prefetch results: \(String(describing: error), privacy: .public)"
+                )
+                lastFailure = error.localizedDescription
+            }
+        }
+
+        prefetchPendingCount = fetchPrefetchCandidates(modelContext: modelContext).count
+        lastPrefetchAt = .now
+        lastPrefetchError = lastFailure
+    }
+
+    /// Backend-only documents whose circle has a local DEK. We skip
+    /// circles whose DEK hasn't arrived yet via
+    /// `CircleDocumentKeySyncService.pullIfMissing` — the next
+    /// foreground tick picks them up.
+    private func fetchPrefetchCandidates(modelContext: ModelContext) -> [Document] {
+        let descriptor = FetchDescriptor<Document>(
+            sortBy: [SortDescriptor(\Document.createdAt)]
+        )
+        guard let all = try? modelContext.fetch(descriptor) else { return [] }
+        return all.filter { document in
+            guard document.isBackendPlaceholder,
+                  document.deletedAt == nil,
+                  let circleId = document.circle?.id else { return false }
+            return (try? keyStore.loadKey(circleID: circleId)) != nil
+        }
     }
 
     /// Returns documents that need a backend upload pass: ciphertext
