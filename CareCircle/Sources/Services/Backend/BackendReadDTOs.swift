@@ -272,6 +272,29 @@ nonisolated struct ShiftDigestDTO: Decodable, Sendable, Equatable {
     let version: Int
 }
 
+// MARK: - Vitals
+
+nonisolated struct VitalsResponse: Decodable, Sendable, Equatable {
+    let vitals: [VitalDTO]
+    let nextCursor: String?
+}
+
+nonisolated struct VitalDTO: Decodable, Sendable, Equatable {
+    let id: String
+    let circleId: String
+    let recordedByUserId: String
+    let kind: String
+    let recordedAt: Date
+    let valueNumeric: Double?
+    let valueText: String?
+    let unit: String
+    let source: String
+    let healthkitUUID: String?
+    let notes: String?
+    let createdAt: Date
+    let version: Int
+}
+
 // MARK: - JSONValue
 
 /// Minimal JSON value used to round-trip the medication `schedule`

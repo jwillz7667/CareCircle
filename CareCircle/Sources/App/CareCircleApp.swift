@@ -13,6 +13,7 @@ struct CareCircleApp: App {
     @State private var documentSweeper: BackendDocumentRetrySweeper
     @State private var realtimeClient: BackendRealtimeClient
     @State private var inferenceClient: BackendInferenceClient
+    @State private var healthKitReader: HealthKitVitalsReader
     @State private var insightsEngine = InsightsEngine()
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
@@ -52,6 +53,10 @@ struct CareCircleApp: App {
             currentBackendUserID: { [auth] in auth.lastVerifiedProfile?.id }
         ))
         _inferenceClient = State(initialValue: BackendInferenceClient(apiClient: client))
+        _healthKitReader = State(initialValue: HealthKitVitalsReader(
+            syncEngine: engine,
+            currentBackendUserID: { [auth] in auth.lastVerifiedProfile?.id }
+        ))
 
         MainActor.assumeIsolated {
             MedicationServices.shared.install(modelContainer: container)
@@ -75,6 +80,7 @@ struct CareCircleApp: App {
             CareMinuteEntry.self,
             ShiftDigest.self,
             Insight.self,
+            Vital.self,
             PendingOperation.self,
         ])
         let configuration = ModelConfiguration(
@@ -103,6 +109,7 @@ struct CareCircleApp: App {
                 .environment(documentSweeper)
                 .environment(realtimeClient)
                 .environment(inferenceClient)
+                .environment(healthKitReader)
                 .environment(insightsEngine)
                 .preferredColorScheme(.light)
         }

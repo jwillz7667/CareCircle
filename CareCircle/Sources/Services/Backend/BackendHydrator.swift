@@ -105,6 +105,7 @@ final class BackendHydrator {
             )
             try await hydrateDocuments(circleId: circleId, modelContext: modelContext)
             try await hydrateShiftDigests(circleId: circleId, modelContext: modelContext)
+            try await hydrateVitals(circleId: circleId, modelContext: modelContext)
 
             try modelContext.save()
             retractStaleSOSNotifications(identifiers: sosRetractIDs)
@@ -399,6 +400,7 @@ final class BackendHydrator {
         case let row as SOSEvent: row.circle?.id
         case let row as Document: row.circle?.id
         case let row as ShiftDigest: row.circle?.id
+        case let row as Vital: row.circle?.id
         default: nil
         }
     }
@@ -443,4 +445,5 @@ final class BackendHydrator {
         let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
         return "\(base)\(query)"
     }
+
 }

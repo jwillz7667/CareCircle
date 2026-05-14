@@ -150,6 +150,13 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CareCircle/Info.plist;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "CareCircle mirrors appointments you create here into your iPhone Calendar so reminders show up alongside your other events. Each device opts in separately.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "CareCircle uses the camera to scan medication labels so you can add prescriptions without typing.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "CareCircle reads vitals from Health to add them to the active Circle's record.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CareCircle does not write to Health; this key is required by the entitlement but unused.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "CareCircle captures your location only when you trigger SOS so your Circle can see where to send help.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CareCircle records voice handoff notes so caregivers can leave hands-free updates for the Circle.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "CareCircle transcribes voice notes on this device so your hands-free updates are searchable in the feed. Transcription runs locally whenever possible.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -184,6 +191,13 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CareCircle/Info.plist;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "CareCircle mirrors appointments you create here into your iPhone Calendar so reminders show up alongside your other events. Each device opts in separately.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "CareCircle uses the camera to scan medication labels so you can add prescriptions without typing.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "CareCircle reads vitals from Health to add them to the active Circle's record.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CareCircle does not write to Health; this key is required by the entitlement but unused.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "CareCircle captures your location only when you trigger SOS so your Circle can see where to send help.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CareCircle records voice handoff notes so caregivers can leave hands-free updates for the Circle.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "CareCircle transcribes voice notes on this device so your hands-free updates are searchable in the feed. Transcription runs locally whenever possible.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -69,6 +69,13 @@ struct MoreView: View {
                         }
 
                         NavigationLink {
+                            VitalsListView(circle: circle, author: authorContext)
+                        } label: {
+                            Label("Vitals", systemImage: "heart.text.square")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
                             InsightsView(circle: circle, author: authorContext)
                         } label: {
                             Label("Insights", systemImage: "sparkles")

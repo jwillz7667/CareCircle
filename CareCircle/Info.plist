@@ -2,21 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>CareCircle mirrors appointments you create here into your iPhone Calendar so reminders show up alongside your other events. Each device opts in separately.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>CareCircle uses the camera to scan medication labels so you can add prescriptions without typing.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>CareCircle captures your location only when you trigger SOS so your Circle can see where to send help.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>CareCircle records voice handoff notes so caregivers can leave hands-free updates for the Circle.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>CareCircle transcribes voice notes on this device so your hands-free updates are searchable in the feed. Transcription runs locally whenever possible.</string>
+	<key>APIBaseURL</key>
+	<string>https://carecircle-production-5669.up.railway.app</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
-	<key>APIBaseURL</key>
-	<string>https://carecircle-production-5669.up.railway.app</string>
 </dict>
 </plist>

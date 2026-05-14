@@ -47,6 +47,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \Insight.circle)
     var insightsStore: [Insight]?
 
+    @Relationship(deleteRule: .cascade, inverse: \Vital.circle)
+    var vitalsStore: [Vital]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -95,6 +98,11 @@ final class Circle {
     var insights: [Insight] {
         get { insightsStore ?? [] }
         set { insightsStore = newValue }
+    }
+
+    var vitals: [Vital] {
+        get { vitalsStore ?? [] }
+        set { vitalsStore = newValue }
     }
 
     init(

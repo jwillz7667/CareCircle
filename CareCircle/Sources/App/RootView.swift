@@ -12,7 +12,9 @@ struct RootView: View {
     @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
     @Environment(BackendRealtimeClient.self) private var realtimeClient
     @Environment(InsightsEngine.self) private var insightsEngine
+    @Environment(HealthKitVitalsReader.self) private var healthKitReader
     @State private var didHydrateThisLaunch = false
+    @State private var didRequestHealthKitAuth = false
 
     var body: some View {
         Group {
@@ -45,6 +47,7 @@ struct RootView: View {
                 Task {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
+                    await readHealthKitForAllCircles()
                 }
             } else if newPhase == .background || newPhase == .inactive {
                 realtimeClient.stop()
@@ -63,6 +66,27 @@ struct RootView: View {
         documentSweeper.triggerPrefetch(modelContext: modelContext)
         realtimeClient.start(modelContext: modelContext)
         recomputeInsightsForAllCircles()
+        await maybeRequestHealthKitAuth()
+        await readHealthKitForAllCircles()
+    }
+
+    /// Asks the user once per app install (we re-prompt on every launch
+    /// only because HK silently no-ops after the first grant, which is
+    /// the right outcome — the OS sheet only ever appears once per
+    /// (type, app) so there's no UX cost to calling it every time).
+    private func maybeRequestHealthKitAuth() async {
+        guard !didRequestHealthKitAuth, healthKitReader.isAvailable else { return }
+        didRequestHealthKitAuth = true
+        _ = try? await healthKitReader.requestAuthorizationIfNeeded()
+    }
+
+    private func readHealthKitForAllCircles() async {
+        guard healthKitReader.isAvailable else { return }
+        let descriptor = FetchDescriptor<Circle>(sortBy: [SortDescriptor(\.createdAt)])
+        let circles = (try? modelContext.fetch(descriptor)) ?? []
+        for circle in circles {
+            await healthKitReader.readNewSamples(for: circle, modelContext: modelContext)
+        }
     }
 
     private func pullDocumentKeys() async {

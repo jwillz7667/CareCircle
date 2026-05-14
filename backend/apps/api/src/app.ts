@@ -34,6 +34,7 @@ import { syncRoutes } from './routes/sync.js';
 import { realtimeRoutes } from './routes/realtime.js';
 import { inferenceRoutes } from './routes/inference.js';
 import { digestRoutes } from './routes/digests.js';
+import { vitalRoutes } from './routes/vitals.js';
 import type { AppContext } from './types.js';
 
 export type BuildOptions = {
@@ -113,6 +114,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     await realtimeRoutes(instance);
     await inferenceRoutes(instance);
     await digestRoutes(instance);
+    await vitalRoutes(instance);
   });
 
   if (!opts.skipStartupTasks) {

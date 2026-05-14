@@ -16,6 +16,7 @@ enum SyncOperationType {
     static let createCareMinuteEntry = "create_care_minute_entry"
     static let createSOSEvent = "create_sos_event"
     static let createShiftDigest = "create_shift_digest"
+    static let createVital = "create_vital"
 }
 
 // MARK: - Activity
@@ -151,6 +152,22 @@ nonisolated struct CreateShiftDigestPayload: Codable, Sendable, Equatable {
     let extractedEntitiesJSON: String?
     let structuredArtifactsJSON: String?
     let relatedShiftID: UUID?
+    let createdAt: Date
+}
+
+// MARK: - Vitals
+
+nonisolated struct CreateVitalPayload: Codable, Sendable, Equatable {
+    let vitalId: UUID
+    let kind: String
+    let recordedAt: Date
+    let valueNumeric: Double?
+    let valueText: String?
+    let unit: String
+    let source: String
+    let healthkitUUID: String?
+    let notes: String?
+    let recordedByAppleUserID: String
     let createdAt: Date
 }
 

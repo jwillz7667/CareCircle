@@ -254,7 +254,7 @@ final class SyncEngine {
         )
     }
 
-    private func enqueue(
+    func enqueue(
         operationType: String,
         circleId: UUID?,
         payload: some Encodable & Sendable

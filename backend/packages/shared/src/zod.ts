@@ -317,3 +317,47 @@ export const createShiftDigestSchema = z.object({
   clientOpId: uuidSchema.optional(),
 });
 export type CreateShiftDigestT = z.infer<typeof createShiftDigestSchema>;
+
+export const vitalKindSchema = z.enum([
+  'heart_rate',
+  'blood_pressure_systolic',
+  'blood_pressure_diastolic',
+  'body_weight',
+  'blood_glucose',
+  'oxygen_saturation',
+  'body_temperature',
+  'respiratory_rate',
+  'falls',
+  'walking_steadiness',
+  'sleep_hours',
+  'resting_heart_rate',
+  'step_count',
+]);
+export type VitalKindT = z.infer<typeof vitalKindSchema>;
+
+export const vitalSourceSchema = z.enum(['manual', 'healthkit']);
+export type VitalSourceT = z.infer<typeof vitalSourceSchema>;
+
+export const createVitalSchema = z
+  .object({
+    kind: vitalKindSchema,
+    recordedAt: isoTimestampSchema,
+    valueNumeric: z.number().finite().optional(),
+    valueText: z.string().min(1).max(120).optional(),
+    unit: z.string().min(1).max(40),
+    source: vitalSourceSchema.default('manual'),
+    healthkitUUID: z.string().min(1).max(120).optional(),
+    notes: z.string().max(2_000).optional(),
+    clientOpId: uuidSchema.optional(),
+  })
+  .refine(
+    (input) => input.valueNumeric !== undefined || (input.valueText && input.valueText.length > 0),
+    { message: 'Either valueNumeric or valueText must be provided', path: ['valueNumeric'] },
+  );
+export type CreateVitalT = z.infer<typeof createVitalSchema>;
+
+export const listVitalsQuerySchema = paginationSchema.extend({
+  kind: vitalKindSchema.optional(),
+  source: vitalSourceSchema.optional(),
+});
+export type ListVitalsQueryT = z.infer<typeof listVitalsQuerySchema>;

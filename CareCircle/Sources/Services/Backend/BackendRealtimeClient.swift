@@ -322,6 +322,8 @@ final class BackendRealtimeClient {
             await applyCareMinuteChange(circleId: circleId, modelContext: modelContext)
         case "shift_digests":
             await applyShiftDigestChange(circleId: circleId, modelContext: modelContext)
+        case "vitals":
+            await applyVitalChange(circleId: circleId, modelContext: modelContext)
         default:
             AppLogger.backend.debug(
                 "Realtime: \(table, privacy: .public) row \(rowId.uuidString, privacy: .public) — no applicator yet."

@@ -316,6 +316,35 @@ enum BackendHydratorMappers {
         digest.relatedShiftID = parseUUID(dto.relatedShiftId ?? "")
     }
 
+    static func makeVital(from dto: VitalDTO) -> Vital {
+        Vital(
+            id: parseUUID(dto.id) ?? UUID(),
+            kind: VitalKind(rawValue: dto.kind) ?? .heartRate,
+            recordedAt: dto.recordedAt,
+            valueNumeric: dto.valueNumeric,
+            valueText: dto.valueText,
+            unit: dto.unit,
+            source: VitalSource(rawValue: dto.source) ?? .manual,
+            healthkitUUID: dto.healthkitUUID,
+            notes: dto.notes,
+            recordedByAppleUserID: dto.recordedByUserId,
+            recordedByDisplayName: "",
+            createdAt: dto.createdAt
+        )
+    }
+
+    static func updateVital(_ vital: Vital, from dto: VitalDTO) {
+        vital.kindRaw = (VitalKind(rawValue: dto.kind) ?? .heartRate).rawValue
+        vital.recordedAt = dto.recordedAt
+        vital.valueNumeric = dto.valueNumeric
+        vital.valueText = dto.valueText
+        vital.unit = dto.unit
+        vital.sourceRaw = (VitalSource(rawValue: dto.source) ?? .manual).rawValue
+        vital.healthkitUUID = dto.healthkitUUID
+        vital.notes = dto.notes
+        vital.recordedByAppleUserID = dto.recordedByUserId
+    }
+
     // MARK: - Parsing helpers
 
     static func parseUUID(_ raw: String) -> UUID? {
