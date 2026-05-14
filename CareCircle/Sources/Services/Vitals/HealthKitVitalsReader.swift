@@ -61,9 +61,12 @@ final class HealthKitVitalsReader {
         HKUnit.gramUnit(with: .milli).unitDivided(by: HKUnit.literUnit(with: .deci))
 
     private let store: HKHealthStore?
-    private let anchors: HealthKitAnchorStore
-    private let syncEngine: SyncEngine
-    private let currentBackendUserID: @MainActor () -> String?
+    /// Internal (not `private`) so the sleep extension in
+    /// `HealthKitVitalsReader+Sleep.swift` can read/write its own
+    /// per-kind anchor. Same applies to `syncEngine` below.
+    let anchors: HealthKitAnchorStore
+    let syncEngine: SyncEngine
+    private let currentRecorderAppleUserID: @MainActor () -> String?
 
     var isAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
@@ -71,11 +74,11 @@ final class HealthKitVitalsReader {
 
     init(
         syncEngine: SyncEngine,
-        currentBackendUserID: @escaping @MainActor () -> String?,
+        currentRecorderAppleUserID: @escaping @MainActor () -> String?,
         userDefaults: UserDefaults = .standard
     ) {
         self.syncEngine = syncEngine
-        self.currentBackendUserID = currentBackendUserID
+        self.currentRecorderAppleUserID = currentRecorderAppleUserID
         anchors = HealthKitAnchorStore(defaults: userDefaults)
         store = HKHealthStore.isHealthDataAvailable() ? HKHealthStore() : nil
     }
@@ -115,10 +118,14 @@ final class HealthKitVitalsReader {
             AppLogger.healthKit.debug("HK reader skipped — health data unavailable on device.")
             return
         }
-        guard let backendUserID = currentBackendUserID() else {
-            AppLogger.healthKit.debug("HK reader skipped — no signed-in backend user.")
+        guard let appleUserID = currentRecorderAppleUserID() else {
+            AppLogger.healthKit.debug("HK reader skipped — no signed-in user to attribute samples to.")
             return
         }
+        let recorder = RecorderContext(
+            appleUserID: appleUserID,
+            displayName: resolveRecorderDisplayName(appleUserID: appleUserID, circle: circle)
+        )
         let circleID = circle.id
         var importedCount = 0
         for spec in Self.quantityImports {
@@ -127,7 +134,7 @@ final class HealthKitVitalsReader {
                 store: store,
                 circle: circle,
                 circleID: circleID,
-                backendUserID: backendUserID,
+                recorder: recorder,
                 modelContext: modelContext
             )
         }
@@ -135,7 +142,7 @@ final class HealthKitVitalsReader {
             store: store,
             circle: circle,
             circleID: circleID,
-            backendUserID: backendUserID,
+            recorder: recorder,
             modelContext: modelContext
         )
         if importedCount > 0 {
@@ -159,7 +166,7 @@ final class HealthKitVitalsReader {
         store: HKHealthStore,
         circle: Circle,
         circleID: UUID,
-        backendUserID: String,
+        recorder: RecorderContext,
         modelContext: ModelContext
     ) async
         -> Int
@@ -201,8 +208,8 @@ final class HealthKitVitalsReader {
                 unit: spec.kind.defaultUnit,
                 source: .healthkit,
                 healthkitUUID: key,
-                recordedByAppleUserID: backendUserID,
-                recordedByDisplayName: ""
+                recordedByAppleUserID: recorder.appleUserID,
+                recordedByDisplayName: recorder.displayName
             )
             vital.circle = circle
             modelContext.insert(vital)
@@ -213,136 +220,20 @@ final class HealthKitVitalsReader {
         return inserted
     }
 
-    // MARK: - Sleep aggregation
-
-    /// Sleep samples are aggregated per local-night and emitted as a
-    /// single `Vital` row per night with `valueNumeric` in hours. The
-    /// row's `healthkitUUID` is a deterministic hash of the night's
-    /// sample UUIDs so re-imports converge on the same row even when
-    /// HK delivers the per-sample list in a different order.
-    private func ingestSleep(
-        store: HKHealthStore,
-        circle: Circle,
-        circleID: UUID,
-        backendUserID: String,
-        modelContext: ModelContext
-    ) async
-        -> Int
-    {
-        guard let hkType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else {
-            return 0
-        }
-        let anchor = anchors.anchor(forKind: .sleepHours, circleID: circleID)
-        let predicate = HKSamplePredicate.categorySample(type: hkType)
-        let descriptor = HKAnchoredObjectQueryDescriptor(
-            predicates: [predicate],
-            anchor: anchor,
-            limit: 500
-        )
-        let result: HKAnchoredObjectQueryDescriptor<HKCategorySample>.Result
-        do {
-            result = try await descriptor.result(for: store)
-        } catch {
-            AppLogger.healthKit.notice(
-                "HK sleep read failed: \(String(describing: error), privacy: .public)"
-            )
-            return 0
-        }
-        let asleepSamples = result.addedSamples.filter(Self.isAsleep)
-        let perNight = Self.aggregateSleepByNight(asleepSamples)
-        let existingUUIDs = fetchExistingHKUUIDs(
-            for: .sleepHours,
-            circleID: circleID,
-            modelContext: modelContext
-        )
-        var inserted = 0
-        for night in perNight {
-            let dedupeKey = Self.sleepDedupeKey(forNight: night.nightStart, samples: night.samples)
-            guard !existingUUIDs.contains(dedupeKey) else { continue }
-            let vital = Vital(
-                kind: .sleepHours,
-                recordedAt: night.nightStart,
-                valueNumeric: night.hours,
-                unit: VitalKind.sleepHours.defaultUnit,
-                source: .healthkit,
-                healthkitUUID: dedupeKey,
-                recordedByAppleUserID: backendUserID,
-                recordedByDisplayName: ""
-            )
-            vital.circle = circle
-            modelContext.insert(vital)
-            syncEngine.enqueueVitalCreate(vital)
-            inserted += 1
-        }
-        anchors.setAnchor(result.newAnchor, forKind: .sleepHours, circleID: circleID)
-        return inserted
-    }
-
-    /// HK exposes a long-running history of sleep stages including
-    /// `inBed`, `awake`, and several "asleep" variants. We count only
-    /// asleep states toward nightly hours — `inBed` is a presence
-    /// signal, not a duration of actual sleep.
-    private static func isAsleep(_ sample: HKCategorySample) -> Bool {
-        switch sample.value {
-        case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
-             HKCategoryValueSleepAnalysis.asleepCore.rawValue,
-             HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
-             HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-            true
-        default:
-            false
-        }
-    }
-
-    private struct NightAggregate {
-        let nightStart: Date
-        let hours: Double
-        let samples: [HKCategorySample]
-    }
-
-    /// Buckets asleep samples into "nights" keyed on the local-calendar
-    /// day of the sample's *end* timestamp — most sleep crosses
-    /// midnight, and end-day matches how a user would describe "last
-    /// night's sleep" ("I slept 7 hours" usually means "for the
-    /// morning of the 5th, I had 7 hours").
-    private static func aggregateSleepByNight(
-        _ samples: [HKCategorySample]
-    )
-        -> [NightAggregate]
-    {
-        let calendar = Calendar.current
-        let grouped = Dictionary(grouping: samples) { sample in
-            calendar.startOfDay(for: sample.endDate)
-        }
-        return grouped
-            .sorted(by: { $0.key < $1.key })
-            .map { nightStart, samples in
-                let seconds = samples.reduce(0.0) {
-                    $0 + $1.endDate.timeIntervalSince($1.startDate)
-                }
-                return NightAggregate(
-                    nightStart: nightStart,
-                    hours: seconds / 3_600.0,
-                    samples: samples
-                )
-            }
-    }
-
-    /// Deterministic key for a night's row. Stable across reruns as
-    /// long as the same set of HK sample UUIDs participate. If HK
-    /// adds a new sample to an already-recorded night, the key
-    /// changes and a new row lands — UI ordering keeps both visible
-    /// until cold-start hydration reconciles. Acceptable noise for v1.
-    private static func sleepDedupeKey(
-        forNight night: Date,
-        samples: [HKCategorySample]
+    /// Looks up the display name to stamp on an imported row from the
+    /// Circle's `members` list so HK-imported rows render with the same
+    /// name as the caregiver's manual entries. Falls back to empty when
+    /// the recorder hasn't been added as a member yet — `VitalsListView`
+    /// then resolves the name from the live `Circle.members` query.
+    private func resolveRecorderDisplayName(
+        appleUserID: String,
+        circle: Circle
     )
         -> String
     {
-        let sortedIDs = samples.map(\.uuid.uuidString).sorted()
-        let joined = sortedIDs.joined(separator: "|")
-        let nightStamp = Int(night.timeIntervalSince1970)
-        return "sleep:\(nightStamp):\(joined.hashValue)"
+        circle.members
+            .first(where: { $0.appleUserID == appleUserID })?
+            .displayName ?? ""
     }
 
     // MARK: - Local lookup
@@ -350,7 +241,8 @@ final class HealthKitVitalsReader {
     /// Fetches every `healthkitUUID` already present on the local
     /// store for the given kind + circle, so the importer can skip
     /// inserts that would otherwise just race the backend dedupe.
-    private func fetchExistingHKUUIDs(
+    /// Internal (not `private`) so the sleep extension can reuse it.
+    func fetchExistingHKUUIDs(
         for kind: VitalKind,
         circleID: UUID,
         modelContext: ModelContext
@@ -370,6 +262,16 @@ final class HealthKitVitalsReader {
             }
         )
     }
+}
+
+// MARK: - RecorderContext
+
+/// Bundles the recorder identity stamped onto every imported `Vital`.
+/// Internal (not file-private) so the sleep-aggregation extension in
+/// `HealthKitVitalsReader+Sleep.swift` can use the same type.
+struct RecorderContext {
+    let appleUserID: String
+    let displayName: String
 }
 
 // MARK: - QuantityImport

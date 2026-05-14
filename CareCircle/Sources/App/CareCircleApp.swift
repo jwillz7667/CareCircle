@@ -58,7 +58,10 @@ struct CareCircleApp: App {
         _inferenceClient = State(initialValue: BackendInferenceClient(apiClient: client))
         _healthKitReader = State(initialValue: HealthKitVitalsReader(
             syncEngine: engine,
-            currentBackendUserID: { [auth] in auth.lastVerifiedProfile?.id }
+            currentRecorderAppleUserID: { [auth] in
+                if case let .signedIn(user) = auth.status { return user.id }
+                return nil
+            }
         ))
         _locationService = State(initialValue: LocationSharingService(
             modelContainer: container,
