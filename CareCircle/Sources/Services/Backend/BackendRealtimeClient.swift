@@ -42,6 +42,19 @@ final class BackendRealtimeClient {
     private(set) var subscribedCircleCount = 0
     private(set) var lastError: String?
 
+    // Resync state lives outside `private(set)` because the
+    // `BackendRealtimeSnapshot` extension lives in another file and
+    // needs to mutate them. Module-internal write access is fine —
+    // no external code should be reaching in.
+    var lastResyncAt: Date?
+    var isResyncing = false
+
+    /// Tracks whether this client instance has been subscribed at least
+    /// once. The first subscribed frame is *not* a reconnect — cold-start
+    /// hydration owns the initial fetch. Every subsequent subscribed
+    /// frame is a reconnect and triggers a snapshot resync.
+    var hasPriorConnection = false
+
     let apiClient: APIClient
     private let configuration: BackendConfiguration
     private let urlSession: URLSession
@@ -162,14 +175,7 @@ final class BackendRealtimeClient {
         }
         switch frame {
         case let .subscribed(circles):
-            subscribedCircleCount = circles.count
-            isConnected = true
-            lastConnectedAt = .now
-            lastError = nil
-            reconnectAttempt = 0
-            AppLogger.backend.info(
-                "Realtime: subscribed to \(circles.count, privacy: .public) circle(s)."
-            )
+            handleSubscribed(circles: circles, modelContext: modelContext)
         case let .change(circleId, table, rowId, op):
             lastChangeAt = .now
             isConnected = true
@@ -179,6 +185,27 @@ final class BackendRealtimeClient {
                 table: table,
                 rowId: rowId,
                 op: op,
+                modelContext: modelContext
+            )
+        }
+    }
+
+    private func handleSubscribed(circles: [UUID], modelContext: ModelContext) {
+        let wasReconnect = hasPriorConnection
+        hasPriorConnection = true
+        subscribedCircleCount = circles.count
+        isConnected = true
+        lastConnectedAt = .now
+        lastError = nil
+        reconnectAttempt = 0
+        AppLogger.backend.info(
+            "Realtime: subscribed to \(circles.count, privacy: .public) circle(s)."
+        )
+        guard wasReconnect, !circles.isEmpty else { return }
+        let circlesToResync = circles
+        Task { [weak self] in
+            await self?.snapshotResync(
+                circleIds: circlesToResync,
                 modelContext: modelContext
             )
         }
