@@ -7,6 +7,8 @@ struct ActivityFeedView: View {
     let circle: Circle
     let author: ActivityAuthorContext
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
     @State private var isComposingText = false
     @State private var isComposingVoice = false
     @State private var filter = ActivityFeedFilter()
@@ -90,6 +92,12 @@ struct ActivityFeedView: View {
             }
             .padding(.top, Theme.spacing)
             .padding(.bottom, 96)
+        }
+        .refreshable {
+            await realtimeClient.snapshotResync(
+                circleIds: [circle.id],
+                modelContext: modelContext
+            )
         }
     }
 

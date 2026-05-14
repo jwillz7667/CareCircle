@@ -10,6 +10,8 @@ struct DocumentListView: View {
     let circle: Circle
     let viewerAppleUserID: String
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
     @State private var isAdding = false
     @State private var pickerSource: AddDocumentSheet?
 
@@ -80,6 +82,12 @@ struct DocumentListView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .refreshable {
+                await realtimeClient.snapshotResync(
+                    circleIds: [circle.id],
+                    modelContext: modelContext
+                )
+            }
         }
     }
 

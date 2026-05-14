@@ -9,6 +9,8 @@ import SwiftUI
 struct AppointmentListView: View {
     let circle: Circle
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
     @State private var isAdding = false
 
     private var sortedAppointments: [Appointment] {
@@ -80,6 +82,12 @@ struct AppointmentListView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .refreshable {
+                await realtimeClient.snapshotResync(
+                    circleIds: [circle.id],
+                    modelContext: modelContext
+                )
+            }
         }
     }
 

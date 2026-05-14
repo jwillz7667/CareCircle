@@ -9,6 +9,8 @@ struct MedicationListView: View {
     let circle: Circle
     let author: ActivityAuthorContext
 
+    @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(\.modelContext) private var modelContext
     @State private var isAddingMedication = false
 
     private var grouped: [(status: MedicationStatus, items: [Medication])] {
@@ -66,6 +68,12 @@ struct MedicationListView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .refreshable {
+                await realtimeClient.snapshotResync(
+                    circleIds: [circle.id],
+                    modelContext: modelContext
+                )
+            }
         }
     }
 
