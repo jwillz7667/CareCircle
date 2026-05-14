@@ -74,6 +74,19 @@ struct MoreView: View {
                         }
                     }
 
+                    Section("Communication") {
+                        NavigationLink {
+                            DirectThreadListView(
+                                circle: circle,
+                                viewerAppleUserID: signedInAppleUserID,
+                                viewerDisplayName: authorContext.displayName
+                            )
+                        } label: {
+                            Label("Direct messages", systemImage: "lock.bubble")
+                                .foregroundStyle(Color.ccText)
+                        }
+                    }
+
                     Section("Records") {
                         NavigationLink {
                             HealthRecordsView(circle: circle)

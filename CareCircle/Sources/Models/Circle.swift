@@ -59,6 +59,9 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \HealthRecord.circle)
     var healthRecordsStore: [HealthRecord]?
 
+    @Relationship(deleteRule: .cascade, inverse: \DirectThread.circle)
+    var directThreadsStore: [DirectThread]?
+
     var members: [Member] {
         get { membersStore ?? [] }
         set { membersStore = newValue }
@@ -127,6 +130,11 @@ final class Circle {
     var healthRecords: [HealthRecord] {
         get { healthRecordsStore ?? [] }
         set { healthRecordsStore = newValue }
+    }
+
+    var directThreads: [DirectThread] {
+        get { directThreadsStore ?? [] }
+        set { directThreadsStore = newValue }
     }
 
     init(

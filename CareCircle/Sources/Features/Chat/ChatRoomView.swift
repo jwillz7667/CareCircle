@@ -18,6 +18,7 @@ struct ChatRoomView: View {
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
     @State private var composedText = ""
     @State private var pinnedMessageID: UUID?
+    @State private var isPresentingDMs = false
 
     private var activeCircle: Circle? {
         guard case let .signedIn(user) = authState.status else {
@@ -50,6 +51,28 @@ struct ChatRoomView: View {
             .navigationTitle("Wall")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Color.ccBackground, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isPresentingDMs = true
+                    } label: {
+                        Image(systemName: "lock.bubble")
+                            .accessibilityLabel("Direct messages")
+                    }
+                    .disabled(activeCircle == nil || author == nil)
+                }
+            }
+            .sheet(isPresented: $isPresentingDMs) {
+                if let circle = activeCircle, let author {
+                    NavigationStack {
+                        DirectThreadListView(
+                            circle: circle,
+                            viewerAppleUserID: author.appleUserID,
+                            viewerDisplayName: author.displayName
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -117,99 +140,8 @@ struct ChatRoomView: View {
 
     private func bubble(_ message: ChatMessage) -> some View {
         let isOwn = (author?.appleUserID ?? "") == message.authorAppleUserID
-        return HStack(alignment: .bottom, spacing: 8) {
-            if !isOwn {
-                authorAvatar(message)
-            } else {
-                Spacer(minLength: 32)
-            }
-            VStack(alignment: isOwn ? .trailing : .leading, spacing: 4) {
-                if !isOwn {
-                    Text(message.authorDisplayName.isEmpty ? "Member" : message.authorDisplayName)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.ccSecondary)
-                        .padding(.leading, 2)
-                }
-                bubbleBody(message, isOwn: isOwn)
-                Text(message.createdAt.formatted(date: .omitted, time: .shortened))
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.ccSecondary)
-                    .padding(.horizontal, 4)
-            }
-            if isOwn {
-                authorAvatar(message)
-            } else {
-                Spacer(minLength: 32)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: isOwn ? .trailing : .leading)
-    }
-
-    private func bubbleBody(_ message: ChatMessage, isOwn: Bool) -> some View {
-        let isSystem = message.kind == .system
-        return Text(message.body)
-            .font(.body)
-            .foregroundStyle(isSystem ? Color.ccPrimary : (isOwn ? Color.white : Color.ccText))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(
-                bubbleBackground(isOwn: isOwn, isSystem: isSystem)
-            )
-            .clipShape(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-            )
-            .frame(maxWidth: 280, alignment: isOwn ? .trailing : .leading)
-            .contextMenu {
-                Button {
-                    UIPasteboard.general.string = message.body
-                } label: {
-                    Label("Copy", systemImage: "doc.on.doc")
-                }
-                if isOwn {
-                    Button(role: .destructive) {
-                        delete(message)
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
-            }
-    }
-
-    @ViewBuilder
-    private func bubbleBackground(isOwn: Bool, isSystem: Bool) -> some View {
-        if isSystem {
-            Color.ccPrimary.opacity(0.10)
-        } else if isOwn {
-            LinearGradient(
-                colors: [Color.ccPrimary, Color.ccPrimary.opacity(0.86)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        } else {
-            Color.ccSurface
-        }
-    }
-
-    private func authorAvatar(_ message: ChatMessage) -> some View {
-        let initials = String(
-            message.authorDisplayName
-                .split(separator: " ")
-                .prefix(2)
-                .compactMap(\.first)
-        ).uppercased()
-        let displayInitials = initials.isEmpty ? "?" : initials
-        return ZStack {
-            SwiftUI.Circle()
-                .fill(Color.ccPrimary.opacity(0.18))
-                .frame(width: 30, height: 30)
-            if message.authorAvatarEmoji.isEmpty {
-                Text(displayInitials)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.ccPrimary)
-            } else {
-                Text(message.authorAvatarEmoji)
-                    .font(.system(size: 16))
-            }
+        return WallBubbleView(message: message, isOwn: isOwn) {
+            delete(message)
         }
     }
 
