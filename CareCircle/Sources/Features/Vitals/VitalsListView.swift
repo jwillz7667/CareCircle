@@ -14,8 +14,11 @@ struct VitalsListView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(BackendRealtimeClient.self) private var realtimeClient
+    @Environment(HealthKitVitalsReader.self) private var healthKitReader
     @State private var isAdding = false
     @State private var selectedKind: VitalKind?
+    @State private var isSyncingHealth = false
+    @State private var lastSyncedAt: Date?
 
     private var permissions: CirclePermissions {
         CirclePermissions.resolve(circle: circle, appleUserID: author.appleUserID)
@@ -43,8 +46,28 @@ struct VitalsListView: View {
         .navigationTitle("Vitals")
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(Color.ccBackground, for: .navigationBar)
+        .toolbar { syncToolbarItem }
         .sheet(isPresented: $isAdding) {
             VitalsAddView(circle: circle, author: author)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var syncToolbarItem: some ToolbarContent {
+        if healthKitReader.isAvailable {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await syncFromHealth() }
+                } label: {
+                    if isSyncingHealth {
+                        ProgressView()
+                    } else {
+                        Label("Sync Apple Health", systemImage: "arrow.triangle.2.circlepath.heart")
+                    }
+                }
+                .disabled(isSyncingHealth)
+                .accessibilityHint("Imports new readings from Apple Health.")
+            }
         }
     }
 
@@ -74,6 +97,16 @@ struct VitalsListView: View {
                         }
                     }
                 }
+                if let lastSyncedAt {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption2)
+                        Text("Apple Health synced \(lastSyncedAt.formatted(.relative(presentation: .named)))")
+                            .font(.caption)
+                    }
+                    .foregroundStyle(Color.ccSecondary)
+                    .padding(.top, Theme.tightSpacing)
+                }
                 DisclaimerFooter()
                     .padding(.top, Theme.looseSpacing)
             }
@@ -82,11 +115,26 @@ struct VitalsListView: View {
             .padding(.bottom, 96)
         }
         .refreshable {
-            await realtimeClient.snapshotResync(
-                circleIds: [circle.id],
-                modelContext: modelContext
-            )
+            await refreshAll()
         }
+    }
+
+    private func refreshAll() async {
+        await realtimeClient.snapshotResync(
+            circleIds: [circle.id],
+            modelContext: modelContext
+        )
+        await syncFromHealth()
+    }
+
+    private func syncFromHealth() async {
+        guard !isSyncingHealth else { return }
+        guard healthKitReader.isAvailable else { return }
+        isSyncingHealth = true
+        defer { isSyncingHealth = false }
+        _ = try? await healthKitReader.requestAuthorizationIfNeeded()
+        await healthKitReader.readNewSamples(for: circle, modelContext: modelContext)
+        lastSyncedAt = .now
     }
 
     private var kindFilter: some View {
