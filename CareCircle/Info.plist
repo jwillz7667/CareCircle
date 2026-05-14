@@ -4,6 +4,8 @@
 <dict>
 	<key>APIBaseURL</key>
 	<string>https://carecircle-production-5669.up.railway.app</string>
+	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
+	<string>CareCircle imports the Care Recipient's clinical records (medications, conditions, allergies, immunizations, labs) from Apple Health so the Circle can see a complete picture without retyping anything from MyChart.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

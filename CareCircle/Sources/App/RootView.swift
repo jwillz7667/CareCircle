@@ -13,8 +13,10 @@ struct RootView: View {
     @Environment(BackendRealtimeClient.self) private var realtimeClient
     @Environment(InsightsEngine.self) private var insightsEngine
     @Environment(HealthKitVitalsReader.self) private var healthKitReader
+    @Environment(HealthRecordsImporter.self) private var healthRecordsImporter
     @State private var didHydrateThisLaunch = false
     @State private var didRequestHealthKitAuth = false
+    @State private var didImportClinicalThisLaunch = false
 
     var body: some View {
         Group {
@@ -68,6 +70,7 @@ struct RootView: View {
         recomputeInsightsForAllCircles()
         await maybeRequestHealthKitAuth()
         await readHealthKitForAllCircles()
+        await maybeImportClinicalRecordsOnce()
     }
 
     /// Asks the user once per app install (we re-prompt on every launch
@@ -87,6 +90,21 @@ struct RootView: View {
         for circle in circles {
             await healthKitReader.readNewSamples(for: circle, modelContext: modelContext)
         }
+    }
+
+    /// Clinical records (MyChart / Epic) read is heavy compared to a
+    /// vitals sweep — provider FHIR resources can be hundreds of KB each,
+    /// and the records change at the cadence of clinic visits, not
+    /// seconds. Run it at most once per cold launch; the user can pull-
+    /// to-refresh the Health Records screen for ad-hoc imports.
+    private func maybeImportClinicalRecordsOnce() async {
+        guard !didImportClinicalThisLaunch, healthRecordsImporter.isAvailable else { return }
+        didImportClinicalThisLaunch = true
+        _ = try? await healthRecordsImporter.requestAuthorizationIfNeeded()
+        let descriptor = FetchDescriptor<Circle>(sortBy: [SortDescriptor(\.createdAt)])
+        let circles = (try? modelContext.fetch(descriptor)) ?? []
+        guard let primary = circles.first else { return }
+        await healthRecordsImporter.importAll(into: modelContext, circle: primary)
     }
 
     private func pullDocumentKeys() async {
