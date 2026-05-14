@@ -7,10 +7,6 @@ struct MoreView: View {
     let authState: AuthState
 
     @Environment(SimplifiedModePreference.self) private var simplifiedPreference
-    @Environment(SyncEngine.self) private var syncEngine
-    @Environment(BackendHydrator.self) private var hydrator
-    @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
-    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
 
     private var activeCircle: Circle? {
@@ -53,7 +49,9 @@ struct MoreView: View {
                                 }
                             }
                         }
+                    }
 
+                    Section("Care planning") {
                         NavigationLink {
                             AppointmentListView(circle: circle)
                         } label: {
@@ -69,19 +67,14 @@ struct MoreView: View {
                         }
 
                         NavigationLink {
-                            VitalsListView(circle: circle, author: authorContext)
-                        } label: {
-                            Label("Vitals", systemImage: "heart.text.square")
-                                .foregroundStyle(Color.ccText)
-                        }
-
-                        NavigationLink {
                             InsightsView(circle: circle, author: authorContext)
                         } label: {
                             Label("Insights", systemImage: "sparkles")
                                 .foregroundStyle(Color.ccText)
                         }
+                    }
 
+                    Section("Records") {
                         NavigationLink {
                             DocumentListView(circle: circle, viewerAppleUserID: signedInAppleUserID)
                         } label: {
@@ -95,7 +88,9 @@ struct MoreView: View {
                             Label("Care minutes", systemImage: "clock.badge.checkmark")
                                 .foregroundStyle(Color.ccText)
                         }
+                    }
 
+                    Section("Safety") {
                         NavigationLink {
                             EmergencyContactsView(circle: circle)
                         } label: {
@@ -107,6 +102,13 @@ struct MoreView: View {
                             SOSHistoryView(circle: circle, viewerAppleUserID: signedInAppleUserID)
                         } label: {
                             Label("SOS history", systemImage: "sos.circle")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
+                            CircleMapView(authState: authState)
+                        } label: {
+                            Label("Find on map", systemImage: "location.fill.viewfinder")
                                 .foregroundStyle(Color.ccText)
                         }
                     }
@@ -142,73 +144,16 @@ struct MoreView: View {
                     .foregroundStyle(Color.ccDanger)
                 }
 
-                Section("Backend sync") {
-                    LabeledContent("Status", value: syncStatusLabel)
-                        .foregroundStyle(Color.ccText)
-
-                    LabeledContent("Session", value: sessionStatusLabel)
-                        .foregroundStyle(sessionStatusColor)
-
-                    if syncEngine.pendingCount > 0 {
-                        LabeledContent("Pending", value: "\(syncEngine.pendingCount)")
-                            .foregroundStyle(Color.ccText)
-                    }
-
-                    if let lastSync = syncEngine.lastSyncAt {
-                        LabeledContent(
-                            "Last sync",
-                            value: lastSync.formatted(.relative(presentation: .named))
-                        )
-                        .foregroundStyle(Color.ccText)
-                    }
-
-                    if let lastError = syncEngine.lastError {
-                        Text(lastError)
-                            .font(.footnote)
-                            .foregroundStyle(Color.ccDanger)
-                    }
-
-                    if shouldShowRetry {
-                        Button {
-                            syncEngine.triggerDrain()
-                        } label: {
-                            Label("Retry sync now", systemImage: "arrow.clockwise")
-                                .foregroundStyle(Color.ccPrimary)
-                        }
-                    }
-
-                    LabeledContent("Last hydrate", value: hydrateStatusLabel)
-                        .foregroundStyle(hydrator.lastError == nil ? Color.ccText : Color.ccDanger)
-
-                    Button {
-                        hydrator.triggerHydrateAll(modelContext: modelContext)
-                    } label: {
-                        Label(
-                            hydrator.isRunning ? "Pulling from backend…" : "Pull from backend now",
-                            systemImage: "arrow.down.circle"
-                        )
-                        .foregroundStyle(Color.ccPrimary)
-                    }
-                    .disabled(hydrator.isRunning)
-
-                    LabeledContent("Documents waiting", value: documentUploadLabel)
-                        .foregroundStyle(documentSweeper.lastError == nil ? Color.ccText : Color.ccDanger)
-
-                    Button {
-                        documentSweeper.triggerSweep(modelContext: modelContext)
-                    } label: {
-                        Label(
-                            documentSweeper.isRunning ? "Uploading documents…" : "Retry document uploads",
-                            systemImage: "icloud.and.arrow.up"
-                        )
-                        .foregroundStyle(Color.ccPrimary)
-                    }
-                    .disabled(documentSweeper.isRunning)
-                }
-
                 Section("About") {
                     LabeledContent("Version", value: Self.appVersion)
                         .foregroundStyle(Color.ccText)
+
+                    if let supportURL = URL(string: "mailto:support@viral-ventures-llc.com") {
+                        Link(destination: supportURL) {
+                            Label("Help & Support", systemImage: "envelope")
+                                .foregroundStyle(Color.ccPrimary)
+                        }
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -216,68 +161,7 @@ struct MoreView: View {
             .navigationTitle("More")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Color.ccBackground, for: .navigationBar)
-            .onAppear {
-                documentSweeper.refreshPendingCount(modelContext: modelContext)
-            }
         }
-    }
-
-    private var syncStatusLabel: String {
-        switch syncEngine.status {
-        case .idle:
-            "Up to date"
-        case .draining:
-            "Syncing…"
-        case .offline:
-            "Waiting to sign in"
-        case let .error(message):
-            message
-        }
-    }
-
-    private var sessionStatusLabel: String {
-        if let profile = authState.lastVerifiedProfile {
-            return "Verified as \(profile.displayName ?? "user")"
-        }
-        if authState.lastVerifyError != nil {
-            return "Unverified — check connection"
-        }
-        return "Not yet verified"
-    }
-
-    private var sessionStatusColor: Color {
-        if authState.lastVerifiedProfile != nil { return Color.ccText }
-        if authState.lastVerifyError != nil { return Color.ccDanger }
-        return Color.ccSecondary
-    }
-
-    private var shouldShowRetry: Bool {
-        if case .error = syncEngine.status { return true }
-        if syncEngine.pendingCount > 0, case .offline = syncEngine.status { return true }
-        return false
-    }
-
-    private var hydrateStatusLabel: String {
-        if let error = hydrator.lastError {
-            return error
-        }
-        if let lastRun = hydrator.lastRunAt {
-            return lastRun.formatted(.relative(presentation: .named))
-        }
-        return "Not yet pulled"
-    }
-
-    private var documentUploadLabel: String {
-        if let error = documentSweeper.lastError {
-            return error
-        }
-        if documentSweeper.pendingCount > 0 {
-            return "\(documentSweeper.pendingCount) pending"
-        }
-        if let lastRun = documentSweeper.lastRunAt {
-            return "Caught up \(lastRun.formatted(.relative(presentation: .named)))"
-        }
-        return "Up to date"
     }
 
     private static var appVersion: String {
