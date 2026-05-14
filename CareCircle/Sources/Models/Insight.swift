@@ -14,20 +14,20 @@ import SwiftData
 /// not synced through CloudKit or the Railway backend.
 @Model
 final class Insight {
-    @Attribute(.unique) var id: UUID
-    var kindRaw: String
-    var severityRaw: String
-    var subjectKindRaw: String
+    var id = UUID()
+    var kindRaw: String = InsightKind.doseTimingDrift.rawValue
+    var severityRaw: String = InsightSeverity.info.rawValue
+    var subjectKindRaw: String = InsightSubjectKind.circle.rawValue
     var subjectId: UUID?
-    var title: String
-    var body: String
-    var computedAt: Date
+    var title = ""
+    var body = ""
+    var computedAt = Date.now
     var dismissedAt: Date?
     var appliedAt: Date?
     /// `dedupeKey = "<kind>:<subjectKind>:<subjectId|none>"`. Stored on
     /// the row (rather than recomputed every fetch) so `#Predicate`
     /// lookups during recompute are O(log n) on an indexed column.
-    var dedupeKey: String
+    var dedupeKey = ""
     /// Optional payload that an apply CTA may need (e.g., suggested
     /// reminder time in minutes from midnight). JSON-encoded so the
     /// schema doesn't grow per pattern.

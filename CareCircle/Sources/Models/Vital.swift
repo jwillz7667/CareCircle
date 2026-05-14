@@ -16,9 +16,9 @@ import SwiftData
 /// happen without decryption.
 @Model
 final class Vital {
-    @Attribute(.unique) var id: UUID
-    var kindRaw: String
-    var recordedAt: Date
+    var id = UUID()
+    var kindRaw: String = VitalKind.heartRate.rawValue
+    var recordedAt = Date.now
     /// Stored as Double for convenient SwiftData encoding; UI formats
     /// per `unit`. Blood-pressure rows use mmHg (Int values); weight
     /// uses lb or kg; glucose uses mg/dL or mmol/L; SpO2 uses % (0-100).
@@ -28,15 +28,15 @@ final class Vital {
     /// the two-row form). The two-row form is preferred — `valueText` is
     /// a legacy / sketch field, kept for backend parity.
     var valueText: String?
-    var unit: String
-    var sourceRaw: String
+    var unit = ""
+    var sourceRaw: String = VitalSource.manual.rawValue
     /// HealthKit sample UUID — used to enforce one-row-per-sample-per-
     /// circle on imports. Stable for the lifetime of the HK sample.
     var healthkitUUID: String?
     var notes: String?
-    var recordedByAppleUserID: String
-    var recordedByDisplayName: String
-    var createdAt: Date
+    var recordedByAppleUserID = ""
+    var recordedByDisplayName = ""
+    var createdAt = Date.now
 
     var circle: Circle?
 
