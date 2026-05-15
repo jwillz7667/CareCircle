@@ -5,6 +5,7 @@ import SwiftUI
 
 struct HomeView: View {
     let authState: AuthState
+    @Binding var selectedTab: AppTab
 
     @Query(sort: \Circle.createdAt) private var circles: [Circle]
     @Environment(SOSCenter.self) private var sosCenter
@@ -88,6 +89,12 @@ struct HomeView: View {
             }
             .padding(.horizontal, Theme.spacing)
             .padding(.top, Theme.tightSpacing)
+            .padding(.bottom, Theme.tightSpacing)
+
+            VitalsQuickViewBar(circle: circle) {
+                selectedTab = .vitals
+            }
+            .padding(.horizontal, Theme.spacing)
             .padding(.bottom, Theme.tightSpacing)
 
             JournalTodayCard(circle: circle, author: authorContext)
