@@ -17,7 +17,7 @@ Full spec: @docs/CARECIRCLE_SPEC.md. Backend spec: @docs/CARECIRCLE_DATABASE_SPE
 ## Project configuration facts
 - Single target/scheme `CareCircle`. Bundle ID `Res.CareCircle`. Dev team `487LC4H9U4`.
 - Entitlements file: `CareCircle/CareCircle.entitlements`. Has Sign in with Apple, CloudKit (`iCloud.Res.CareCircle`), and APNs (`aps-environment = development`). Critical Alerts entitlement application filed with Apple (see @docs/CRITICAL_ALERTS_APPLICATION.md); add `com.apple.developer.usernotifications.critical-alerts` once approved.
-- `Info.plist` is in the synchronized-folder membership exception list and is managed via the project's Build Settings / Info tab in Xcode.
+- `Info.plist` lives at `CareCircle/Info.plist` (synchronized-folder membership exception). Editing the file directly is fine and is the preferred path for arrays/dicts like `CFBundleURLTypes`. Simple scalar keys (usage descriptions, etc.) can live either in the file or as `INFOPLIST_KEY_*` build settings — the latter requires a pbxproj edit, which hard-rule #1 forbids, so use the file.
 - The Xcode project uses `PBXFileSystemSynchronizedRootGroup` rooted at `CareCircle/`. **Any `.swift` file placed under `CareCircle/` is automatically added to the app target — you do not need to edit `project.pbxproj` to add Swift sources.**
 - No test target exists yet. When tests are added, the user must create a Unit Testing Bundle in Xcode (File ▸ New ▸ Target). The future test target's synchronized root should be the top-level `CareCircleTests/` folder (which already exists with `Unit/` and `Integration/` subdirs). It MUST live outside `CareCircle/` so test files don't accidentally join the app target via the app's synchronized root group.
 
@@ -58,7 +58,7 @@ CareCircle/
     Services/       // Network/API, CloudKit, persistence, push, analytics
     Models/         // SwiftData @Model types, value types, enums
     DesignSystem/   // Reusable views, colors, typography, spacing
-  Info.plist                 (membership exception; managed via build settings)
+  Info.plist                 (membership exception; edit the file directly)
   CareCircle.entitlements
   Assets.xcassets/
 CareCircleTests/                // OUTSIDE the app's synced root — will be the test target root
@@ -118,7 +118,7 @@ iOS app currently writes through CloudKit only — the Railway backend is built 
 - HealthKit reads on Simulator return empty; test on device or with mock data.
 - `CKShare` URLs only resolve on devices logged into iCloud. Simulator handling requires a workaround that will be documented in `docs/cloudkit_testing.md` once we hit it (Phase 3).
 - `SFSpeechRecognizer.requiresOnDeviceRecognition = true` is supported on iPhone 11 and later for English. Fall back explicitly for older devices.
-- `Info.plist` is a build-settings membership exception. Add or edit keys via Xcode's Info tab, not direct file edits, or they won't be picked up reliably.
+- `Info.plist` is a build-settings membership exception (not auto-included via the synchronized root). Direct file edits work — Xcode picks them up on the next build. Use the file for arrays/dicts like `CFBundleURLTypes`; use it for scalars too unless you specifically want them in pbxproj build settings (which hard-rule #1 forbids you from editing).
 
 ## Verification
 
