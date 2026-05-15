@@ -13,6 +13,7 @@ import { createTokenService } from './services/tokens.js';
 import { createObjectStorage } from './services/minio.js';
 import { createQueueClient } from './services/queues.js';
 import { createRealtimeBroker } from './services/realtime.js';
+import { createStoreKitService } from './services/storekit.js';
 import { createInferenceService, type InferenceService } from './services/inference.js';
 import { CircleKeyService } from './services/circleKeys.js';
 import authPlugin from './plugins/auth.js';
@@ -39,6 +40,7 @@ import { realtimeRoutes } from './routes/realtime.js';
 import { inferenceRoutes } from './routes/inference.js';
 import { digestRoutes } from './routes/digests.js';
 import { vitalRoutes } from './routes/vitals.js';
+import { subscriptionRoutes } from './routes/subscriptions.js';
 import type { AppContext } from './types.js';
 
 export type BuildOptions = {
@@ -64,6 +66,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
   const circleKeys = new CircleKeyService(pool, config);
   const queues = createQueueClient(config);
   const inference = opts.overrides?.inference ?? createInferenceService(config, logger);
+  const storekit = createStoreKitService(config);
   const ctx: AppContext = {
     config,
     pool,
@@ -77,6 +80,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     circleKeys,
     queues,
     inference,
+    storekit,
   };
 
   const app = Fastify({
@@ -125,6 +129,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     await inferenceRoutes(instance);
     await digestRoutes(instance);
     await vitalRoutes(instance);
+    await subscriptionRoutes(instance);
   });
 
   if (!opts.skipStartupTasks) {

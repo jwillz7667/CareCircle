@@ -15,6 +15,10 @@ struct InsightsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var applyTarget: ApplyTarget?
 
+    private var isEntitled: Bool {
+        circle.entitles(.insights)
+    }
+
     private var insights: [Insight] {
         circle.insights
             .filter { $0.dismissedAt == nil && $0.appliedAt == nil }
@@ -27,6 +31,23 @@ struct InsightsView: View {
     }
 
     var body: some View {
+        Group {
+            if isEntitled {
+                entitledBody
+            } else {
+                PremiumLockedView(
+                    feature: .insights,
+                    circle: circle,
+                    viewerAppleUserID: author.appleUserID
+                )
+            }
+        }
+        .navigationTitle("Insights")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbarBackground(Color.ccBackground, for: .navigationBar)
+    }
+
+    private var entitledBody: some View {
         ScrollView {
             VStack(spacing: Theme.spacing) {
                 if insights.isEmpty {
@@ -49,9 +70,6 @@ struct InsightsView: View {
             .padding(.vertical, Theme.spacing)
         }
         .background(Color.ccBackground)
-        .navigationTitle("Insights")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbarBackground(Color.ccBackground, for: .navigationBar)
         .refreshable {
             engine.recompute(circle: circle, modelContext: modelContext)
         }

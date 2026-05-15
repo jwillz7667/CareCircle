@@ -177,6 +177,24 @@ struct MoreView: View {
                             .foregroundStyle(Color.ccText)
                     }
 
+                    if let circle = activeCircle {
+                        NavigationLink {
+                            SubscriptionStatusView(
+                                circle: circle,
+                                viewerAppleUserID: signedInAppleUserID
+                            )
+                        } label: {
+                            HStack {
+                                Label("Subscription", systemImage: "creditcard")
+                                    .foregroundStyle(Color.ccText)
+                                Spacer()
+                                Text(circle.subscriptionTier.displayName)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.ccSecondary)
+                            }
+                        }
+                    }
+
                     Button(role: .destructive) {
                         authState.signOut()
                     } label: {

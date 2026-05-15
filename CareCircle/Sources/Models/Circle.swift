@@ -10,6 +10,26 @@ final class Circle {
     var ownerAppleUserID = ""
     var createdAt = Date.now
 
+    // MARK: Subscription state
+
+    //
+    // The owner pays — every member sees the same tier. Stored as raw
+    // strings so SwiftData can lightweight-migrate when new tiers are
+    // added; typed accessors below convert to/from the enums.
+    //
+    // `trialUsed` lets us hide the "7-day free trial" framing in the
+    // paywall once it's been claimed (Apple also enforces this server-
+    // side via family-group eligibility, but the UX shouldn't dangle a
+    // promise StoreKit will then revoke).
+    var subscriptionTierRaw = "free"
+    var subscriptionStatusRaw = "active"
+    var subscriptionProductID: String?
+    var subscriptionOriginalTransactionID: String?
+    var subscriptionRenewsAt: Date?
+    var subscriptionGraceUntil: Date?
+    var subscriptionEnvironment: String?
+    var trialUsed = false
+
     @Relationship(deleteRule: .cascade, inverse: \CareRecipient.circle)
     var careRecipient: CareRecipient?
 
@@ -143,6 +163,29 @@ final class Circle {
     var journalEntries: [JournalEntry] {
         get { journalEntriesStore ?? [] }
         set { journalEntriesStore = newValue }
+    }
+
+    // MARK: Subscription accessors
+
+    var subscriptionTier: SubscriptionTier {
+        get { SubscriptionTier(rawValue: subscriptionTierRaw) ?? .free }
+        set { subscriptionTierRaw = newValue.rawValue }
+    }
+
+    var subscriptionStatus: SubscriptionStatus {
+        get { SubscriptionStatus(rawValue: subscriptionStatusRaw) ?? .active }
+        set { subscriptionStatusRaw = newValue.rawValue }
+    }
+
+    /// True if the circle is in any paid state (including grace period
+    /// and "canceled but still in paid period"). Used by feature gates.
+    var hasActiveSubscription: Bool {
+        switch subscriptionStatus {
+        case .trialing, .active, .pastDue, .canceled:
+            subscriptionTier != .free
+        case .expired:
+            false
+        }
     }
 
     init(

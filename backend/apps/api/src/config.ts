@@ -69,6 +69,23 @@ const ConfigSchema = z.object({
     .transform((v) => (v === '' ? undefined : v)),
   OPENAI_MODEL: z.string().min(1).default('gpt-4o-mini'),
   OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+
+  // StoreKit / App Store subscription verification.
+  // `STOREKIT_BUNDLE_ID` must match the bundle ID Apple signs into each
+  // transaction; we reject any JWS whose bundleId doesn't match.
+  // `STOREKIT_ALLOW_SANDBOX` lets us accept Sandbox transactions in
+  // staging/dev — production should set this to false.
+  STOREKIT_BUNDLE_ID: z.string().default('Res.CareCircle'),
+  STOREKIT_ALLOW_SANDBOX: z
+    .union([z.string(), z.boolean()])
+    .default(true)
+    .transform((v) => v === true || v === 'true'),
+  STOREKIT_VERIFIER_MODE: z.enum(['real', 'mock']).default('real'),
+  // Used in mock mode to symmetrically sign synthetic JWS so tests can
+  // exercise the subscription flow without a real Apple cert chain.
+  STOREKIT_MOCK_SECRET: z.string().optional(),
+  STOREKIT_PRODUCT_STANDARD: z.string().default('app.carecircle.subscription.standard.monthly'),
+  STOREKIT_PRODUCT_PREMIUM: z.string().default('app.carecircle.subscription.premium.monthly'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

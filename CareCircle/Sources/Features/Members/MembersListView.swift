@@ -66,10 +66,25 @@ struct MembersListView: View {
                 } label: {
                     Label("Invite", systemImage: "person.crop.circle.badge.plus")
                 }
-                .disabled(activeCount >= CircleSharingService.memberCap)
-                .accessibilityHint("Send a Circle invitation.")
+                .disabled(!hasInviteCapacity)
+                .accessibilityHint(inviteHint)
+                .featureGate(.sharedCircle, circle: circle, viewerAppleUserID: signedInAppleUserID)
             }
         }
+    }
+
+    private var hasInviteCapacity: Bool {
+        activeCount < circle.subscriptionTier.seatCap
+    }
+
+    private var inviteHint: String {
+        if !circle.entitles(.sharedCircle) {
+            return "Upgrade to invite caregivers."
+        }
+        if !hasInviteCapacity {
+            return "Your \(circle.subscriptionTier.displayName) plan is full. Upgrade for more seats."
+        }
+        return "Send a Circle invitation."
     }
 
     private func sectionHeader(for status: MemberStatus, count: Int) -> some View {

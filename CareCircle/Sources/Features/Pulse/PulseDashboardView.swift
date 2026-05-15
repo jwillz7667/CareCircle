@@ -66,11 +66,14 @@ struct PulseDashboardView: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                isShowingCopilot = true
-            } label: {
-                Image(systemName: "sparkles")
-                    .accessibilityLabel("Open Care Co-pilot")
+            if let circle = activeCircle {
+                Button {
+                    isShowingCopilot = true
+                } label: {
+                    Image(systemName: "sparkles")
+                        .accessibilityLabel("Open Care Co-pilot")
+                }
+                .featureGate(.careCopilot, circle: circle, viewerAppleUserID: signedInUser?.id ?? "")
             }
         }
     }
@@ -129,6 +132,9 @@ struct PulseDashboardView: View {
 
     private var actionsRow: some View {
         HStack(spacing: Theme.tightSpacing) {
+            let circle = activeCircle
+            let viewerID = signedInUser?.id ?? ""
+
             actionButton(
                 title: "Bedside Mode",
                 systemImage: "waveform.path.ecg.rectangle.fill",
@@ -136,6 +142,8 @@ struct PulseDashboardView: View {
             ) {
                 isShowingBedside = true
             }
+            .featureGateIfPresent(.bedsideMonitor, circle: circle, viewerAppleUserID: viewerID)
+
             actionButton(
                 title: "Ask Co-pilot",
                 systemImage: "sparkles",
@@ -143,6 +151,8 @@ struct PulseDashboardView: View {
             ) {
                 isShowingCopilot = true
             }
+            .featureGateIfPresent(.careCopilot, circle: circle, viewerAppleUserID: viewerID)
+
             actionButton(
                 title: isSyncingHealth ? "Syncing…" : "Sync Health",
                 systemImage: isSyncingHealth ? "arrow.triangle.2.circlepath" : "heart.text.square.fill",

@@ -5,9 +5,11 @@ import {
   acceptInvitationSchema,
   createInvitationSchema,
   conflict,
+  HttpError,
   notFound,
 } from '@carecircle/shared';
 import { requireMembership } from '../lib/membership.js';
+import { availableInviteSlots } from '../lib/subscriptions.js';
 
 function generateCode(): string {
   const buf = randomBytes(8);
@@ -27,6 +29,18 @@ export async function invitationRoutes(app: FastifyInstance): Promise<void> {
     const { circleId } = req.params as { circleId: string };
     await requireMembership(pool, userId, circleId, ['owner']);
     const body = createInvitationSchema.parse(req.body);
+
+    const slots = await availableInviteSlots(pool, circleId);
+    if (slots.remaining <= 0) {
+      throw new HttpError(
+        409,
+        'circle_member_cap_reached',
+        slots.cap === 0
+          ? 'Free circles cannot send invites — upgrade to invite caregivers.'
+          : `Your ${slots.tier} plan allows ${slots.cap} invites; upgrade to invite more caregivers.`,
+        { tier: slots.tier, cap: slots.cap },
+      );
+    }
 
     const expiresAt = new Date(Date.now() + body.expiresInDays * 24 * 3600 * 1000);
 

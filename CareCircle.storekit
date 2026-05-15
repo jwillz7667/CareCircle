@@ -1,0 +1,89 @@
+{
+  "identifier" : "F8E2B6F1-3F1D-4B7A-8F2A-2E1A6F5C8D9E",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_applicationInternalID" : "0000000000",
+    "_developerTeamID" : "487LC4H9U4",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [],
+    "_billingIssuesEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_renewalRate" : 1,
+    "_disableDialogs" : false,
+    "_askToBuyEnabled" : false,
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21567823",
+      "localizations" : [
+        {
+          "description" : "CareCircle subscription tiers — owner pays, every Circle member benefits.",
+          "displayName" : "CareCircle Plans",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "CareCircle Plans",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21567824",
+          "introductoryOffer" : {
+            "internalID" : "21567825",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Up to 6 invited caregivers + the care recipient. Shared check-ins, documents, and shift digests.",
+              "displayName" : "CareCircle Standard",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "app.carecircle.subscription.standard.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "CareCircle Standard",
+          "subscriptionGroupID" : "21567823",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "21567826",
+          "introductoryOffer" : {
+            "internalID" : "21567827",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Up to 15 invited caregivers, Care Co-pilot, Bedside monitor, and Insights.",
+              "displayName" : "CareCircle Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "app.carecircle.subscription.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "CareCircle Premium",
+          "subscriptionGroupID" : "21567823",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

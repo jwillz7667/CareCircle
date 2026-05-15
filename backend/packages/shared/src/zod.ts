@@ -386,3 +386,18 @@ export const listVitalsQuerySchema = paginationSchema.extend({
   source: vitalSourceSchema.optional(),
 });
 export type ListVitalsQueryT = z.infer<typeof listVitalsQuerySchema>;
+
+// StoreKit signed transactions come in as the JWS compact string —
+// caps are large enough to fit Apple's payloads (a couple KB) but not
+// so large that a malicious client can DoS the verifier.
+export const subscriptionSyncSchema = z.object({
+  circleId: uuidSchema,
+  signedTransaction: z.string().min(20).max(20_000),
+  signedRenewalInfo: z.string().min(20).max(20_000).optional(),
+});
+export type SubscriptionSyncT = z.infer<typeof subscriptionSyncSchema>;
+
+export const appStoreNotificationSchema = z.object({
+  signedPayload: z.string().min(20).max(40_000),
+});
+export type AppStoreNotificationT = z.infer<typeof appStoreNotificationSchema>;

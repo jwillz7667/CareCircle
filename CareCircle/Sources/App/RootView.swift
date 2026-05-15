@@ -14,7 +14,9 @@ struct RootView: View {
     @Environment(InsightsEngine.self) private var insightsEngine
     @Environment(HealthKitVitalsReader.self) private var healthKitReader
     @Environment(HealthRecordsImporter.self) private var healthRecordsImporter
+    @Environment(SubscriptionService.self) private var subscriptionService
     @State private var didHydrateThisLaunch = false
+    @State private var didStartSubscriptionsThisLaunch = false
     @State private var didRequestHealthKitAuth = false
     @State private var didImportClinicalThisLaunch = false
 
@@ -50,6 +52,7 @@ struct RootView: View {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
                     await readHealthKitForAllCircles()
+                    await hydrateSubscriptionsForAllCircles()
                 }
             } else if newPhase == .background || newPhase == .inactive {
                 realtimeClient.stop()
@@ -68,9 +71,33 @@ struct RootView: View {
         documentSweeper.triggerPrefetch(modelContext: modelContext)
         realtimeClient.start(modelContext: modelContext)
         recomputeInsightsForAllCircles()
+        await maybeStartSubscriptions()
+        await hydrateSubscriptionsForAllCircles()
         await maybeRequestHealthKitAuth()
         await readHealthKitForAllCircles()
         await maybeImportClinicalRecordsOnce()
+    }
+
+    /// Boots the StoreKit transaction-updates listener exactly once per
+    /// process. We don't tear it down on sign-out — Apple may post an
+    /// external transaction at any time (renewal, refund, family share)
+    /// and the listener's only job is to forward to the backend, which
+    /// will reject without auth.
+    private func maybeStartSubscriptions() async {
+        guard !didStartSubscriptionsThisLaunch else { return }
+        didStartSubscriptionsThisLaunch = true
+        subscriptionService.start()
+    }
+
+    /// Pulls the backend's authoritative subscription state for every
+    /// local Circle. Non-owner devices rely on this — they never see
+    /// StoreKit events for someone else's purchase.
+    private func hydrateSubscriptionsForAllCircles() async {
+        let descriptor = FetchDescriptor<Circle>(sortBy: [SortDescriptor(\.createdAt)])
+        let circleIDs = (try? modelContext.fetch(descriptor))?.map(\.id) ?? []
+        for circleID in circleIDs {
+            await subscriptionService.hydrate(circleID: circleID)
+        }
     }
 
     /// Asks the user once per app install (we re-prompt on every launch

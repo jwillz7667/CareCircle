@@ -9,6 +9,7 @@ import type { ObjectStorage } from './services/minio.js';
 import type { PasswordService } from './services/passwords.js';
 import type { QueueClient } from './services/queues.js';
 import type { RealtimeBroker } from './services/realtime.js';
+import type { StoreKitService } from './services/storekit.js';
 import type { TokenService } from './services/tokens.js';
 
 export type AppContext = {
@@ -24,6 +25,7 @@ export type AppContext = {
   circleKeys: CircleKeyService;
   queues: QueueClient;
   inference: InferenceService;
+  storekit: StoreKitService;
 };
 
 declare module 'fastify' {

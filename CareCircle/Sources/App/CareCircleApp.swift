@@ -20,6 +20,7 @@ struct CareCircleApp: App {
     @State private var insightsEngine = InsightsEngine()
     @State private var sosCenter = SOSCenter()
     @State private var simplifiedPreference = SimplifiedModePreference()
+    @State private var subscriptionService: SubscriptionService
 
     /// `BackendDocumentService` is an actor, so it isn't itself
     /// observable. The sweeper owns it; only the sweeper is exposed
@@ -45,10 +46,7 @@ struct CareCircleApp: App {
         let docService = BackendDocumentService(apiClient: client)
         documentService = docService
         _documentSweeper = State(initialValue: BackendDocumentRetrySweeper(service: docService))
-        let auth = AuthState(
-            backendAuthService: authService,
-            syncEngine: engine
-        )
+        let auth = AuthState(backendAuthService: authService, syncEngine: engine)
         _authState = State(initialValue: auth)
         _realtimeClient = State(initialValue: BackendRealtimeClient(
             apiClient: client,
@@ -56,6 +54,7 @@ struct CareCircleApp: App {
             currentBackendUserID: { [auth] in auth.lastVerifiedProfile?.id }
         ))
         _inferenceClient = State(initialValue: BackendInferenceClient(apiClient: client))
+        _subscriptionService = State(initialValue: .init(apiClient: client, modelContainer: container))
         _healthKitReader = State(initialValue: HealthKitVitalsReader(
             syncEngine: engine,
             currentRecorderAppleUserID: { [auth] in
@@ -133,6 +132,7 @@ struct CareCircleApp: App {
                 .environment(directMessenger)
                 .environment(locationService)
                 .environment(insightsEngine)
+                .environment(subscriptionService)
                 .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)

@@ -30,7 +30,7 @@ const inet = customType<{ data: string; default: false }>({
   },
 });
 
-export const subscriptionTier = pgEnum('subscription_tier', ['free', 'family', 'pro']);
+export const subscriptionTier = pgEnum('subscription_tier', ['free', 'standard', 'premium']);
 export const subscriptionStatus = pgEnum('subscription_status', [
   'trialing',
   'active',
@@ -156,7 +156,11 @@ export const circles = pgTable(
     subscriptionTier: subscriptionTier('subscription_tier').notNull().default('free'),
     subscriptionStatus: subscriptionStatus('subscription_status').notNull().default('active'),
     subscriptionRenewsAt: timestamp('subscription_renews_at', { withTimezone: true }),
-    revenuecatSubscriberId: text('revenuecat_subscriber_id'),
+    subscriptionProductId: text('subscription_product_id'),
+    subscriptionOriginalTransactionId: text('subscription_original_transaction_id').unique(),
+    subscriptionGraceUntil: timestamp('subscription_grace_until', { withTimezone: true }),
+    subscriptionEnvironment: text('subscription_environment'),
+    trialUsed: boolean('trial_used').notNull().default(false),
     settings: jsonb('settings').notNull().default(sql`'{}'::jsonb`),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
