@@ -4,6 +4,21 @@
 <dict>
 	<key>APIBaseURL</key>
 	<string>https://carecircle-production-5669.up.railway.app</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.googleusercontent.apps.578488042232-l6fgbfgpve5vtm1ckbc0vkhln3lhigql</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.578488042232-l6fgbfgpve5vtm1ckbc0vkhln3lhigql</string>
+			</array>
+		</dict>
+	</array>
+	<key>GoogleOAuthClientId</key>
+	<string>578488042232-l6fgbfgpve5vtm1ckbc0vkhln3lhigql.apps.googleusercontent.com</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string>CareCircle imports the Care Recipient's clinical records (medications, conditions, allergies, immunizations, labs) from Apple Health so the Circle can see a complete picture without retyping anything from MyChart.</string>
 	<key>UIBackgroundModes</key>
