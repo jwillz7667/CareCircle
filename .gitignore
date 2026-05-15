@@ -112,6 +112,9 @@ google-services.json
 firebase-credentials.json
 AuthKey_*.p8
 
+# Local-only reference doc with seeded dev credentials — keep on disk, never commit.
+docs/SEED_LOGINS.md
+
 # -----------------------------------------------------------------------------
 # Logs / runtime
 # -----------------------------------------------------------------------------
