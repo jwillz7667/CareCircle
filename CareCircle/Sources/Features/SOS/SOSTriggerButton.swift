@@ -17,36 +17,31 @@ struct SOSTriggerButton: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(isAvailable ? Color.red : Color.red.opacity(0.4))
 
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(.white.opacity(0.2))
                 .scaleEffect(x: holdProgress, y: 1, anchor: .leading)
-                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .animation(.linear(duration: 0.05), value: holdProgress)
                 .accessibilityHidden(true)
 
-            HStack(spacing: 16) {
+            HStack(spacing: 10) {
                 Image(systemName: "sos.circle.fill")
-                    .font(.system(size: 44, weight: .black))
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(isAvailable ? "Hold for SOS" : "SOS unavailable")
-                        .font(.title2.weight(.heavy))
-                    Text(isAvailable
-                        ? "Hold 3 seconds to start the 30-second countdown."
-                        : "Create your Circle to unlock SOS.")
-                        .font(.subheadline)
-                        .opacity(0.9)
-                }
+                    .font(.system(size: 24, weight: .black))
+                Text(isAvailable ? "Hold 3s for SOS" : "SOS unavailable")
+                    .font(.headline.weight(.heavy))
                 Spacer()
             }
             .foregroundStyle(.white)
-            .padding(Theme.spacing)
+            .padding(.horizontal, Theme.spacing)
+            .padding(.vertical, Theme.tightSpacing)
         }
-        .frame(maxWidth: .infinity, minHeight: 120)
-        .contentShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(isAvailable ? "SOS" : "SOS unavailable")
         .accessibilityHint("Hold this button for 3 seconds to start the SOS countdown.")
         .accessibilityAddTraits(.isButton)
         .gesture(longPressGesture)
