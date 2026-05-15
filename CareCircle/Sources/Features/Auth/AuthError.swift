@@ -8,6 +8,11 @@ enum AuthError: LocalizedError, Sendable, Equatable {
     case credentialRevoked
     case nonceMismatch
     case keychainFailure(OSStatus)
+    case invalidEmailOrPassword
+    case emailAlreadyInUse
+    case googleSignInUnavailable
+    case googleSignInFailed(String)
+    case backendUnavailable
     case unknown(String)
 
     var errorDescription: String? {
@@ -22,6 +27,16 @@ enum AuthError: LocalizedError, Sendable, Equatable {
             "Sign in could not be verified. Please try again."
         case let .keychainFailure(status):
             "Could not access secure storage (code \(status))."
+        case .invalidEmailOrPassword:
+            "Email or password is incorrect."
+        case .emailAlreadyInUse:
+            "An account with this email already exists. Try signing in with the method you used before."
+        case .googleSignInUnavailable:
+            "Google sign-in isn't configured for this build."
+        case let .googleSignInFailed(detail):
+            detail
+        case .backendUnavailable:
+            "Could not reach the CareCircle server. Check your connection and try again."
         case let .unknown(message):
             message
         }

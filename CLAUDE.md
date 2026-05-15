@@ -11,7 +11,7 @@ Full spec: @docs/CARECIRCLE_SPEC.md. Backend spec: @docs/CARECIRCLE_DATABASE_SPE
 - **Backend:** Node.js 22 + Fastify 5 + PostgreSQL 16 + Redis + MinIO on Railway (monorepo under `backend/`)
 - Swift Testing framework for unit tests; XCUITest reserved for late-phase critical flows only
 - swiftformat + swiftlint enforced (configs at root)
-- Sign in with Apple is the only auth path (iOS and backend)
+- Three auth paths, all minting the same CareCircle JWT and resolving to the same `users.id`: **Sign in with Apple** (primary, OS-native UX), **Sign in with Google** (OAuth ID token verified via Google's JWKS), and **email + password** (Argon2id hash, prod-grade rate limit, audit-logged). Backend keeps providers separable: `users.apple_user_id`, `users.google_user_id`, `users.password_hash` are independent nullable columns. A single user can later link multiple providers; v1 disallows account merge — a duplicate-email sign-up across providers fails fast with a clear error.
 - iOS deployment target: **17.0** (lowered from 26.4 on 2026-05-13 for TestFlight reach).
 
 ## Project configuration facts
@@ -102,7 +102,7 @@ Two-tier sync model:
 
 **CloudKit layer (in-app sharing).** Each Circle is backed by a `CKShare` in the owner's private database; other members access via `CKContainer.default().sharedCloudDatabase`. Per-circle `CKRecordZone` keyed on the Circle UUID enables clean full-deletion. Sensitive document data is encrypted client-side with `CryptoKit` (AES-256-GCM) before write — the per-circle symmetric key lives in iCloud Keychain and propagates to members via CKShare invitation flow. (Spec §5.3.)
 
-**Railway backend layer (backend-of-record).** Postgres 16 with FORCE RLS on every PHI table, pgcrypto envelope encryption (master key wraps per-circle DEKs), append-only audit log, LISTEN/NOTIFY → WebSocket fanout. Fastify 5 API + BullMQ worker. MinIO for object storage (E2EE for documents, server-side encryption for photos/voice). Sign in with Apple JWT verification, 15-min access tokens with 30-day refresh rotation. (Backend spec @docs/CARECIRCLE_DATABASE_SPEC.md.)
+**Railway backend layer (backend-of-record).** Postgres 16 with FORCE RLS on every PHI table, pgcrypto envelope encryption (master key wraps per-circle DEKs), append-only audit log, LISTEN/NOTIFY → WebSocket fanout. Fastify 5 API + BullMQ worker. MinIO for object storage (E2EE for documents, server-side encryption for photos/voice). Three sign-in routes (`/v1/auth/apple`, `/v1/auth/google`, `/v1/auth/register` + `/v1/auth/login`) all converge on the same JWT issuance, 15-min access tokens with 30-day refresh rotation. (Backend spec @docs/CARECIRCLE_DATABASE_SPEC.md.)
 
 iOS app currently writes through CloudKit only — the Railway backend is built and tested (68/68 integration tests) but the iOS `APIClient` + `SyncEngine` migration to write to both paths is a future task. New iOS features should keep working through SwiftData + CloudKit until that migration lands.
 

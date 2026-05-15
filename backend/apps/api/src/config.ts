@@ -23,6 +23,21 @@ const ConfigSchema = z.object({
   APPLE_VERIFIER_MODE: z.enum(['real', 'mock']).default('real'),
   APPLE_MOCK_SECRET: z.string().optional(),
 
+  // Comma-separated list of Google OAuth client_ids we accept as the
+  // `aud` claim. iOS and a future web client each have their own
+  // client_id, so this is plural by design.
+  GOOGLE_CLIENT_IDS: z
+    .string()
+    .default('carecircle.google.ios')
+    .transform((s) =>
+      s
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0),
+    ),
+  GOOGLE_VERIFIER_MODE: z.enum(['real', 'mock']).default('real'),
+  GOOGLE_MOCK_SECRET: z.string().optional(),
+
   APP_MASTER_KEY: z.string().min(32),
 
   MINIO_ENDPOINT: z.string().default('localhost'),
@@ -46,7 +61,12 @@ const ConfigSchema = z.object({
   INFERENCE_MAX_PER_HOUR: z.coerce.number().int().min(1).default(30),
   INFERENCE_PROMPT_CHAR_LIMIT: z.coerce.number().int().min(1).max(20_000).default(8_000),
   INFERENCE_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(60_000).default(20_000),
-  OPENAI_API_KEY: z.string().min(1).optional(),
+  // Accept an empty string in .env as "not set" — operators sometimes
+  // ship `OPENAI_API_KEY=` to mark the slot without enabling inference.
+  OPENAI_API_KEY: z
+    .union([z.string().min(1), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' ? undefined : v)),
   OPENAI_MODEL: z.string().min(1).default('gpt-4o-mini'),
   OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
 });

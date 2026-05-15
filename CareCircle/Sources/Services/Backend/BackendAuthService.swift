@@ -44,6 +44,62 @@ nonisolated struct BackendAuthService: Sendable {
         AppLogger.backend.info("Backend session established for Apple identity.")
     }
 
+    /// Registers a new email-auth account and persists the resulting
+    /// session. Backend rejects (409) when the email is already claimed
+    /// by any provider — the caller should surface that as a "use your
+    /// existing sign-in method" error rather than letting it look like a
+    /// generic network failure.
+    func registerWithEmail(
+        email: String,
+        password: String,
+        displayName: String?
+    ) async throws(APIError) {
+        let request = EmailRegisterRequest(
+            email: email,
+            password: password,
+            displayName: displayName
+        )
+        let response: BackendAuthResponse = try await apiClient.send(
+            method: .post,
+            path: "/v1/auth/register",
+            body: request,
+            authenticated: false
+        )
+        try await persist(response: response, logLabel: "email registration")
+    }
+
+    /// Signs in an existing email-auth account. Backend returns a
+    /// deliberately generic 401 for both wrong-password and unknown-email
+    /// so the UI must do the same — don't leak which half failed.
+    func signInWithEmail(
+        email: String,
+        password: String
+    ) async throws(APIError) {
+        let request = EmailLoginRequest(email: email, password: password)
+        let response: BackendAuthResponse = try await apiClient.send(
+            method: .post,
+            path: "/v1/auth/login",
+            body: request,
+            authenticated: false
+        )
+        try await persist(response: response, logLabel: "email sign-in")
+    }
+
+    /// Exchanges a Google-issued ID token for a backend session. The token
+    /// must originate from the PKCE OAuth handshake the iOS app performs
+    /// against `accounts.google.com` — the backend re-verifies the JWT
+    /// signature against Google's JWKS, the `aud` claim, and `email_verified`.
+    func exchangeGoogleIdentity(idToken: String) async throws(APIError) {
+        let request = GoogleAuthRequest(idToken: idToken)
+        let response: BackendAuthResponse = try await apiClient.send(
+            method: .post,
+            path: "/v1/auth/google",
+            body: request,
+            authenticated: false
+        )
+        try await persist(response: response, logLabel: "Google sign-in")
+    }
+
     /// Calls `POST /v1/auth/logout` (best effort) and clears local tokens.
     /// Network failures are logged but not propagated — the caller almost
     /// always wants to forget the session locally regardless.
@@ -88,5 +144,17 @@ nonisolated struct BackendAuthService: Sendable {
     func isAuthenticatedToBackend() async -> Bool {
         guard let tokens = await apiClient.tokenStore.currentTokens() else { return false }
         return !tokens.isRefreshTokenExpired
+    }
+
+    private func persist(response: BackendAuthResponse, logLabel: StaticString) async throws(APIError) {
+        let tokens = BackendTokens(
+            accessToken: response.accessToken,
+            accessTokenExpiresAt: response.accessTokenExpiresAt,
+            refreshToken: response.refreshToken,
+            refreshTokenExpiresAt: response.refreshTokenExpiresAt,
+            userId: response.userId
+        )
+        try await apiClient.tokenStore.storeTokens(tokens)
+        AppLogger.backend.info("Backend session established (\(logLabel)).")
     }
 }

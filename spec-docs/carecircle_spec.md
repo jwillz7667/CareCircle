@@ -223,7 +223,7 @@ These are the features required to make CareCircle real and useful to Sarah and 
 ### 4.2 Onboarding flow (~3 minutes)
 
 1. Welcome screen with a 15-second illustrated "what this is" carousel
-2. Sign in with Apple (mandatory; no email/password)
+2. Choose sign-in: Sign in with Apple (default), Sign in with Google, or email + password — all converge on the same Circle account model server-side
 3. "Who are you setting this up for?" → choose: myself / a parent or relative / a friend
 4. If for a relative: create the Care Recipient profile (name, DOB, photo, primary conditions if known — all optional)
 5. Invite at least 1 other person (skippable; can do later)
@@ -280,7 +280,7 @@ This is the hero feature. The flow:
 | UI | SwiftUI (with UIKit interop for VoiceOver edge cases) | Justin's stack |
 | Local data | SwiftData | Modern, simple, Justin already uses this on Piggly |
 | Sync | CloudKit (private + shared databases) | No backend to run, Apple-grade privacy story |
-| Authentication | Sign in with Apple | Required by Apple for SiwA-only apps; clean |
+| Authentication | Sign in with Apple (primary), Sign in with Google, email + password — all backed by the Railway JWT issuer | Native UX for the Apple ecosystem; reach for the rest of the install base; one server-side identity model |
 | Voice → text | Apple Speech framework, on-device | Free, private |
 | Tagging/summarization | Apple Foundation Models framework (iOS 26+) with fallback to OpenAI gpt-4o-mini | On-device first; cloud only if needed |
 | OCR (prescription labels, insurance cards) | VisionKit DataScannerViewController | Native, no cost |

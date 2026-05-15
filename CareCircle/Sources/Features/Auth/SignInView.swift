@@ -8,6 +8,8 @@ struct SignInView: View {
     let authState: AuthState
 
     @State private var currentHashedNonce = ""
+    @State private var isPresentingEmailSheet = false
+    @State private var isStartingGoogleSignIn = false
 
     var body: some View {
         VStack(spacing: Theme.looseSpacing) {
@@ -49,6 +51,39 @@ struct SignInView: View {
                 .frame(height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
 
+                if authState.canSignInWithGoogle {
+                    Button {
+                        authState.clearLastError()
+                        isStartingGoogleSignIn = true
+                        Task {
+                            await authState.signInWithGoogle()
+                            isStartingGoogleSignIn = false
+                        }
+                    } label: {
+                        HStack {
+                            if isStartingGoogleSignIn {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            }
+                            Label("Continue with Google", systemImage: "g.circle.fill")
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.ccSecondary)
+                    .disabled(isStartingGoogleSignIn)
+                    .accessibilityIdentifier("signIn.googleButton")
+                }
+
+                Button {
+                    authState.clearLastError()
+                    isPresentingEmailSheet = true
+                } label: {
+                    Label("Continue with email", systemImage: "envelope.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.ccSecondary)
+                .accessibilityIdentifier("signIn.emailButton")
+
                 if let error = authState.lastError, error != .canceled {
                     Text(error.errorDescription ?? "Sign in failed.")
                         .font(.footnote)
@@ -61,6 +96,9 @@ struct SignInView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.ccBackground.ignoresSafeArea())
+        .sheet(isPresented: $isPresentingEmailSheet) {
+            EmailSignInView(authState: authState)
+        }
     }
 
     // MARK: Nonce helpers

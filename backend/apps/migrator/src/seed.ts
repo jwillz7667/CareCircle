@@ -1,11 +1,13 @@
 /**
  * CareCircle seed. Idempotent: clears the existing app data then re-creates
  * two complete demo circles, every entity type populated, every RLS-bound
- * relationship wired. Apple IDs use the deterministic "mock|<id>" form so
- * `/v1/auth/_mock-token` can mint test tokens in non-prod environments.
+ * relationship wired. Auth identities span all three providers (Apple,
+ * Google, email+password) so the seed produces a realistic working set
+ * for `/v1/auth/{apple,google,login}` and prints credentials at the end.
  */
 import { randomUUID, randomBytes } from 'node:crypto';
 import pg from 'pg';
+import argon2 from 'argon2';
 import {
   encryptColumn,
   newDek,
@@ -15,11 +17,20 @@ import {
 
 type Cipher = (plaintext: string) => Buffer;
 
-type SeededUser = {
-  id: string;
-  appleId: string;
-  email: string;
+type AuthProvider = 'apple' | 'google' | 'email';
+
+type UserSpec = {
+  key: string;
   displayName: string;
+  email: string;
+  auth: AuthProvider;
+  appleId?: string;
+  googleId?: string;
+  password?: string;
+};
+
+type SeededUser = UserSpec & {
+  id: string;
 };
 
 type SeededCircle = {
@@ -29,6 +40,7 @@ type SeededCircle = {
   recipientId: string;
   cipher: Cipher;
   memberIds: Record<string, string>; // userId -> circleMemberId
+  users: SeededUser[]; // ordered by role: owner → recipient → caregivers
 };
 
 const APP_MASTER_KEY = process.env.APP_MASTER_KEY;
@@ -69,54 +81,86 @@ const TABLES_TO_TRUNCATE = [
   'users',
 ];
 
+// Shared password for every email-auth seed user. Hard-coded for
+// developer convenience (this script never runs in production), but
+// strong enough to satisfy the production password schema (>= 12 chars).
+const SEED_PASSWORD = 'CareCircle-Test-2026!';
+
+// Each user's auth provider is chosen deliberately to give the seed
+// coverage across all three sign-in paths:
+//   Circle A — Laura (Apple), Michael (Google), Ada (email),
+//              Rosa (email), Uncle Ben (Google)
+//   Circle B — Diego (Apple), Sofía (Google), Martín (email),
+//              Carla (email)
+// → 2 Apple, 3 Google, 4 email. Apple/Google IDs use the deterministic
+// "mock|<slug>" / "google|<slug>" form so the non-prod mock-token
+// endpoints can mint tokens for them.
 const FAMILY_USERS = {
   laura: {
+    key: 'laura',
     appleId: 'mock|laura.chen',
     email: 'laura@example.com',
     displayName: 'Laura',
+    auth: 'apple',
   },
   michael: {
-    appleId: 'mock|michael.chen',
+    key: 'michael',
+    googleId: 'google|michael.chen',
     email: 'michael@example.com',
     displayName: 'Michael',
+    auth: 'google',
   },
   ada: {
-    appleId: 'mock|ada.chen',
+    key: 'ada',
     email: 'ada@example.com',
     displayName: 'Ada (Mom)',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   rosa: {
-    appleId: 'mock|rosa.aide',
+    key: 'rosa',
     email: 'rosa@example.com',
     displayName: 'Rosa',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   uncleBen: {
-    appleId: 'mock|ben.relative',
+    key: 'uncleBen',
+    googleId: 'google|ben.relative',
     email: 'ben@example.com',
     displayName: 'Uncle Ben',
+    auth: 'google',
   },
 
   diego: {
+    key: 'diego',
     appleId: 'mock|diego.alvarez',
     email: 'diego@example.com',
     displayName: 'Diego',
+    auth: 'apple',
   },
   sofia: {
-    appleId: 'mock|sofia.alvarez',
+    key: 'sofia',
+    googleId: 'google|sofia.alvarez',
     email: 'sofia@example.com',
     displayName: 'Sofía',
+    auth: 'google',
   },
   martin: {
-    appleId: 'mock|martin.alvarez',
+    key: 'martin',
     email: 'martin@example.com',
     displayName: 'Martín (Dad)',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   carla: {
-    appleId: 'mock|carla.aide',
+    key: 'carla',
     email: 'carla@example.com',
     displayName: 'Carla',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
-} as const;
+} as const satisfies Record<string, UserSpec>;
 
 function cipherFor(dek: Buffer): Cipher {
   return (plaintext: string) => encryptColumn(plaintext, dek);
@@ -133,13 +177,35 @@ async function truncateAll(client: pg.PoolClient): Promise<void> {
 
 async function insertUser(
   client: pg.PoolClient,
-  user: { appleId: string; email: string; displayName: string },
+  user: UserSpec,
 ): Promise<SeededUser> {
   const id = randomUUID();
+  // Hash the password here so the seed produces the same wire format
+  // (`$argon2id$...`) that the live /v1/auth/register endpoint writes.
+  // Hashing is ~100ms per call — fine for a 4-user seed.
+  const passwordHash =
+    user.auth === 'email' && user.password
+      ? await argon2.hash(user.password, {
+          type: argon2.argon2id,
+          memoryCost: 64 * 1024,
+          timeCost: 3,
+          parallelism: 4,
+        })
+      : null;
   await client.query(
-    `INSERT INTO users (id, apple_user_id, email, display_name)
-     VALUES ($1, $2, $3, $4)`,
-    [id, user.appleId, user.email, user.displayName],
+    `INSERT INTO users (
+        id, apple_user_id, google_user_id, email, display_name,
+        password_hash, password_updated_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [
+      id,
+      user.appleId ?? null,
+      user.googleId ?? null,
+      user.email,
+      user.displayName,
+      passwordHash,
+      passwordHash ? new Date() : null,
+    ],
   );
   return { id, ...user };
 }
@@ -1110,6 +1176,7 @@ async function seedCircleA(client: pg.PoolClient): Promise<SeededCircle> {
     recipientId,
     cipher,
     memberIds,
+    users: [laura, ada, michael, rosa, uncleBen],
   };
 }
 
@@ -1445,7 +1512,65 @@ async function seedCircleB(client: pg.PoolClient): Promise<SeededCircle> {
     recipientId,
     cipher,
     memberIds,
+    users: [diego, martin, sofia, carla],
   };
+}
+
+function rolesByMember(circle: SeededCircle, userId: string): string {
+  // The seed creates members with specific roles per circle. Re-derive
+  // the role from the user → owner / recipient mapping rather than a
+  // second query so the credential printer stays a pure function.
+  if (userId === circle.ownerId) return 'owner';
+  return 'member';
+}
+
+function printCredentials(
+  apiBase: string,
+  circles: SeededCircle[],
+): void {
+  const bar = '═'.repeat(72);
+  const sub = '─'.repeat(72);
+  process.stdout.write(`\n${bar}\nCareCircle seed complete. Test credentials below.\nAPI base: ${apiBase}\n${bar}\n`);
+
+  for (const circle of circles) {
+    process.stdout.write(`\nCircle: ${circle.name}   (id: ${circle.id})\n${sub}\n`);
+    for (const user of circle.users) {
+      const role = rolesByMember(circle, user.id);
+      process.stdout.write(`\n  ${user.displayName}   [${role}]\n`);
+      process.stdout.write(`    user_id : ${user.id}\n`);
+      process.stdout.write(`    email   : ${user.email}\n`);
+      process.stdout.write(`    auth    : ${user.auth}\n`);
+
+      if (user.auth === 'email') {
+        process.stdout.write(`    password: ${user.password}\n`);
+        process.stdout.write(`    login   : curl -sS -X POST ${apiBase}/v1/auth/login \\\n`);
+        process.stdout.write(`                -H 'content-type: application/json' \\\n`);
+        process.stdout.write(`                -d '${JSON.stringify({ email: user.email, password: user.password })}'\n`);
+      } else if (user.auth === 'apple') {
+        process.stdout.write(`    apple_id: ${user.appleId}\n`);
+        process.stdout.write(`    login   : # 1) mint mock identity token, 2) exchange via /v1/auth/apple\n`);
+        process.stdout.write(`              TOKEN=$(curl -sS -X POST ${apiBase}/v1/auth/_mock-token \\\n`);
+        process.stdout.write(`                -H 'content-type: application/json' \\\n`);
+        process.stdout.write(`                -d '${JSON.stringify({ sub: user.appleId, email: user.email })}' \\\n`);
+        process.stdout.write(`                | jq -r .identityToken)\n`);
+        process.stdout.write(`              curl -sS -X POST ${apiBase}/v1/auth/apple \\\n`);
+        process.stdout.write(`                -H 'content-type: application/json' \\\n`);
+        process.stdout.write(`                -d "$(jq -n --arg t "$TOKEN" '{identityToken:$t}')"\n`);
+      } else {
+        process.stdout.write(`    google  : ${user.googleId}\n`);
+        process.stdout.write(`    login   : # 1) mint mock Google token, 2) exchange via /v1/auth/google\n`);
+        process.stdout.write(`              TOKEN=$(curl -sS -X POST ${apiBase}/v1/auth/_mock-google-token \\\n`);
+        process.stdout.write(`                -H 'content-type: application/json' \\\n`);
+        process.stdout.write(`                -d '${JSON.stringify({ sub: user.googleId, email: user.email, name: user.displayName })}' \\\n`);
+        process.stdout.write(`                | jq -r .idToken)\n`);
+        process.stdout.write(`              curl -sS -X POST ${apiBase}/v1/auth/google \\\n`);
+        process.stdout.write(`                -H 'content-type: application/json' \\\n`);
+        process.stdout.write(`                -d "$(jq -n --arg t "$TOKEN" '{idToken:$t}')"\n`);
+      }
+    }
+  }
+
+  process.stdout.write(`\n${bar}\nShared password for all email-auth seed users: ${SEED_PASSWORD}\n${bar}\n\n`);
 }
 
 async function main(): Promise<void> {
@@ -1466,6 +1591,10 @@ async function main(): Promise<void> {
       generatedAt: asInteger(new Date()),
     };
     console.log(JSON.stringify(summary, null, 2));
+
+    const apiBase = process.env.SEED_API_BASE
+      ?? (process.env.PORT ? `http://localhost:${process.env.PORT}` : 'http://localhost:8080');
+    printCredentials(apiBase, [circleA, circleB]);
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;

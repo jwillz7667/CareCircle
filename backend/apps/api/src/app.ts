@@ -7,6 +7,8 @@ import { createPool, createDb } from '@carecircle/db';
 import { createLogger } from '@carecircle/shared';
 import { loadConfig, type Config } from './config.js';
 import { createAppleVerifier } from './services/apple.js';
+import { createGoogleVerifier } from './services/google.js';
+import { createPasswordService } from './services/passwords.js';
 import { createTokenService } from './services/tokens.js';
 import { createObjectStorage } from './services/minio.js';
 import { createQueueClient } from './services/queues.js';
@@ -17,6 +19,8 @@ import authPlugin from './plugins/auth.js';
 import errorsPlugin from './plugins/errors.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
+import { emailAuthRoutes } from './routes/emailAuth.js';
+import { googleAuthRoutes } from './routes/googleAuth.js';
 import { meRoutes } from './routes/me.js';
 import { circleRoutes } from './routes/circles.js';
 import { recipientRoutes } from './routes/recipients.js';
@@ -52,6 +56,8 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
   // Eagerly bind the drizzle handle so consumers can grab it later if needed.
   createDb(pool);
   const apple = createAppleVerifier(config);
+  const google = createGoogleVerifier(config);
+  const passwords = createPasswordService();
   const tokens = createTokenService(config);
   const storage = createObjectStorage(config);
   const realtime = createRealtimeBroker(config, logger);
@@ -63,6 +69,8 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     pool,
     logger,
     apple,
+    google,
+    passwords,
     tokens,
     storage,
     realtime,
@@ -97,6 +105,8 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
   await app.register(async (instance) => {
     await healthRoutes(instance);
     await authRoutes(instance);
+    await emailAuthRoutes(instance);
+    await googleAuthRoutes(instance);
     await meRoutes(instance);
     await circleRoutes(instance);
     await recipientRoutes(instance);

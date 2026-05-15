@@ -205,6 +205,31 @@ export const refreshAuthSchema = z.object({
   refreshToken: z.string().min(20).max(500),
 });
 
+// Email + password sign-in. Password rules follow NIST 800-63B:
+// min 12 chars, no required complexity classes, but we cap length so
+// an attacker cannot DoS the Argon2 verifier with a megabyte input.
+// Email is lowercased + trimmed at the route boundary before reaching
+// the DB so case-only variants collapse to a single account.
+export const emailRegisterSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(320),
+  password: z.string().min(12).max(128),
+  displayName: z.string().trim().min(1).max(80).optional(),
+});
+
+export const emailLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(320),
+  password: z.string().min(1).max(128),
+});
+
+// Google ID token comes in via the iOS GoogleSignIn SDK or
+// ASWebAuthenticationSession code-exchange flow. We accept the raw
+// JWT — backend verifies against Google's JWKS.
+export const googleAuthSchema = z.object({
+  idToken: z.string().min(20).max(8_000),
+  givenName: z.string().max(80).optional(),
+  familyName: z.string().max(120).optional(),
+});
+
 export const registerDeviceSchema = z.object({
   apnsToken: z.string().min(40).max(200),
   deviceName: z.string().max(80).optional(),

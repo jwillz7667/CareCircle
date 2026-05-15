@@ -32,6 +32,21 @@ nonisolated struct AppleAuthRequest: Encodable, Sendable {
     let familyName: String?
 }
 
+nonisolated struct EmailRegisterRequest: Encodable, Sendable {
+    let email: String
+    let password: String
+    let displayName: String?
+}
+
+nonisolated struct EmailLoginRequest: Encodable, Sendable {
+    let email: String
+    let password: String
+}
+
+nonisolated struct GoogleAuthRequest: Encodable, Sendable {
+    let idToken: String
+}
+
 nonisolated struct RefreshAuthRequest: Encodable, Sendable {
     let refreshToken: String
 }

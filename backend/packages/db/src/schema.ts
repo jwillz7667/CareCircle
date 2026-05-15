@@ -105,7 +105,10 @@ export const users = pgTable(
   'users',
   {
     id: id(),
-    appleUserId: text('apple_user_id').unique().notNull(),
+    appleUserId: text('apple_user_id').unique(),
+    googleUserId: text('google_user_id').unique(),
+    passwordHash: text('password_hash'),
+    passwordUpdatedAt: timestamp('password_updated_at', { withTimezone: true }),
     email: text('email').unique(),
     isPrivateEmail: boolean('is_private_email').notNull().default(false),
     displayName: text('display_name'),
