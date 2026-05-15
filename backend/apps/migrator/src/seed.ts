@@ -1,9 +1,10 @@
 /**
  * CareCircle seed. Idempotent: clears the existing app data then re-creates
  * two complete demo circles, every entity type populated, every RLS-bound
- * relationship wired. Auth identities span all three providers (Apple,
- * Google, email+password) so the seed produces a realistic working set
- * for `/v1/auth/{apple,google,login}` and prints credentials at the end.
+ * relationship wired. Every seed user is email + password so that the iOS
+ * client (where real Apple / Google sign-in mints brand-new accounts) can
+ * sign in as any member of either circle. Credentials are printed at the
+ * end and the shared password is `CareCircle-Test-2026!`.
  */
 import { randomUUID, randomBytes } from 'node:crypto';
 import pg from 'pg';
@@ -86,29 +87,27 @@ const TABLES_TO_TRUNCATE = [
 // strong enough to satisfy the production password schema (>= 12 chars).
 const SEED_PASSWORD = 'CareCircle-Test-2026!';
 
-// Each user's auth provider is chosen deliberately to give the seed
-// coverage across all three sign-in paths:
-//   Circle A — Laura (Apple), Michael (Google), Ada (email),
-//              Rosa (email), Uncle Ben (Google)
-//   Circle B — Diego (Apple), Sofía (Google), Martín (email),
-//              Carla (email)
-// → 2 Apple, 3 Google, 4 email. Apple/Google IDs use the deterministic
-// "mock|<slug>" / "google|<slug>" form so the non-prod mock-token
-// endpoints can mint tokens for them.
+// Every seed user is email-auth so they can be signed into from the iOS
+// app with the shared password. Real Apple / Google sign-in on a device
+// creates a brand-new `users` row (keyed on the real Apple/Google sub),
+// so the seed would never line up with a real account anyway. If you
+// need to exercise the Apple/Google backend routes specifically, flip
+// the verifier modes back to `mock` and call /v1/auth/_mock-token from
+// curl with any sub of your choosing.
 const FAMILY_USERS = {
   laura: {
     key: 'laura',
-    appleId: 'mock|laura.chen',
     email: 'laura@example.com',
     displayName: 'Laura',
-    auth: 'apple',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   michael: {
     key: 'michael',
-    googleId: 'google|michael.chen',
     email: 'michael@example.com',
     displayName: 'Michael',
-    auth: 'google',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   ada: {
     key: 'ada',
@@ -126,25 +125,25 @@ const FAMILY_USERS = {
   },
   uncleBen: {
     key: 'uncleBen',
-    googleId: 'google|ben.relative',
     email: 'ben@example.com',
     displayName: 'Uncle Ben',
-    auth: 'google',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
 
   diego: {
     key: 'diego',
-    appleId: 'mock|diego.alvarez',
     email: 'diego@example.com',
     displayName: 'Diego',
-    auth: 'apple',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   sofia: {
     key: 'sofia',
-    googleId: 'google|sofia.alvarez',
     email: 'sofia@example.com',
     displayName: 'Sofía',
-    auth: 'google',
+    auth: 'email',
+    password: SEED_PASSWORD,
   },
   martin: {
     key: 'martin',
