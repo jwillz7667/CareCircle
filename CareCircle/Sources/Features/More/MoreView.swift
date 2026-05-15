@@ -202,6 +202,11 @@ struct MoreView: View {
             .navigationTitle("More")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Color.ccBackground, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BrandLogo(size: 28)
+                }
+            }
         }
     }
 

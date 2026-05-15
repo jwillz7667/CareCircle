@@ -16,10 +16,7 @@ struct SignInView: View {
             Spacer(minLength: 0)
 
             VStack(spacing: Theme.spacing) {
-                Image(systemName: "heart.text.square.fill")
-                    .font(.system(size: 72, weight: .light))
-                    .foregroundStyle(Color.ccPrimary)
-                    .accessibilityHidden(true)
+                BrandLogo(size: 96)
 
                 Text("CareCircle")
                     .font(.largeTitle.weight(.bold))

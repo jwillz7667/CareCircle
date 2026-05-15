@@ -34,6 +34,9 @@ struct EmailSignInView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Theme.looseSpacing) {
+                    BrandLogo(size: 56)
+                        .padding(.top, Theme.spacing)
+
                     Picker("Mode", selection: $mode) {
                         ForEach(Mode.allCases) { mode in
                             Text(mode.rawValue).tag(mode)

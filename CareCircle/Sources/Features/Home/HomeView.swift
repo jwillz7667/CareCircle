@@ -36,6 +36,11 @@ struct HomeView: View {
                 .navigationTitle("Home")
                 .navigationBarTitleDisplayMode(.large)
                 .toolbarBackground(Color.ccBackground, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        BrandLogo(size: 28)
+                    }
+                }
         }
         .sheet(isPresented: $isPresentingCreate) {
             CreateCircleView(authState: authState)

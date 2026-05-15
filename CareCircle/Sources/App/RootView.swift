@@ -137,10 +137,8 @@ private struct LaunchView: View {
         ZStack {
             Color.ccBackground.ignoresSafeArea()
 
-            VStack(spacing: Theme.spacing) {
-                Image(systemName: "heart.text.square.fill")
-                    .font(.system(size: 64, weight: .light))
-                    .foregroundStyle(Color.ccPrimary)
+            VStack(spacing: Theme.looseSpacing) {
+                BrandLogo(size: 140)
                 ProgressView()
                     .tint(Color.ccPrimary)
             }
