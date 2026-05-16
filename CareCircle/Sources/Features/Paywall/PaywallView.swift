@@ -11,7 +11,7 @@ import SwiftUI
 //
 // 7-day intro offer is fulfilled by StoreKit — we don't gate it
 // ourselves. The product configuration in App Store Connect (and in
-// `Configuration.storekit` for dev) declares the offer; we render the
+// `CareCircle.storekit` for dev) declares the offer; we render the
 // "7-day free trial" copy only when `Product.SubscriptionInfo.IntroductoryOffer`
 // is present and not yet used by this Apple ID.
 

@@ -63,7 +63,7 @@ enum SubscriptionTier: String, Codable, CaseIterable, Sendable, Equatable {
 
     /// The StoreKit product ID this tier maps to. Must match
     /// `STOREKIT_PRODUCT_*` on the backend and the products in the
-    /// `Configuration.storekit` test file.
+    /// `CareCircle.storekit` test file.
     var productID: String? {
         switch self {
         case .free: nil
