@@ -21,6 +21,8 @@
 	<string>578488042232-l6fgbfgpve5vtm1ckbc0vkhln3lhigql.apps.googleusercontent.com</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string>CareCircle imports the Care Recipient's clinical records (medications, conditions, allergies, immunizations, labs) from Apple Health so the Circle can see a complete picture without retyping anything from MyChart.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>CareCircle reads heart rate, blood pressure, oxygen saturation, body temperature, weight, glucose, respiratory rate, walking steadiness, steps, falls, and sleep from Apple Health so caregivers in your Circle can see the Care Recipient's vitals trend over time.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
