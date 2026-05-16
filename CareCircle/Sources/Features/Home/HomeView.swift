@@ -91,6 +91,10 @@ struct HomeView: View {
             .padding(.top, Theme.tightSpacing)
             .padding(.bottom, Theme.tightSpacing)
 
+            UpgradeBanner(circle: circle, viewerAppleUserID: signedInUser?.id ?? "")
+                .padding(.horizontal, Theme.spacing)
+                .padding(.bottom, Theme.tightSpacing)
+
             VitalsQuickViewBar(circle: circle) {
                 selectedTab = .vitals
             }
