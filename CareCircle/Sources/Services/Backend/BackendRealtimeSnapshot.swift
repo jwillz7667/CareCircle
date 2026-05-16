@@ -14,6 +14,11 @@ import SwiftData
 /// already idempotent (Phase 23's upsert + soft-delete merge), so the
 /// snapshot is correct end-to-end with no per-domain customization.
 ///
+/// Vitals (Phase 33) participate in the resync via `applyVitalChange`,
+/// which refetches the most recent page and upserts without authoritative
+/// deletes — backend-of-record reconciliation for older HK-imported rows
+/// stays with cold-start hydration.
+///
 /// Doses are skipped because the dose endpoint is per-row — there's
 /// no list to refetch. Stale dose rows are usually corrected by the
 /// medication applicator's cascade-delete or by the next user-driven
@@ -77,6 +82,9 @@ extension BackendRealtimeClient {
         }
         group.addTask { [weak self] in
             await self?.applyShiftDigestChange(circleId: circleId, modelContext: modelContext)
+        }
+        group.addTask { [weak self] in
+            await self?.applyVitalChange(circleId: circleId, modelContext: modelContext)
         }
     }
 }
