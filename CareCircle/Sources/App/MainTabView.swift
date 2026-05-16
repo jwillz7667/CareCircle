@@ -5,21 +5,15 @@ import SwiftUI
 struct MainTabView: View {
     let authState: AuthState
 
-    @State private var selectedTab: AppTab = .home
+    @State private var selectedTab: AppTab = .today
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView(authState: authState, selectedTab: $selectedTab)
+            HomeDashboardView(authState: authState, selectedTab: $selectedTab)
                 .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                    Label("Today", systemImage: "sun.max.fill")
                 }
-                .tag(AppTab.home)
-
-            PulseDashboardView(authState: authState)
-                .tabItem {
-                    Label("Vitals", systemImage: "heart.fill")
-                }
-                .tag(AppTab.vitals)
+                .tag(AppTab.today)
 
             MedsView(authState: authState)
                 .tabItem {
@@ -27,11 +21,11 @@ struct MainTabView: View {
                 }
                 .tag(AppTab.meds)
 
-            ChatRoomView(authState: authState)
+            BrainView(authState: authState)
                 .tabItem {
-                    Label("Wall", systemImage: "bubble.left.and.bubble.right.fill")
+                    Label("Brain", systemImage: "brain.head.profile")
                 }
-                .tag(AppTab.wall)
+                .tag(AppTab.brain)
 
             MoreView(authState: authState)
                 .tabItem {
@@ -39,6 +33,6 @@ struct MainTabView: View {
                 }
                 .tag(AppTab.more)
         }
-        .tint(Color.ccPrimary)
+        .tint(Color.ccAccent)
     }
 }

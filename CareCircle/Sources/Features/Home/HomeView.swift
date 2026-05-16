@@ -96,7 +96,7 @@ struct HomeView: View {
                 .padding(.bottom, Theme.tightSpacing)
 
             VitalsQuickViewBar(circle: circle) {
-                selectedTab = .vitals
+                selectedTab = .more
             }
             .padding(.horizontal, Theme.spacing)
             .padding(.bottom, Theme.tightSpacing)

@@ -2,14 +2,17 @@ import Foundation
 
 // MARK: - AppTab
 
-/// Identifies the five top-level tabs in `MainTabView`. Bound to the
-/// `TabView`'s selection so leaf views (e.g. the Home dashboard) can
-/// programmatically switch tabs — used by the Vitals quickview bar on
-/// Home to jump straight into the Pulse tab.
+/// Identifies the four top-level tabs in `MainTabView`. Bound to the
+/// `TabView`'s selection so leaf views (e.g. the Today dashboard) can
+/// programmatically switch tabs — the Today screen uses this to route
+/// "See all" affordances over to Meds or Brain.
 enum AppTab: Hashable {
-    case home
-    case vitals
+    /// Synthesis surface. Composes signals from Meds + Pulse + Brain.
+    case today
+    /// Medication safety system. Interactions, escalation, refills, adherence.
     case meds
-    case wall
+    /// Family Brain. Shared multi-author record of care.
+    case brain
+    /// Junk drawer: settings, history archives, secondary surfaces.
     case more
 }
