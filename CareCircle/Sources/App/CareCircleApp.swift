@@ -31,7 +31,17 @@ struct CareCircleApp: App {
     let apiClient: APIClient
     let backendAuthService: BackendAuthService
 
+    /// `UserDefaults` is wiped when iOS deletes the app, but Keychain
+    /// entries written with `AccessibleAfterFirstUnlockThisDeviceOnly`
+    /// survive uninstall. After a reinstall we'd otherwise auto-sign-in
+    /// from a credential the user thought they cleared. Flipping this
+    /// flag the first time the new install runs lets us purge those
+    /// orphaned credentials before `AuthState.bootstrap()` reads them.
+    private static let didLaunchBeforeKey = "com.jwillz.carecircle.didLaunchBefore"
+
     init() {
+        Self.purgeAuthOnFreshInstall()
+
         let container = Self.makeModelContainer()
         modelContainer = container
 
@@ -73,6 +83,16 @@ struct CareCircleApp: App {
         MainActor.assumeIsolated {
             MedicationServices.shared.install(modelContainer: container)
         }
+    }
+
+    private static func purgeAuthOnFreshInstall() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: didLaunchBeforeKey) else { return }
+        let keychain = KeychainStore()
+        try? keychain.delete(KeychainStore.signedInUserKey)
+        try? keychain.delete(KeychainStore.backendTokensKey)
+        defaults.set(true, forKey: didLaunchBeforeKey)
+        AppLogger.auth.info("Fresh install detected — cleared cached auth credentials from prior install.")
     }
 
     private static func makeModelContainer() -> ModelContainer {

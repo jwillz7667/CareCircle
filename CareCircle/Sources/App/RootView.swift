@@ -62,9 +62,14 @@ struct RootView: View {
 
     private func maybeHydrateOnce() async {
         guard !didHydrateThisLaunch,
-              isSignedIn,
-              authState.lastVerifiedProfile != nil else { return }
+              case let .signedIn(user) = authState.status,
+              let verifiedProfile = authState.lastVerifiedProfile else { return }
         didHydrateThisLaunch = true
+        await hydrator.discoverCircles(
+            viewerLocalID: user.id,
+            viewerBackendID: verifiedProfile.id,
+            modelContext: modelContext
+        )
         hydrator.triggerHydrateAll(modelContext: modelContext)
         documentSweeper.triggerSweep(modelContext: modelContext)
         await pullDocumentKeys()

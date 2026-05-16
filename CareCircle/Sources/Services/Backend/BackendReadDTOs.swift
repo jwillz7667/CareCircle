@@ -14,6 +14,22 @@ import Foundation
 // detached from SwiftData avoids the actor-isolation gymnastics of
 // instantiating models in a Sendable context.
 
+// MARK: - Circles
+
+nonisolated struct CircleSummariesResponse: Decodable, Sendable, Equatable {
+    let circles: [CircleSummaryDTO]
+}
+
+nonisolated struct CircleSummaryDTO: Decodable, Sendable, Equatable {
+    let id: String
+    let name: String
+    let ownerUserId: String
+    let subscriptionTier: String
+    let subscriptionStatus: String
+    let createdAt: Date
+    let memberCount: Int
+}
+
 // MARK: - Activities
 
 nonisolated struct ActivitiesResponse: Decodable, Sendable, Equatable {
