@@ -36,13 +36,21 @@ export async function sendApnsNotification(
   config: Config,
   logger: Logger,
 ): Promise<void> {
+  // `critical` marks an urgent alert (SOS) that should bypass Focus and ride at
+  // top priority. The OS-level *critical alert* (interruption-level `critical`
+  // + critical sound) additionally needs Apple's Critical Alert entitlement —
+  // without it APNs rejects the push with 400. Gate that behind the flag and
+  // otherwise degrade to `time-sensitive` while keeping priority 10.
+  const wantsUrgent = data.critical === true;
+  const useCriticalAlert = wantsUrgent && config.SOS_CRITICAL_ALERTS_ENABLED;
   if (config.APNS_MOCK_MODE) {
     logger.info(
       {
         circleId: data.circleId,
         token: apnsToken.slice(0, 8) + '…',
         alert: data.alert,
-        critical: !!data.critical,
+        urgent: wantsUrgent,
+        criticalAlert: useCriticalAlert,
       },
       'apns mock send',
     );
@@ -56,10 +64,10 @@ export async function sendApnsNotification(
   const body = JSON.stringify({
     aps: {
       alert: data.alert,
-      sound: data.critical ? { critical: 1, name: 'default', volume: 1.0 } : 'default',
+      sound: useCriticalAlert ? { critical: 1, name: 'default', volume: 1.0 } : 'default',
       'thread-id': data.threadId ?? data.circleId,
       category: data.category,
-      'interruption-level': data.critical ? 'critical' : 'time-sensitive',
+      'interruption-level': useCriticalAlert ? 'critical' : 'time-sensitive',
     },
     ...data.payload,
   });
@@ -69,7 +77,7 @@ export async function sendApnsNotification(
       authorization: `bearer ${authToken}`,
       'apns-topic': config.APNS_BUNDLE_ID,
       'apns-push-type': 'alert',
-      'apns-priority': data.critical ? '10' : '5',
+      'apns-priority': wantsUrgent ? '10' : '5',
     },
     body,
   });

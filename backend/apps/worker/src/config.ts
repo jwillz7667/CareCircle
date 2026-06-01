@@ -28,6 +28,15 @@ const ConfigSchema = z.object({
     .union([z.string(), z.boolean()])
     .default(true)
     .transform((v) => v === true || v === 'true'),
+  // OS-level critical alerts (interruption-level `critical` + `sound.critical`)
+  // require Apple's Critical Alert entitlement on the app. Sending them without
+  // it gets every push rejected with APNs 400. Until the entitlement is granted
+  // (filed per docs/CRITICAL_ALERTS_APPLICATION.md) this stays false and SOS
+  // pushes degrade to `time-sensitive` at priority 10 — still bypasses Focus.
+  SOS_CRITICAL_ALERTS_ENABLED: z
+    .union([z.string(), z.boolean()])
+    .default(false)
+    .transform((v) => v === true || v === 'true'),
 
   OPENFDA_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
