@@ -30,6 +30,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@carecircle/migrator": "workspace:*",
     "@types/node": "^22.10.5",
     "@types/pg": "^8.11.10",
     "typescript": "^5.7.2",

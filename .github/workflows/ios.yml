@@ -25,13 +25,15 @@ permissions:
   contents: read
 
 env:
-  DESTINATION: platform=iOS Simulator,name=iPhone 16 Pro Max
+  # Build-only CI job: a generic simulator destination avoids pinning to a
+  # specific device/runtime that may not be preinstalled on the runner image.
+  DESTINATION: generic/platform=iOS Simulator
   SCHEME: CareCircle
 
 jobs:
   lint:
     name: Lint (swiftformat + swiftlint)
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
@@ -56,14 +58,15 @@ jobs:
 
   build:
     name: Build (xcodebuild)
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: Select latest Xcode 26
         run: |
           ls /Applications | grep -i Xcode
-          sudo xcode-select -s /Applications/Xcode_16.app || true
+          LATEST=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then sudo xcode-select -s "$LATEST"; fi
           xcodebuild -version
 
       - name: Cache DerivedData

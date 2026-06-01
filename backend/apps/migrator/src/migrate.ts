@@ -6,11 +6,16 @@ import pg from 'pg';
 const here = dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = resolve(here, '../../../packages/db/migrations');
 
-const connectionString = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error('DATABASE_URL or DIRECT_DATABASE_URL is required.');
-  process.exit(1);
-}
+export type MigrateOptions = {
+  connectionString: string;
+  /** When false, suppresses per-migration stdout (used by the test harness). */
+  log?: boolean;
+};
+
+export type MigrateResult = {
+  applied: number;
+  total: number;
+};
 
 async function ensureLedger(client: pg.PoolClient): Promise<void> {
   await client.query(`
@@ -26,8 +31,15 @@ async function listApplied(client: pg.PoolClient): Promise<Set<string>> {
   return new Set(rows.map((r) => r.name));
 }
 
-async function applyMigration(client: pg.PoolClient, name: string, sqlText: string): Promise<void> {
-  console.log(`→ applying ${name}`);
+async function applyMigration(
+  client: pg.PoolClient,
+  name: string,
+  sqlText: string,
+  log: boolean,
+): Promise<void> {
+  if (log) {
+    console.log(`→ applying ${name}`);
+  }
   await client.query('BEGIN');
   try {
     await client.query(sqlText);
@@ -39,19 +51,23 @@ async function applyMigration(client: pg.PoolClient, name: string, sqlText: stri
   }
 }
 
-async function main(): Promise<void> {
-  const pool = new pg.Pool({ connectionString });
+/**
+ * Applies every pending SQL migration in `packages/db/migrations` in lexical
+ * order, each inside its own transaction. Idempotent: already-applied files
+ * (tracked in `schema_migrations`) are skipped, so it is safe to run on every
+ * deploy and from the test harness.
+ */
+export async function runMigrations(opts: MigrateOptions): Promise<MigrateResult> {
+  const log = opts.log ?? true;
+  const pool = new pg.Pool({ connectionString: opts.connectionString });
   const client = await pool.connect();
   try {
     await ensureLedger(client);
     const applied = await listApplied(client);
-    const files = (await readdir(MIGRATIONS_DIR))
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
+    const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort();
 
     if (files.length === 0) {
-      console.error(`No migrations found in ${MIGRATIONS_DIR}`);
-      process.exit(1);
+      throw new Error(`No migrations found in ${MIGRATIONS_DIR}`);
     }
 
     let appliedCount = 0;
@@ -60,17 +76,30 @@ async function main(): Promise<void> {
         continue;
       }
       const sqlText = await readFile(join(MIGRATIONS_DIR, file), 'utf8');
-      await applyMigration(client, file, sqlText);
+      await applyMigration(client, file, sqlText, log);
       appliedCount += 1;
     }
-    console.log(`Done. ${appliedCount} new migration(s) applied. ${applied.size + appliedCount} total.`);
+    if (log) {
+      console.log(
+        `Done. ${appliedCount} new migration(s) applied. ${applied.size + appliedCount} total.`,
+      );
+    }
+    return { applied: appliedCount, total: applied.size + appliedCount };
   } finally {
     client.release();
     await pool.end();
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const invokedDirectly = process.argv[1] === fileURLToPath(import.meta.url);
+if (invokedDirectly) {
+  const connectionString = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error('DATABASE_URL or DIRECT_DATABASE_URL is required.');
+    process.exit(1);
+  }
+  runMigrations({ connectionString }).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

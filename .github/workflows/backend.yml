@@ -92,11 +92,41 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Generate Prisma client
-        run: pnpm --filter @carecircle/db prisma:generate
-
       - name: Migrate test database
-        run: pnpm --filter @carecircle/db migrate
+        run: pnpm run migrate
 
       - name: Run tests
         run: pnpm run test
+
+  security:
+    name: Security (audit + secret scan)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # Informational: surfaces advisories without blocking merges. Promote to a
+      # hard gate once the dependency tree is clean at the chosen level.
+      - name: Dependency audit
+        run: pnpm audit --audit-level high
+        continue-on-error: true
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: backend/.gitleaks.toml

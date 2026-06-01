@@ -1,0 +1,23 @@
+# gitleaks configuration for the CareCircle backend.
+# Extends the upstream default rule set and allowlists files that contain
+# intentional, non-production test fixtures (rotate-me placeholders, seed
+# credentials printed for local dev). Real secrets live in env vars only.
+title = "CareCircle backend gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and local-dev placeholders (no production secrets)"
+paths = [
+  '''backend/apps/api/test/helpers/env\.ts''',
+  '''backend/apps/migrator/src/seed\.ts''',
+  '''.*\.env\.example$''',
+  '''.*\.test\.ts$''',
+]
+regexes = [
+  # Every test placeholder is suffixed to make its disposability explicit.
+  '''please-rotate''',
+  '''32-bytes-minimum-rotate''',
+  '''test-(jwt|master|mock)''',
+]

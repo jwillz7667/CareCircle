@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyBaseLogger } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
@@ -84,7 +84,11 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
   };
 
   const app = Fastify({
-    loggerInstance: logger,
+    // pino's standalone `Logger` type requires `msgPrefix`, which Fastify's
+    // `FastifyBaseLogger` omits; passing the logger at Fastify's expected type
+    // keeps `buildApp` returning the default-generic `FastifyInstance` instead
+    // of widening every route's logger param and breaking assignability.
+    loggerInstance: logger as unknown as FastifyBaseLogger,
     disableRequestLogging: config.NODE_ENV === 'test',
     trustProxy: true,
     bodyLimit: 5 * 1024 * 1024,

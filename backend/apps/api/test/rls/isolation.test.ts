@@ -16,7 +16,6 @@ import { encryptColumn } from '@carecircle/shared';
 import { closeTestApp, getTestApp } from '../helpers/app.js';
 import {
   addMember,
-  countAuditLog,
   insertActivityRaw,
   insertCircle,
   insertMedicationRaw,

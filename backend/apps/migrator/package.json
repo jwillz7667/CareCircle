@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./migrate": "./src/migrate.ts"
+  },
   "scripts": {
     "start": "tsx src/migrate.ts",
     "migrate": "tsx src/migrate.ts",
