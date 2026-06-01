@@ -9,6 +9,7 @@ import {
 } from '@carecircle/shared';
 import { cipherFor } from '../lib/encrypt.js';
 import { requireMembership } from '../lib/membership.js';
+import { requireEntitlement } from '../lib/subscriptions.js';
 
 export async function documentRoutes(app: FastifyInstance): Promise<void> {
   const { pool, storage, circleKeys } = app.ctx;
@@ -17,6 +18,7 @@ export async function documentRoutes(app: FastifyInstance): Promise<void> {
     const userId = await app.requireUser(req);
     const { circleId } = req.params as { circleId: string };
     await requireMembership(pool, userId, circleId);
+    await requireEntitlement(pool, circleId);
     const body = uploadUrlSchema.parse(req.body);
 
     const objectKey = `${circleId}/${new Date().toISOString().slice(0, 10)}/${randomBytes(12).toString('hex')}-${body.filename ?? 'object'}`;
@@ -28,6 +30,7 @@ export async function documentRoutes(app: FastifyInstance): Promise<void> {
     const userId = await app.requireUser(req);
     const { circleId } = req.params as { circleId: string };
     await requireMembership(pool, userId, circleId);
+    await requireEntitlement(pool, circleId);
     const body = createDocumentSchema.parse(req.body);
     const cipher = await cipherFor(circleKeys, circleId);
 

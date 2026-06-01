@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { withRls } from '@carecircle/db';
-import { HttpError, notFound } from '@carecircle/shared';
+import { HttpError, notFound, subscriptionRequired } from '@carecircle/shared';
 import type {
   AppStoreNotificationType,
   Environment,
@@ -313,6 +313,29 @@ export async function applyNotification(
 
 export function isPaidStatus(status: SubscriptionStatusT): boolean {
   return status === 'active' || status === 'trialing' || status === 'past_due' || status === 'canceled';
+}
+
+/**
+ * Server-side entitlement gate for premium per-circle features. Throws
+ * 402 `subscription_required` unless the circle currently holds a paid
+ * tier in a paying status. `past_due` (billing-retry grace) and
+ * `canceled` (auto-renew off, still inside paid period) keep access;
+ * `expired` resets the tier to free via {@link tierForStatus}, so the
+ * free-tier check below catches it. The iOS client never trusts its own
+ * StoreKit receipt for access control — this is the authoritative gate.
+ */
+export async function requireEntitlement(
+  pool: pg.Pool,
+  circleId: string,
+): Promise<CircleSubscriptionRow> {
+  const state = await fetchCircleSubscription(pool, circleId);
+  if (state.tier === 'free' || !isPaidStatus(state.status)) {
+    throw subscriptionRequired('This feature requires an active subscription', {
+      tier: state.tier,
+      status: state.status,
+    });
+  }
+  return state;
 }
 
 export function inviteCapForTier(tier: 'free' | SubscriptionTier): number {

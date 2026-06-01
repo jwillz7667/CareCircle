@@ -119,6 +119,22 @@ describe('Documents', () => {
     expect(dlBody.encryptionTag).toBe(tag);
   });
 
+  it('returns 402 subscription_required for a free-tier circle', async () => {
+    const freeCircle = await insertCircle(pool, {
+      ownerId: owner.id,
+      name: 'Free Circle',
+      tier: 'free',
+    });
+    const res = await app.inject({
+      method: 'POST',
+      url: `/v1/circles/${freeCircle.id}/documents/upload-url`,
+      headers: bearer(token),
+      payload: { bucket: 'cc-documents', contentType: 'application/pdf', sizeBytes: 1024 },
+    });
+    expect(res.statusCode).toBe(402);
+    expect(JSON.parse(res.body).error.code).toBe('subscription_required');
+  });
+
   it('DELETE soft-deletes; only the uploader can delete', async () => {
     const other = await insertUser(pool, { appleId: 'mock|other-uploader' });
     await pool.query(

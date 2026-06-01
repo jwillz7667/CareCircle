@@ -76,11 +76,13 @@ export type SeededCircle = {
 
 export async function insertCircle(
   pool: pg.Pool,
-  args: { ownerId: string; name?: string; tier?: 'free' | 'family' | 'pro' },
+  args: { ownerId: string; name?: string; tier?: 'free' | 'standard' | 'premium' },
 ): Promise<SeededCircle> {
   const id = randomUUID();
   const name = args.name ?? `Circle-${id.slice(0, 4)}`;
-  const tier = args.tier ?? 'family';
+  // Migration 0015 renamed the tier enum (family→standard, pro→premium).
+  // Default seeded circles to a paid tier so entitlement-gated routes work.
+  const tier = args.tier ?? 'standard';
   await pool.query(
     `INSERT INTO circles (id, name, owner_user_id, subscription_tier, subscription_status)
      VALUES ($1, $2, $3, $4::subscription_tier, 'active')`,

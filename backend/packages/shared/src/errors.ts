@@ -18,6 +18,7 @@ export type ErrorCode =
   | 'invitation_expired'
   | 'invitation_already_used'
   | 'idempotent_replay'
+  | 'subscription_required'
   | 'internal_error';
 
 export class HttpError extends Error {
@@ -49,3 +50,8 @@ export const serviceUnavailable = (msg = 'Service unavailable') =>
   new HttpError(503, 'service_unavailable', msg);
 export const upstreamError = (msg = 'Upstream provider error') =>
   new HttpError(502, 'upstream_error', msg);
+// Feature is gated behind a paid subscription the circle doesn't currently
+// hold. 402 lets the iOS client distinguish "upgrade required" from a plain
+// authorization failure (403) and route the user to the paywall.
+export const subscriptionRequired = (msg = 'An active subscription is required', details?: Record<string, unknown>) =>
+  new HttpError(402, 'subscription_required', msg, details);
