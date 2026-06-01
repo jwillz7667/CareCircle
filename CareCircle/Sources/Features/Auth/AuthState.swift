@@ -156,6 +156,29 @@ final class AuthState {
         AppLogger.auth.info("User signed out.")
     }
 
+    /// Permanently deletes the signed-in account. The backend deletion is
+    /// performed first (irreversible server action); only on success do we
+    /// run the caller-supplied `localTeardown` to wipe the on-device store,
+    /// then flip to `.signedOut` last so the calling view stays mounted
+    /// through the teardown. Rethrows the backend error untouched so the UI
+    /// can distinguish "still signed in, try again" from a clean deletion.
+    func deleteAccount(localTeardown: () -> Void) async throws(APIError) {
+        try await backendAuthService.deleteAccount()
+        localTeardown()
+        clearStoredUser()
+        lastError = nil
+        lastVerifiedProfile = nil
+        lastVerifyError = nil
+        status = .signedOut
+        AppLogger.auth.info("Account deleted.")
+    }
+
+    /// Downloads the signed-in user's data export (a ZIP archive) from the
+    /// backend for the user to save or share.
+    func exportData() async throws(APIError) -> Data {
+        try await backendAuthService.exportData()
+    }
+
     /// Clears the surfaced error so a previous failure does not bleed into
     /// a fresh form submission (e.g. flipping between sign-in and create).
     func clearLastError() {

@@ -140,6 +140,22 @@ nonisolated struct BackendAuthService: Sendable {
         )
     }
 
+    /// `DELETE /v1/me`. Soft-deletes the account server-side (the backend
+    /// then runs the cascading teardown — owned circles, members, devices,
+    /// PII scrub, object purge — out-of-band) and forgets the local token
+    /// pair. The session is unrecoverable afterwards.
+    func deleteAccount() async throws(APIError) {
+        try await apiClient.sendNoResponse(method: .delete, path: "/v1/me", authenticated: true)
+        await apiClient.tokenStore.clearTokens()
+        AppLogger.backend.info("Backend account deleted; local tokens cleared.")
+    }
+
+    /// `POST /v1/me/export`. Returns the raw ZIP archive of the caller's
+    /// data (profile + per-circle decrypted records) for the user to keep.
+    func exportData() async throws(APIError) -> Data {
+        try await apiClient.sendForData(method: .post, path: "/v1/me/export", authenticated: true)
+    }
+
     /// `true` when valid backend tokens are persisted on this device.
     func isAuthenticatedToBackend() async -> Bool {
         guard let tokens = await apiClient.tokenStore.currentTokens() else { return false }

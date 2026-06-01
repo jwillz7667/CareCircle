@@ -131,6 +131,25 @@ actor APIClient {
         return tokens.accessToken
     }
 
+    /// Returns the raw response bytes without JSON decoding. Used by the
+    /// data-export flow, which downloads a binary ZIP rather than JSON.
+    func sendForData(
+        method: HTTPMethod,
+        path: String,
+        authenticated: Bool = true
+    ) async throws(APIError)
+        -> Data
+    {
+        let (data, _) = try await performRequest(
+            method: method,
+            path: path,
+            body: nil,
+            authenticated: authenticated,
+            retryOnUnauthorized: true
+        )
+        return data
+    }
+
     /// Sends a pre-encoded JSON body. Used by `SyncEngine` so it can
     /// assemble heterogeneous operation payloads with
     /// `JSONSerialization` without having to model every payload type at

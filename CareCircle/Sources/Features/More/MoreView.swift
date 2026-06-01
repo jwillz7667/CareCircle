@@ -158,6 +158,13 @@ struct MoreView: View {
                         }
                     }
 
+                    NavigationLink {
+                        AccountPrivacyView(authState: authState)
+                    } label: {
+                        Label("Account & Privacy", systemImage: "lock.shield")
+                            .foregroundStyle(Color.ccText)
+                    }
+
                     Button(role: .destructive) {
                         authState.signOut()
                     } label: {
