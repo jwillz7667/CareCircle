@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyInstance, type FastifyBaseLogger } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -94,8 +95,25 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
     trustProxy: true,
     bodyLimit: 5 * 1024 * 1024,
     pluginTimeout: 30_000,
+    // Correlate logs end-to-end: honor a caller/proxy-supplied id when it looks
+    // sane, otherwise mint one. We read the header here (rather than via
+    // requestIdHeader) so we can length-bound untrusted input.
+    requestIdHeader: false,
+    requestIdLogLabel: 'reqId',
+    genReqId: (req) => {
+      const supplied = req.headers['x-request-id'];
+      if (typeof supplied === 'string' && supplied.length > 0 && supplied.length <= 200) {
+        return supplied;
+      }
+      return randomUUID();
+    },
   });
   app.decorate('ctx', ctx);
+
+  // Echo the resolved id so clients and proxies can correlate a response.
+  app.addHook('onRequest', async (req, reply) => {
+    void reply.header('x-request-id', req.id);
+  });
 
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cors, {
