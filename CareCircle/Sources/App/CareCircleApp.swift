@@ -18,9 +18,10 @@ struct CareCircleApp: App {
     @State private var directMessenger = DirectMessenger()
     @State private var locationService: LocationSharingService
     @State private var insightsEngine = InsightsEngine()
-    @State private var sosCenter = SOSCenter()
+    @State private var sosCenter: SOSCenter
     @State private var simplifiedPreference = SimplifiedModePreference()
     @State private var subscriptionService: SubscriptionService
+    @State private var pushRegistration: PushRegistrationService
 
     /// `BackendDocumentService` is an actor, so it isn't itself
     /// observable. The sweeper owns it; only the sweeper is exposed
@@ -58,6 +59,8 @@ struct CareCircleApp: App {
         _documentSweeper = State(initialValue: BackendDocumentRetrySweeper(service: docService))
         let auth = AuthState(backendAuthService: authService, syncEngine: engine)
         _authState = State(initialValue: auth)
+        _sosCenter = State(initialValue: SOSCenter(apiClient: client))
+        _pushRegistration = State(initialValue: Self.makePushRegistration(apiClient: client, auth: auth))
         _realtimeClient = State(initialValue: BackendRealtimeClient(
             apiClient: client,
             configuration: configuration,
@@ -80,6 +83,24 @@ struct CareCircleApp: App {
             }
         ))
 
+        Self.installMedicationServices(into: container)
+    }
+
+    /// Bridges the backend auth state into the push service as a plain bool
+    /// probe so the service stays decoupled from `AuthState`'s full surface.
+    private static func makePushRegistration(
+        apiClient: APIClient,
+        auth: AuthState
+    )
+        -> PushRegistrationService
+    {
+        PushRegistrationService(apiClient: apiClient, isAuthenticated: { [auth] in
+            if case .signedIn = auth.status { return true }
+            return false
+        })
+    }
+
+    private static func installMedicationServices(into container: ModelContainer) {
         MainActor.assumeIsolated {
             MedicationServices.shared.install(modelContainer: container)
         }
@@ -153,6 +174,23 @@ struct CareCircleApp: App {
                 .environment(locationService)
                 .environment(insightsEngine)
                 .environment(subscriptionService)
+                .environment(pushRegistration)
+                .task {
+                    appDelegate.pushTokenHandler = { [pushRegistration] token in
+                        pushRegistration.handleDeviceToken(token)
+                    }
+                    appDelegate.pushFailureHandler = { [pushRegistration] error in
+                        pushRegistration.registrationDidFail(error)
+                    }
+                    if case .signedIn = authState.status {
+                        pushRegistration.registerForPushNotifications()
+                    }
+                }
+                .onChange(of: authState.status) { _, status in
+                    guard case .signedIn = status else { return }
+                    pushRegistration.flushPendingRegistration()
+                    pushRegistration.registerForPushNotifications()
+                }
                 .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)

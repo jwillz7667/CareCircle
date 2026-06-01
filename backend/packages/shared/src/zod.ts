@@ -173,6 +173,11 @@ export const emergencyContactSchema = z.object({
 });
 
 export const triggerSosSchema = z.object({
+  // Client-generated id of the local SOSEvent. Supplying it makes the trigger
+  // idempotent: a retry of the same fire (flaky network, app relaunch) lands on
+  // the same row instead of double-inserting and double-paging the Circle.
+  // Omitted by older clients, in which case the server mints the id.
+  eventId: uuidSchema.optional(),
   locationLat: z.number().min(-90).max(90).optional(),
   locationLng: z.number().min(-180).max(180).optional(),
   locationAccuracyM: z.number().min(0).max(10_000).optional(),

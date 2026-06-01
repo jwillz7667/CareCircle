@@ -3,8 +3,25 @@ import UIKit
 // MARK: - AppDelegate
 
 /// Hosts the `CircleSceneDelegate` so SwiftUI scenes can receive
-/// `windowScene(_:userDidAcceptCloudKitShareWith:)` callbacks.
+/// `windowScene(_:userDidAcceptCloudKitShareWith:)` callbacks, and bridges the
+/// APNs device-token callbacks (which only land on the app delegate) to the
+/// SwiftUI-owned `PushRegistrationService`.
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    /// Set by `CareCircleApp` once the SwiftUI environment is wired. The OS can
+    /// deliver a device token before that happens, so a token that arrives
+    /// early is buffered and flushed the instant the handler is installed.
+    var pushTokenHandler: ((Data) -> Void)? {
+        didSet {
+            guard let token = bufferedDeviceToken else { return }
+            bufferedDeviceToken = nil
+            pushTokenHandler?(token)
+        }
+    }
+
+    var pushFailureHandler: ((Error) -> Void)?
+
+    private var bufferedDeviceToken: Data?
+
     func application(
         _: UIApplication,
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -13,6 +30,24 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     {
         configureNavigationBarAppearance()
         return true
+    }
+
+    func application(
+        _: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        if let handler = pushTokenHandler {
+            handler(deviceToken)
+        } else {
+            bufferedDeviceToken = deviceToken
+        }
+    }
+
+    func application(
+        _: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        pushFailureHandler?(error)
     }
 
     func application(

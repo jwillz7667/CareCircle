@@ -238,22 +238,6 @@ final class SyncEngine {
         )
     }
 
-    func enqueueSOSEventCreate(_ event: SOSEvent) {
-        enqueue(
-            operationType: SyncOperationType.createSOSEvent,
-            circleId: event.circle?.id,
-            payload: CreateSOSEventPayload(
-                eventId: event.id,
-                triggeredByAppleUserID: event.triggeredByAppleUserID,
-                triggeredByDisplayName: event.triggeredByDisplayName,
-                triggeredAt: event.triggeredAt,
-                latitude: event.latitude,
-                longitude: event.longitude,
-                locationAccuracyMeters: event.locationAccuracyMeters
-            )
-        )
-    }
-
     func enqueue(
         operationType: String,
         circleId: UUID?,

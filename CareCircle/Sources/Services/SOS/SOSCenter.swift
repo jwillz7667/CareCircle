@@ -51,28 +51,36 @@ enum SOSCenterState: Equatable {
 final class SOSCenter {
     private(set) var state: SOSCenterState = .idle
 
+    private let apiClient: APIClient
     private let locationProvider: SOSLocationProvider
     private let armDuration: Int
     private var countdownTask: Task<Void, Never>?
+    private var submitTask: Task<Void, Never>?
     private var hapticGenerator: UIImpactFeedbackGenerator?
 
+    /// Bounded retries for the backend trigger. The fire is idempotent on the
+    /// client-supplied event id, so a replay never double-pages the Circle.
+    private static let maxSubmitAttempts = 3
+
     init(
+        apiClient: APIClient,
         locationProvider: SOSLocationProvider? = nil,
         armDuration: Int = 30
     ) {
+        self.apiClient = apiClient
         self.locationProvider = locationProvider ?? SOSLocationProvider()
         self.armDuration = armDuration
     }
 
     /// Starts the 30-second countdown. Caller passes the model context and
     /// the user / circle so the orchestrator can write the SOSEvent at T=0
-    /// without reaching into SwiftUI environment values. `syncEngine` mirrors
-    /// the fired event to the backend queue.
+    /// without reaching into SwiftUI environment values. At T=0 the fired
+    /// event is posted to the backend SOS route, which fans out the push to
+    /// the rest of the Circle.
     func arm(
         in circle: Circle,
         triggeredBy user: SignedInUser,
-        modelContext: ModelContext,
-        syncEngine: SyncEngine
+        modelContext: ModelContext
     ) async throws(SOSCenterError) {
         guard case .idle = state else { throw .alreadyArmed }
         await SOSNotificationAuthorizer.requestAuthorization()
@@ -82,8 +90,7 @@ final class SOSCenter {
             await self?.runCountdown(
                 circle: circle,
                 user: user,
-                modelContext: modelContext,
-                syncEngine: syncEngine
+                modelContext: modelContext
             )
         }
     }
@@ -107,13 +114,35 @@ final class SOSCenter {
         state = .idle
     }
 
+    /// Marks an already-fired SOS resolved. Updates the local event (CloudKit
+    /// fans it out to the Circle) and records the resolution on the backend so
+    /// the backend-of-record stops treating the event as active. The backend
+    /// call is best-effort — local SwiftData state is authoritative, and a
+    /// `404` (event never reached the backend, or already resolved) is benign.
+    func resolve(
+        _ event: SOSEvent,
+        by viewerAppleUserID: String,
+        notes: String?,
+        in modelContext: ModelContext
+    ) {
+        event.resolutionNotes = notes
+        event.resolvedAt = .now
+        event.resolvedByAppleUserID = viewerAppleUserID
+        do {
+            try modelContext.save()
+        } catch {
+            let described = String(describing: error)
+            AppLogger.sos.error("Failed to persist SOS resolution: \(described, privacy: .public)")
+        }
+        notifyBackendResolution(eventID: event.id)
+    }
+
     // MARK: Countdown
 
     private func runCountdown(
         circle: Circle,
         user: SignedInUser,
-        modelContext: ModelContext,
-        syncEngine: SyncEngine
+        modelContext: ModelContext
     ) async {
         hapticGenerator = UIImpactFeedbackGenerator(style: .heavy)
         hapticGenerator?.prepare()
@@ -131,7 +160,7 @@ final class SOSCenter {
         }
 
         if Task.isCancelled { return }
-        await fire(circle: circle, user: user, modelContext: modelContext, syncEngine: syncEngine)
+        await fire(circle: circle, user: user, modelContext: modelContext)
     }
 
     private func triggerHaptic(secondsRemaining: Int) {
@@ -145,8 +174,7 @@ final class SOSCenter {
     private func fire(
         circle: Circle,
         user: SignedInUser,
-        modelContext: ModelContext,
-        syncEngine: SyncEngine
+        modelContext: ModelContext
     ) async {
         let location = await locationProvider.requestFix()
         let event = SOSEvent(
@@ -162,15 +190,83 @@ final class SOSCenter {
         modelContext.insert(event)
         do {
             try modelContext.save()
-            syncEngine.enqueueSOSEventCreate(event)
         } catch {
             let described = String(describing: error)
             AppLogger.sos.error("Failed to persist SOSEvent: \(described, privacy: .public)")
         }
 
+        // Capture value types before leaving the MainActor: SwiftData models
+        // aren't Sendable, so the backend post works off plain copies.
+        let eventID = event.id
+        let circleID = circle.id
+        let latitude = event.latitude
+        let longitude = event.longitude
+        let accuracyMeters = event.locationAccuracyMeters
+        submitTask = Task { [weak self] in
+            await self?.postTrigger(
+                eventID: eventID,
+                circleID: circleID,
+                latitude: latitude,
+                longitude: longitude,
+                accuracyMeters: accuracyMeters
+            )
+        }
+
         await postLocalAlert(event: event, triggeredBy: user)
         state = .fired(eventID: event.id)
         AppLogger.sos.info("SOS fired event=\(event.id.uuidString, privacy: .public)")
+    }
+
+    /// Posts the fired event to `/v1/circles/:circleId/sos`, which records the
+    /// backend-of-record row and fans the alert out to the rest of the Circle
+    /// via APNs. Retries with backoff on transport failure; the client event
+    /// id keeps the call idempotent so a replay never double-pages.
+    private func postTrigger(
+        eventID: UUID,
+        circleID: UUID,
+        latitude: Double?,
+        longitude: Double?,
+        accuracyMeters: Double?
+    ) async {
+        let request = TriggerSOSRequest(
+            eventId: eventID,
+            locationLat: latitude,
+            locationLng: longitude,
+            locationAccuracyM: accuracyMeters
+        )
+        let path = "/v1/circles/\(circleID.uuidString)/sos"
+        for attempt in 1 ... Self.maxSubmitAttempts {
+            if Task.isCancelled { return }
+            do {
+                try await apiClient.sendNoResponse(method: .post, path: path, body: request)
+                AppLogger.sos.info("SOS posted to backend event=\(eventID.uuidString, privacy: .public)")
+                return
+            } catch {
+                let described = String(describing: error)
+                AppLogger.sos.error(
+                    "SOS backend post attempt \(attempt, privacy: .public) failed: \(described, privacy: .public)"
+                )
+                if attempt < Self.maxSubmitAttempts {
+                    try? await Task.sleep(for: .seconds(attempt * 2))
+                }
+            }
+        }
+    }
+
+    private func notifyBackendResolution(eventID: UUID) {
+        Task { [apiClient] in
+            do {
+                try await apiClient.sendNoResponse(
+                    method: .post,
+                    path: "/v1/sos/\(eventID.uuidString)/cancel"
+                )
+            } catch {
+                let described = String(describing: error)
+                AppLogger.sos.notice(
+                    "SOS backend resolution not recorded event=\(eventID.uuidString, privacy: .public): \(described, privacy: .public)"
+                )
+            }
+        }
     }
 
     private func postLocalAlert(event: SOSEvent, triggeredBy user: SignedInUser) async {
@@ -195,4 +291,15 @@ final class SOSCenter {
             AppLogger.sos.error("Local SOS alert failed: \(described, privacy: .public)")
         }
     }
+}
+
+// MARK: - TriggerSOSRequest
+
+/// Body for `POST /v1/circles/:circleId/sos`. `eventId` matches the local
+/// `SOSEvent.id` so the backend trigger is idempotent across retries.
+nonisolated private struct TriggerSOSRequest: Encodable, Sendable {
+    let eventId: UUID
+    let locationLat: Double?
+    let locationLng: Double?
+    let locationAccuracyM: Double?
 }

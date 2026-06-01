@@ -20,12 +20,17 @@ export async function sosRoutes(app: FastifyInstance): Promise<void> {
       );
       const notified = members.rows.map((r) => r.user_id);
 
+      // COALESCE lets the server mint the id when the client omits one; a
+      // supplied eventId hits ON CONFLICT DO NOTHING on retry, so a duplicate
+      // fire returns no row and we skip the (already-sent) push.
       const result = await client.query<{ id: string }>(
         `INSERT INTO sos_events (
-            circle_id, triggered_by, location_lat, location_lng, location_accuracy_m, notified_user_ids
-         ) VALUES ($1, $2, $3, $4, $5, $6::uuid[])
+            id, circle_id, triggered_by, location_lat, location_lng, location_accuracy_m, notified_user_ids
+         ) VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7::uuid[])
+         ON CONFLICT (id) DO NOTHING
          RETURNING id`,
         [
+          body.eventId ?? null,
           circleId,
           userId,
           body.locationLat ?? null,
@@ -34,9 +39,14 @@ export async function sosRoutes(app: FastifyInstance): Promise<void> {
           notified,
         ],
       );
-      return { id: result.rows[0]!.id, notified };
+      const inserted = result.rows[0] ?? null;
+      return {
+        id: inserted?.id ?? body.eventId!,
+        notified,
+        created: inserted !== null,
+      };
     });
-    if (row.notified.length > 0) {
+    if (row.created && row.notified.length > 0) {
       await queues.push.add('sos', {
         userIds: row.notified,
         circleId,
@@ -50,7 +60,7 @@ export async function sosRoutes(app: FastifyInstance): Promise<void> {
         payload: { sosId: row.id, circleId },
       });
     }
-    reply.status(201).send(row);
+    reply.status(row.created ? 201 : 200).send({ id: row.id, notified: row.notified });
   });
 
   app.post('/v1/sos/:id/cancel', async (req, reply) => {

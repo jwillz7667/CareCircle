@@ -17,7 +17,6 @@ struct SOSCountdownView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(SyncEngine.self) private var syncEngine
 
     var body: some View {
         ZStack {
@@ -116,8 +115,7 @@ struct SOSCountdownView: View {
                 try await center.arm(
                     in: circle,
                     triggeredBy: user,
-                    modelContext: modelContext,
-                    syncEngine: syncEngine
+                    modelContext: modelContext
                 )
             } catch {
                 AppLogger.sos.error(

@@ -3,6 +3,7 @@
  * GET lists events DESC.
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import pg from 'pg';
 import { closeTestApp, getTestApp } from './helpers/app.js';
@@ -88,6 +89,35 @@ describe('SOS', () => {
     expect(body.events).toHaveLength(1);
     expect(body.events[0]!.id).toBe(sosId);
     expect(body.events[0]!.canceledAt).not.toBeNull();
+  });
+
+  it('retriggering with the same eventId is idempotent', async () => {
+    const eventId = randomUUID();
+    const first = await app.inject({
+      method: 'POST',
+      url: `/v1/circles/${circle.id}/sos`,
+      headers: bearer(ownerToken),
+      payload: { eventId, locationLat: 44.95, locationLng: -93.09 },
+    });
+    expect(first.statusCode).toBe(201);
+    expect(JSON.parse(first.body).id).toBe(eventId);
+
+    // Replay (e.g. a network retry): the row already exists, so the route
+    // no-ops the insert, returns 200, and skips re-paging the Circle.
+    const replay = await app.inject({
+      method: 'POST',
+      url: `/v1/circles/${circle.id}/sos`,
+      headers: bearer(ownerToken),
+      payload: { eventId, locationLat: 44.95, locationLng: -93.09 },
+    });
+    expect(replay.statusCode).toBe(200);
+    expect(JSON.parse(replay.body).id).toBe(eventId);
+
+    const count = await pool.query<{ n: string }>(
+      `SELECT COUNT(*)::text AS n FROM sos_events WHERE id = $1`,
+      [eventId],
+    );
+    expect(count.rows[0]!.n).toBe('1');
   });
 
   it('triggering with no other members leaves notified empty (and skips queue)', async () => {

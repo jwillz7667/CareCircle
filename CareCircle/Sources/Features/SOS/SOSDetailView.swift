@@ -1,5 +1,4 @@
 import MapKit
-import OSLog
 import SwiftData
 import SwiftUI
 
@@ -15,6 +14,7 @@ struct SOSDetailView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
+    @Environment(SOSCenter.self) private var sosCenter
 
     @State private var notesDraft = ""
     @State private var cameraPosition: MapCameraPosition = .automatic
@@ -185,16 +185,12 @@ struct SOSDetailView: View {
 
     private func markResolved() {
         let trimmed = notesDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        event.resolutionNotes = trimmed.isEmpty ? nil : trimmed
-        event.resolvedAt = .now
-        event.resolvedByAppleUserID = viewerAppleUserID
-        do {
-            try modelContext.save()
-        } catch {
-            AppLogger.sos.error(
-                "Failed to save resolution: \(error.localizedDescription, privacy: .public)"
-            )
-        }
+        sosCenter.resolve(
+            event,
+            by: viewerAppleUserID,
+            notes: trimmed.isEmpty ? nil : trimmed,
+            in: modelContext
+        )
     }
 }
 
