@@ -11,12 +11,25 @@ import {
 import { requireMembership } from '../lib/membership.js';
 import { availableInviteSlots } from '../lib/subscriptions.js';
 
+// Ambiguity-free alphabet (no I/L/O/0/1). 31 symbols ⇒ log2(31) ≈ 4.95 bits
+// each, so 26 symbols ⇒ ~128 bits — unguessable even though the accept-by-code
+// endpoint is reachable unauthenticated-by-code. Rejection sampling discards
+// bytes ≥ 248 (the largest multiple of 31 below 256) so every symbol is
+// uniform; the old `byte % 31` over-weighted the first eight symbols.
+const INVITE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const INVITE_CODE_LENGTH = 26;
+const INVITE_REJECTION_CEILING = 256 - (256 % INVITE_ALPHABET.length);
+
 function generateCode(): string {
-  const buf = randomBytes(8);
-  const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   let out = '';
-  for (let i = 0; i < 8; i++) {
-    out += alpha[buf[i]! % alpha.length];
+  while (out.length < INVITE_CODE_LENGTH) {
+    const bytes = randomBytes(INVITE_CODE_LENGTH);
+    for (let i = 0; i < bytes.length && out.length < INVITE_CODE_LENGTH; i++) {
+      const b = bytes[i]!;
+      if (b < INVITE_REJECTION_CEILING) {
+        out += INVITE_ALPHABET[b % INVITE_ALPHABET.length];
+      }
+    }
   }
   return out;
 }

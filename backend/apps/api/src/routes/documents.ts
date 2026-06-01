@@ -11,6 +11,27 @@ import { cipherFor } from '../lib/encrypt.js';
 import { requireMembership } from '../lib/membership.js';
 import { requireEntitlement } from '../lib/subscriptions.js';
 
+/**
+ * Reduce a client-supplied filename to a safe key suffix. The object key is
+ * built from a server-controlled prefix (`circleId/date/random-`) followed by
+ * this suffix; without sanitization a name like `../other/x` or one with NUL /
+ * control bytes would let the client steer the stored path or smuggle control
+ * characters into S3/MinIO keys and Content-Disposition headers. Keep only the
+ * basename, allowlist printable filename characters, drop leading dots so the
+ * suffix can never become a `.`/`..` segment, and cap the length.
+ */
+function sanitizeFilename(name: string | undefined): string {
+  if (!name) {
+    return 'object';
+  }
+  const base = name.split(/[\\/]/).pop() ?? 'object';
+  const cleaned = base
+    .replace(/[^A-Za-z0-9._-]/g, '_')
+    .replace(/^\.+/, '')
+    .slice(0, 128);
+  return cleaned.length > 0 ? cleaned : 'object';
+}
+
 export async function documentRoutes(app: FastifyInstance): Promise<void> {
   const { pool, storage, circleKeys } = app.ctx;
 
@@ -21,7 +42,7 @@ export async function documentRoutes(app: FastifyInstance): Promise<void> {
     await requireEntitlement(pool, circleId);
     const body = uploadUrlSchema.parse(req.body);
 
-    const objectKey = `${circleId}/${new Date().toISOString().slice(0, 10)}/${randomBytes(12).toString('hex')}-${body.filename ?? 'object'}`;
+    const objectKey = `${circleId}/${new Date().toISOString().slice(0, 10)}/${randomBytes(12).toString('hex')}-${sanitizeFilename(body.filename)}`;
     const url = await storage.presignPut(body.bucket, objectKey, body.contentType);
     reply.send({ bucket: body.bucket, objectKey, url, expiresInSeconds: 300 });
   });
