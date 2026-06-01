@@ -173,17 +173,39 @@ nonisolated struct CreateVitalPayload: Codable, Sendable, Equatable {
 
 // MARK: - Sync wire format
 
+/// Lifecycle of one op as reported by the backend. The worker drains
+/// `pending_operations` asynchronously, so a freshly accepted op is
+/// `pending` until it lands in its domain table (`applied`) or is rejected
+/// for good (`failed`). `unknown` means the backend has no record of the op,
+/// so the client re-submits it.
+nonisolated enum SyncOpStatus: String, Decodable, Sendable {
+    case pending
+    case applied
+    case failed
+    case unknown
+}
+
+/// One op's server-side state. Shared by the batch-submit and status-poll
+/// responses, which return the same shape. `error` is present only when
+/// `status == .failed`.
+nonisolated struct SyncOpState: Decodable, Sendable, Equatable {
+    let clientOpId: UUID
+    let status: SyncOpStatus
+    let error: String?
+}
+
 /// `POST /v1/sync/batch` response envelope.
 nonisolated struct SyncBatchResponse: Decodable, Sendable {
-    let acks: [Ack]
+    let acks: [SyncOpState]
+}
 
-    nonisolated struct Ack: Decodable, Sendable, Equatable {
-        let clientOpId: UUID
-        let status: Status
+/// `POST /v1/sync/status` request envelope — confirms ops already submitted
+/// in a prior drain without re-sending their payloads.
+nonisolated struct SyncStatusRequest: Encodable, Sendable {
+    let clientOpIds: [String]
+}
 
-        nonisolated enum Status: String, Decodable, Sendable {
-            case queued
-            case duplicate
-        }
-    }
+/// `POST /v1/sync/status` response envelope.
+nonisolated struct SyncStatusResponse: Decodable, Sendable {
+    let statuses: [SyncOpState]
 }

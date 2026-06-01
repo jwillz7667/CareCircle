@@ -90,6 +90,9 @@ importers:
       '@carecircle/migrator':
         specifier: workspace:*
         version: link:../migrator
+      '@carecircle/worker':
+        specifier: workspace:*
+        version: link:../worker
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.19

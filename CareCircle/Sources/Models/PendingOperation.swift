@@ -17,6 +17,11 @@ final class PendingOperation {
     var lastAttemptAt: Date?
     var attemptCount = 0
     var lastErrorMessage: String?
+    /// Set once the backend has accepted the op for asynchronous projection.
+    /// `nil` means the op has never been POSTed, so a drain submits it via
+    /// `/v1/sync/batch`; non-`nil` means a drain only polls `/v1/sync/status`
+    /// until the op is `applied` (dropped) or `failed` (logged and dropped).
+    var submittedAt: Date?
 
     init(
         clientOpId: UUID = UUID(),

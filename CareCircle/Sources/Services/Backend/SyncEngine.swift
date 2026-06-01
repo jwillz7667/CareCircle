@@ -303,10 +303,13 @@ final class SyncEngine {
     }
 
     private enum ChunkOutcome {
-        case sent
+        case progressed
         case deferred(String)
         case failed(String)
     }
+
+    /// `POST /v1/sync/status` accepts up to 500 ids; stay well under that.
+    private static let statusChunkSize = 200
 
     private func drainOnce() async {
         guard await apiClient.tokenStore.currentTokens() != nil else {
@@ -315,8 +318,7 @@ final class SyncEngine {
         }
 
         let context = modelContainer.mainContext
-        let pending = fetchPendingOperations(context: context)
-        guard let pending else { return }
+        guard let pending = fetchPendingOperations(context: context) else { return }
 
         guard !pending.isEmpty else {
             status = .idle
@@ -326,12 +328,14 @@ final class SyncEngine {
         }
 
         status = .draining
-        var sentAny = false
+        var didProgress = false
 
-        for chunk in pending.chunked(into: Self.batchChunkSize) {
-            switch await sendChunk(chunk, context: context) {
-            case .sent:
-                sentAny = true
+        // Phase 1 — submit ops the backend has never seen.
+        let unsubmitted = pending.filter { $0.submittedAt == nil }
+        for chunk in unsubmitted.chunked(into: Self.batchChunkSize) {
+            switch await submitChunk(chunk, context: context) {
+            case .progressed:
+                didProgress = true
             case let .deferred(message):
                 status = .offline
                 lastError = message
@@ -343,7 +347,25 @@ final class SyncEngine {
             }
         }
 
-        if sentAny {
+        // Phase 2 — confirm ops submitted in a prior pass. The projector runs
+        // asynchronously, so these resolve on a later drain, not this one.
+        let awaitingConfirmation = pending.filter { $0.submittedAt != nil }
+        for chunk in awaitingConfirmation.chunked(into: Self.statusChunkSize) {
+            switch await confirmChunk(chunk, context: context) {
+            case .progressed:
+                didProgress = true
+            case let .deferred(message):
+                status = .offline
+                lastError = message
+                return
+            case let .failed(message):
+                status = .error(message)
+                lastError = message
+                return
+            }
+        }
+
+        if didProgress {
             lastSyncAt = .now
         }
         lastError = nil
@@ -365,7 +387,11 @@ final class SyncEngine {
         }
     }
 
-    private func sendChunk(
+    /// Phase 1: POSTs never-submitted ops to `/v1/sync/batch`. The response
+    /// reports each op's current state, which is normally `pending` (the
+    /// projector has not run yet). Terminal states are reaped immediately;
+    /// `pending` ops are stamped `submittedAt` so the next drain only polls.
+    private func submitChunk(
         _ chunk: [PendingOperation],
         context: ModelContext
     ) async
@@ -387,22 +413,90 @@ final class SyncEngine {
                 path: "/v1/sync/batch",
                 body: bodyData
             )
-            let acked = Set(response.acks.map(\.clientOpId))
-            for op in chunk where acked.contains(op.clientOpId) {
-                context.delete(op)
+            let states = indexByClientOpId(response.acks)
+            let submittedAt = Date.now
+            for op in chunk {
+                apply(states[op.clientOpId], to: op, submittedAt: submittedAt, context: context)
             }
             try context.save()
             AppLogger.sync.info(
-                "Sync batch acked \(response.acks.count, privacy: .public) ops."
+                "Sync batch submitted \(response.acks.count, privacy: .public) ops."
             )
-            return .sent
+            return .progressed
         } catch let apiError as APIError {
             return handleAPIFailure(apiError, chunk: chunk, context: context)
         } catch {
             AppLogger.sync.error(
-                "Save after sync ack failed: \(String(describing: error), privacy: .public)"
+                "Save after sync submit failed: \(String(describing: error), privacy: .public)"
             )
             return .failed(error.localizedDescription)
+        }
+    }
+
+    /// Phase 2: polls `/v1/sync/status` for ops submitted in a prior pass and
+    /// reaps the ones that have since been applied or permanently rejected.
+    private func confirmChunk(
+        _ chunk: [PendingOperation],
+        context: ModelContext
+    ) async
+        -> ChunkOutcome
+    {
+        let request = SyncStatusRequest(
+            clientOpIds: chunk.map { $0.clientOpId.uuidString.lowercased() }
+        )
+        do {
+            let response: SyncStatusResponse = try await apiClient.send(
+                method: .post,
+                path: "/v1/sync/status",
+                body: request
+            )
+            let states = indexByClientOpId(response.statuses)
+            for op in chunk {
+                apply(states[op.clientOpId], to: op, submittedAt: op.submittedAt, context: context)
+            }
+            try context.save()
+            return .progressed
+        } catch let apiError as APIError {
+            return handleAPIFailure(apiError, chunk: chunk, context: context)
+        } catch {
+            AppLogger.sync.error(
+                "Save after sync status poll failed: \(String(describing: error), privacy: .public)"
+            )
+            return .failed(error.localizedDescription)
+        }
+    }
+
+    private func indexByClientOpId(_ states: [SyncOpState]) -> [UUID: SyncOpState] {
+        Dictionary(states.map { ($0.clientOpId, $0) }, uniquingKeysWith: { _, last in last })
+    }
+
+    /// Reconciles one op against the backend's reported state. `applied` and
+    /// `failed` are terminal: the local row is dropped. A rejected op is only
+    /// logged — SwiftData/CloudKit remain the on-device source of truth, so a
+    /// bad backend mirror is not user-facing. `pending` retains the row and
+    /// records that it is awaiting projection. A missing state re-arms the op
+    /// for submission on the next drain.
+    private func apply(
+        _ state: SyncOpState?,
+        to op: PendingOperation,
+        submittedAt: Date?,
+        context: ModelContext
+    ) {
+        switch state?.status {
+        case .applied:
+            context.delete(op)
+        case .failed:
+            let reason = state?.error ?? "unknown error"
+            AppLogger.sync.error(
+                "Backend rejected op \(op.clientOpId.uuidString, privacy: .public) [\(op.operationType, privacy: .public)]: \(reason, privacy: .public)"
+            )
+            context.delete(op)
+        case .pending:
+            op.submittedAt = submittedAt
+        case .unknown, nil:
+            op.submittedAt = nil
+            op.attemptCount += 1
+            op.lastAttemptAt = .now
         }
     }
 

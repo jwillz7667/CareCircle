@@ -10,11 +10,13 @@ import {
   type OpenFdaJobData,
   type PdfJobData,
   type PushJobData,
+  type SyncJobData,
 } from './queues.js';
 import { runPushJob } from './jobs/push.js';
 import { runOpenFdaJob } from './jobs/openFda.js';
 import { runPdfJob } from './jobs/pdf.js';
 import { runDigestJob } from './jobs/digest.js';
+import { runSyncProjector } from './jobs/syncProjector.js';
 import { createMinioClient } from './services/minio.js';
 
 async function main(): Promise<void> {
@@ -49,8 +51,13 @@ async function main(): Promise<void> {
       runDigestJob(job.data, { pool, logger, pushQueue: queues.push }),
     { connection, concurrency: 4 },
   );
+  const syncWorker = new Worker<SyncJobData>(
+    QUEUE_NAMES.sync,
+    async (job: Job<SyncJobData>) => runSyncProjector(job.data, { pool, config, logger }),
+    { connection, concurrency: 4 },
+  );
 
-  const all: Worker[] = [pushWorker, openFdaWorker, pdfWorker, digestWorker];
+  const all: Worker[] = [pushWorker, openFdaWorker, pdfWorker, digestWorker, syncWorker];
   for (const worker of all) {
     worker.on('failed', (job, err) => {
       logger.error({ jobId: job?.id, name: job?.name, err }, 'job failed');

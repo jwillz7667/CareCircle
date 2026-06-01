@@ -258,6 +258,17 @@ export const syncBatchSchema = z.object({
     .max(100),
 });
 
+export const syncStatusSchema = z.object({
+  clientOpIds: z.array(uuidSchema).min(1).max(500),
+});
+
+// 'pending'  — accepted, projection not yet attempted
+// 'applied'  — projected into its domain table
+// 'failed'   — permanently rejected (bad payload / constraint); do not retry
+// 'unknown'  — backend has no record; the client should resend
+export const syncOpStatusSchema = z.enum(['pending', 'applied', 'failed', 'unknown']);
+export type SyncOpStatusT = z.infer<typeof syncOpStatusSchema>;
+
 export const acceptInvitationSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
 });

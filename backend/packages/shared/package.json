@@ -10,6 +10,7 @@
     "./errors": "./src/errors.ts",
     "./logger": "./src/logger.ts",
     "./crypto": "./src/crypto.ts",
+    "./cipher": "./src/cipher.ts",
     "./zod": "./src/zod.ts",
     "./hcbs": "./src/hcbs.ts"
   },

@@ -6,6 +6,7 @@ export const QUEUE_NAMES = {
   openFda: 'cc.openfda',
   pdf: 'cc.pdf',
   digest: 'cc.digest',
+  sync: 'cc.sync',
 } as const;
 
 export type PushJobData = {
@@ -39,11 +40,16 @@ export type DigestJobData = {
   userId: string;
 };
 
+export type SyncJobData = {
+  userId: string;
+};
+
 export interface QueueClient {
   push: Queue<PushJobData>;
   openFda: Queue<OpenFdaJobData>;
   pdf: Queue<PdfJobData>;
   digest: Queue<DigestJobData>;
+  sync: Queue<SyncJobData>;
   close(): Promise<void>;
 }
 
@@ -56,13 +62,21 @@ export function createQueueClient(config: Config): QueueClient {
   const openFda = new Queue<OpenFdaJobData>(QUEUE_NAMES.openFda, { connection });
   const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection });
   const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection });
+  const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection });
   return {
     push,
     openFda,
     pdf,
     digest,
+    sync,
     async close() {
-      await Promise.all([push.close(), openFda.close(), pdf.close(), digest.close()]);
+      await Promise.all([
+        push.close(),
+        openFda.close(),
+        pdf.close(),
+        digest.close(),
+        sync.close(),
+      ]);
     },
   };
 }
