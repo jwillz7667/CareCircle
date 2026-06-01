@@ -17,6 +17,7 @@ export const QUEUE_NAMES = {
   pdf: 'cc.pdf',
   digest: 'cc.digest',
   sync: 'cc.sync',
+  account: 'cc.account',
 } as const;
 
 export type PushJobData = {
@@ -54,12 +55,18 @@ export type SyncJobData = {
   userId: string;
 };
 
+/** Cascading teardown after a user soft-deletes their account. */
+export type AccountDeletionJobData = {
+  userId: string;
+};
+
 export interface QueueClient {
   push: Queue<PushJobData>;
   openFda: Queue<OpenFdaJobData>;
   pdf: Queue<PdfJobData>;
   digest: Queue<DigestJobData>;
   sync: Queue<SyncJobData>;
+  account: Queue<AccountDeletionJobData>;
   close(): Promise<void>;
 }
 
@@ -74,12 +81,17 @@ export function createQueueClient(config: Config): QueueClient {
   const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection, defaultJobOptions });
   const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection, defaultJobOptions });
   const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection, defaultJobOptions });
+  const account = new Queue<AccountDeletionJobData>(QUEUE_NAMES.account, {
+    connection,
+    defaultJobOptions,
+  });
   return {
     push,
     openFda,
     pdf,
     digest,
     sync,
+    account,
     async close() {
       await Promise.all([
         push.close(),
@@ -87,6 +99,7 @@ export function createQueueClient(config: Config): QueueClient {
         pdf.close(),
         digest.close(),
         sync.close(),
+        account.close(),
       ]);
     },
   };

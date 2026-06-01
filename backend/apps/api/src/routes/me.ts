@@ -1,9 +1,11 @@
 import type { FastifyInstance } from 'fastify';
+import archiver from 'archiver';
 import { withRls } from '@carecircle/db';
 import { registerDeviceSchema, updateMeSchema, notFound } from '@carecircle/shared';
+import { collectUserExportEntries } from '../lib/dataExport.js';
 
 export async function meRoutes(app: FastifyInstance): Promise<void> {
-  const { pool, tokens } = app.ctx;
+  const { pool, tokens, circleKeys, queues } = app.ctx;
 
   app.get('/v1/me', async (req, reply) => {
     const userId = await app.requireUser(req);
@@ -56,7 +58,33 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
       await client.query(`UPDATE users SET deleted_at = NOW() WHERE id = $1`, [userId]);
     });
     await tokens.revokeAllForUser(userId, pool);
+    // The account is already inaccessible (soft-deleted + tokens revoked); the
+    // cascading teardown runs out-of-band. A failed enqueue is logged but must
+    // not fail the request — the job is keyed so a retry coalesces.
+    try {
+      await queues.account.add('delete', { userId }, { jobId: `account-delete:${userId}` });
+    } catch (err) {
+      app.log.error({ err, userId }, 'failed to enqueue account deletion cascade');
+    }
     reply.status(204).send();
+  });
+
+  app.post('/v1/me/export', async (req, reply) => {
+    const userId = await app.requireUser(req);
+    // Gather and decrypt everything up front so a read failure surfaces as a
+    // clean 500 before any archive bytes are written to the response.
+    const entries = await collectUserExportEntries({ pool, circleKeys, userId });
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('warning', (err) => {
+      app.log.warn({ err, userId }, 'export archive warning');
+    });
+    for (const entry of entries) {
+      archive.append(entry.content, { name: entry.name });
+    }
+    void archive.finalize();
+    void reply.header('content-type', 'application/zip');
+    void reply.header('content-disposition', 'attachment; filename="carecircle-export.zip"');
+    return reply.send(archive);
   });
 
   app.post('/v1/me/devices', async (req, reply) => {

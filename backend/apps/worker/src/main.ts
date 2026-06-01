@@ -6,6 +6,7 @@ import {
   QUEUE_NAMES,
   buildConnection,
   createQueues,
+  type AccountDeletionJobData,
   type DigestJobData,
   type OpenFdaJobData,
   type PdfJobData,
@@ -17,6 +18,7 @@ import { runOpenFdaJob } from './jobs/openFda.js';
 import { runPdfJob } from './jobs/pdf.js';
 import { runDigestJob } from './jobs/digest.js';
 import { runSyncProjector } from './jobs/syncProjector.js';
+import { runAccountDeletionJob } from './jobs/accountDeletion.js';
 import { createMinioClient } from './services/minio.js';
 
 async function main(): Promise<void> {
@@ -56,8 +58,21 @@ async function main(): Promise<void> {
     async (job: Job<SyncJobData>) => runSyncProjector(job.data, { pool, config, logger }),
     { connection, concurrency: 4 },
   );
+  const accountWorker = new Worker<AccountDeletionJobData>(
+    QUEUE_NAMES.account,
+    async (job: Job<AccountDeletionJobData>) =>
+      runAccountDeletionJob(job.data, { pool, config, logger, minio }),
+    { connection, concurrency: 2 },
+  );
 
-  const all: Worker[] = [pushWorker, openFdaWorker, pdfWorker, digestWorker, syncWorker];
+  const all: Worker[] = [
+    pushWorker,
+    openFdaWorker,
+    pdfWorker,
+    digestWorker,
+    syncWorker,
+    accountWorker,
+  ];
   for (const worker of all) {
     worker.on('failed', (job, err) => {
       logger.error({ jobId: job?.id, name: job?.name, err }, 'job failed');

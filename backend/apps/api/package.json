@@ -17,6 +17,7 @@
     "@fastify/helmet": "^12.0.1",
     "@fastify/rate-limit": "^10.2.1",
     "@fastify/websocket": "^11.0.1",
+    "archiver": "^8.0.0",
     "argon2": "^0.44.0",
     "bullmq": "^5.34.0",
     "fastify": "^5.1.0",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@carecircle/migrator": "workspace:*",
     "@carecircle/worker": "workspace:*",
+    "@types/archiver": "^7.0.0",
     "@types/node": "^22.10.5",
     "@types/pg": "^8.11.10",
     "typescript": "^5.7.2",

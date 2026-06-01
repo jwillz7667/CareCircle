@@ -15,6 +15,7 @@ export const QUEUE_NAMES = {
   pdf: 'cc.pdf',
   digest: 'cc.digest',
   sync: 'cc.sync',
+  account: 'cc.account',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -59,6 +60,11 @@ export type SyncJobData = {
   userId: string;
 };
 
+/** Cascading teardown after a user soft-deletes their account. */
+export type AccountDeletionJobData = {
+  userId: string;
+};
+
 export function buildConnection(redisUrl: string): ConnectionOptions {
   return { url: redisUrl, maxRetriesPerRequest: null };
 }
@@ -69,6 +75,7 @@ export function createQueues(connection: ConnectionOptions): {
   pdf: Queue<PdfJobData>;
   digest: Queue<DigestJobData>;
   sync: Queue<SyncJobData>;
+  account: Queue<AccountDeletionJobData>;
   closeAll: () => Promise<void>;
 } {
   const defaultJobOptions = DEFAULT_JOB_OPTIONS;
@@ -77,12 +84,17 @@ export function createQueues(connection: ConnectionOptions): {
   const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection, defaultJobOptions });
   const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection, defaultJobOptions });
   const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection, defaultJobOptions });
+  const account = new Queue<AccountDeletionJobData>(QUEUE_NAMES.account, {
+    connection,
+    defaultJobOptions,
+  });
   return {
     push,
     openFda,
     pdf,
     digest,
     sync,
+    account,
     async closeAll() {
       await Promise.all([
         push.close(),
@@ -90,6 +102,7 @@ export function createQueues(connection: ConnectionOptions): {
         pdf.close(),
         digest.close(),
         sync.close(),
+        account.close(),
       ]);
     },
   };

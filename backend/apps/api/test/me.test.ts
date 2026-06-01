@@ -87,6 +87,14 @@ describe('Me routes', () => {
     expect(del.statusCode).toBe(204);
   });
 
+  it('POST /v1/me/export streams a zip archive', async () => {
+    const res = await app.inject({ method: 'POST', url: '/v1/me/export', headers: bearer(access) });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('application/zip');
+    // ZIP local-file-header magic — confirms the archive actually streamed.
+    expect(res.rawPayload.subarray(0, 2).toString('latin1')).toBe('PK');
+  });
+
   it('DELETE /v1/me soft-deletes the account and revokes tokens', async () => {
     const del = await app.inject({ method: 'DELETE', url: '/v1/me', headers: bearer(access) });
     expect(del.statusCode).toBe(204);
