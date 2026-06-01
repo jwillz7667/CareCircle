@@ -13,6 +13,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import pg from 'pg';
 import { encryptColumn } from '@carecircle/shared';
+import { withRls } from '@carecircle/db';
 import { closeTestApp, getTestApp } from '../helpers/app.js';
 import {
   addMember,
@@ -296,6 +297,31 @@ describe('RLS isolation', () => {
       [alice.id, bobCircle.id],
     );
     expect(Number(result.rows[0]!.n)).toBe(0);
+  });
+
+  it('Audit log: a circle-less row is visible only to its actor', async () => {
+    // A circle-less audit row (e.g. an auth event) written by Bob.
+    await pool.query(
+      `INSERT INTO audit_log (actor_id, circle_id, action, table_name, row_id)
+       VALUES ($1, NULL, 'LOGIN', 'users', $1)`,
+      [bob.id],
+    );
+
+    const asAlice = await withRls(pool, { userId: alice.id, role: 'app_user' }, (client) =>
+      client.query<{ n: string }>(
+        `SELECT COUNT(*)::TEXT AS n FROM audit_log WHERE circle_id IS NULL AND actor_id = $1`,
+        [bob.id],
+      ),
+    );
+    expect(Number(asAlice.rows[0]!.n)).toBe(0);
+
+    const asBob = await withRls(pool, { userId: bob.id, role: 'app_user' }, (client) =>
+      client.query<{ n: string }>(
+        `SELECT COUNT(*)::TEXT AS n FROM audit_log WHERE circle_id IS NULL AND actor_id = $1`,
+        [bob.id],
+      ),
+    );
+    expect(Number(asBob.rows[0]!.n)).toBe(1);
   });
 
   it("Service role still bypasses RLS (sanity check for internal jobs)", async () => {
