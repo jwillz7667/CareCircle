@@ -129,14 +129,19 @@ export async function careMinuteRoutes(app: FastifyInstance): Promise<void> {
       'paid_family',
     ]);
     const body = exportCareMinutesSchema.parse(req.body ?? {});
-    const job = await queues.pdf.add('care_minutes_export', {
-      jobType: 'care_minutes_export',
-      circleId,
-      caregiverUserId: userId,
-      startDate: body.startDate,
-      endDate: body.endDate,
-      fiscalIntermediary: body.fiscalIntermediary,
-    });
+    const job = await queues.pdf.add(
+      'care_minutes_export',
+      {
+        jobType: 'care_minutes_export',
+        circleId,
+        caregiverUserId: userId,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        fiscalIntermediary: body.fiscalIntermediary,
+      },
+      // A double-tapped export for the same closed range coalesces into one job.
+      { jobId: `pdf:${circleId}:${userId}:${body.startDate}:${body.endDate}` },
+    );
     reply.status(202).send({ jobId: job.id });
   });
 }

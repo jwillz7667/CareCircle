@@ -36,15 +36,21 @@ export async function runDigestJob(
     .map((row) => row.headline ?? row.activity_type.replaceAll('_', ' '))
     .slice(0, 3)
     .join(' · ');
-  await pushQueue.add('digest', {
-    userIds: [data.userId],
-    circleId: data.circleId,
-    alert: {
-      title: 'CareCircle daily digest',
-      body: `${recent.length} update${recent.length === 1 ? '' : 's'} in the past day: ${summary}`,
+  const day = new Date().toISOString().slice(0, 10);
+  await pushQueue.add(
+    'digest',
+    {
+      userIds: [data.userId],
+      circleId: data.circleId,
+      alert: {
+        title: 'CareCircle daily digest',
+        body: `${recent.length} update${recent.length === 1 ? '' : 's'} in the past day: ${summary}`,
+      },
+      category: 'cc_digest',
     },
-    category: 'cc_digest',
-  });
+    // One digest per recipient per circle per day, even if the job re-runs.
+    { jobId: `digest:${data.circleId}:${data.userId}:${day}` },
+  );
   logger.info({ circleId: data.circleId, userId: data.userId, recent: recent.length }, 'digest queued');
   return { recentCount: recent.length, queued: true };
 }

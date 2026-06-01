@@ -1,5 +1,15 @@
-import { Queue, type ConnectionOptions } from 'bullmq';
+import { Queue, type ConnectionOptions, type DefaultJobOptions } from 'bullmq';
 import type { Config } from '../config.js';
+
+// Without retries a transient Redis/APNs/OpenFDA blip drops the job silently;
+// without removal policies completed/failed jobs accumulate in Redis forever.
+// Failures are kept a week for triage; successes are trimmed aggressively.
+const DEFAULT_JOB_OPTIONS: DefaultJobOptions = {
+  attempts: 5,
+  backoff: { type: 'exponential', delay: 2_000 },
+  removeOnComplete: { age: 3_600, count: 1_000 },
+  removeOnFail: { age: 7 * 24 * 3_600 },
+};
 
 export const QUEUE_NAMES = {
   push: 'cc.push',
@@ -58,11 +68,12 @@ export function createQueueClient(config: Config): QueueClient {
     url: config.REDIS_URL,
     maxRetriesPerRequest: null,
   };
-  const push = new Queue<PushJobData>(QUEUE_NAMES.push, { connection });
-  const openFda = new Queue<OpenFdaJobData>(QUEUE_NAMES.openFda, { connection });
-  const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection });
-  const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection });
-  const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection });
+  const defaultJobOptions = DEFAULT_JOB_OPTIONS;
+  const push = new Queue<PushJobData>(QUEUE_NAMES.push, { connection, defaultJobOptions });
+  const openFda = new Queue<OpenFdaJobData>(QUEUE_NAMES.openFda, { connection, defaultJobOptions });
+  const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection, defaultJobOptions });
+  const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection, defaultJobOptions });
+  const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection, defaultJobOptions });
   return {
     push,
     openFda,

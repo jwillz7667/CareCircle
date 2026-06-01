@@ -1,4 +1,13 @@
-import { Queue, type ConnectionOptions } from 'bullmq';
+import { Queue, type ConnectionOptions, type DefaultJobOptions } from 'bullmq';
+
+// Mirrors the API-side policy: retry transient failures, keep failures a week
+// for triage, trim successes so Redis doesn't grow unbounded.
+const DEFAULT_JOB_OPTIONS: DefaultJobOptions = {
+  attempts: 5,
+  backoff: { type: 'exponential', delay: 2_000 },
+  removeOnComplete: { age: 3_600, count: 1_000 },
+  removeOnFail: { age: 7 * 24 * 3_600 },
+};
 
 export const QUEUE_NAMES = {
   push: 'cc.push',
@@ -62,11 +71,12 @@ export function createQueues(connection: ConnectionOptions): {
   sync: Queue<SyncJobData>;
   closeAll: () => Promise<void>;
 } {
-  const push = new Queue<PushJobData>(QUEUE_NAMES.push, { connection });
-  const openFda = new Queue<OpenFdaJobData>(QUEUE_NAMES.openFda, { connection });
-  const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection });
-  const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection });
-  const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection });
+  const defaultJobOptions = DEFAULT_JOB_OPTIONS;
+  const push = new Queue<PushJobData>(QUEUE_NAMES.push, { connection, defaultJobOptions });
+  const openFda = new Queue<OpenFdaJobData>(QUEUE_NAMES.openFda, { connection, defaultJobOptions });
+  const pdf = new Queue<PdfJobData>(QUEUE_NAMES.pdf, { connection, defaultJobOptions });
+  const digest = new Queue<DigestJobData>(QUEUE_NAMES.digest, { connection, defaultJobOptions });
+  const sync = new Queue<SyncJobData>(QUEUE_NAMES.sync, { connection, defaultJobOptions });
   return {
     push,
     openFda,

@@ -47,18 +47,22 @@ export async function sosRoutes(app: FastifyInstance): Promise<void> {
       };
     });
     if (row.created && row.notified.length > 0) {
-      await queues.push.add('sos', {
-        userIds: row.notified,
-        circleId,
-        alert: {
-          title: 'SOS triggered',
-          body: 'Tap to view location and call.',
+      await queues.push.add(
+        'sos',
+        {
+          userIds: row.notified,
+          circleId,
+          alert: {
+            title: 'SOS triggered',
+            body: 'Tap to view location and call.',
+          },
+          category: 'cc_sos',
+          threadId: `sos:${circleId}`,
+          critical: true,
+          payload: { sosId: row.id, circleId },
         },
-        category: 'cc_sos',
-        threadId: `sos:${circleId}`,
-        critical: true,
-        payload: { sosId: row.id, circleId },
-      });
+        { jobId: `sos:${row.id}` },
+      );
     }
     reply.status(row.created ? 201 : 200).send({ id: row.id, notified: row.notified });
   });
