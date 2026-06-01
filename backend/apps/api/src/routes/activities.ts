@@ -273,6 +273,8 @@ export async function activityRoutes(app: FastifyInstance): Promise<void> {
   app.get('/v1/activities/:id/comments', async (req, reply) => {
     const userId = await app.requireUser(req);
     const { id } = req.params as { id: string };
+    const query = paginationSchema.parse(req.query);
+    const cursor = parseCursor(query.cursor);
     const data = await withRls(pool, { userId, role: 'app_user' }, async (client) => {
       const activity = await client.query<{ circle_id: string }>(
         `SELECT circle_id FROM activities WHERE id = $1 AND deleted_at IS NULL`,
@@ -282,6 +284,13 @@ export async function activityRoutes(app: FastifyInstance): Promise<void> {
         return null;
       }
       const cipher = await cipherFor(circleKeys, activity.rows[0].circle_id);
+      const params: unknown[] = [id, query.limit + 1];
+      let cursorClause = '';
+      if (cursor) {
+        params.push(cursor.occurredAt, cursor.id);
+        // Comments read oldest-first, so the cursor walks forward in time.
+        cursorClause = `AND (created_at, id) > ($3::timestamptz, $4::uuid)`;
+      }
       const result = await client.query<{
         id: string;
         author_user_id: string;
@@ -291,8 +300,10 @@ export async function activityRoutes(app: FastifyInstance): Promise<void> {
         `SELECT id, author_user_id, content_enc, created_at
          FROM activity_comments
          WHERE activity_id = $1 AND deleted_at IS NULL
-         ORDER BY created_at ASC`,
-        [id],
+           ${cursorClause}
+         ORDER BY created_at ASC, id ASC
+         LIMIT $2`,
+        params,
       );
       return result.rows.map((r) => ({
         id: r.id,
@@ -304,6 +315,11 @@ export async function activityRoutes(app: FastifyInstance): Promise<void> {
     if (!data) {
       throw notFound('Activity not found');
     }
-    reply.send({ comments: data });
+    const limited = data.slice(0, query.limit);
+    const nextCursor =
+      data.length > query.limit
+        ? encodeCursor(limited[limited.length - 1]!.createdAt, limited[limited.length - 1]!.id)
+        : null;
+    reply.send({ comments: limited, nextCursor });
   });
 }
