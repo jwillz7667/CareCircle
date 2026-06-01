@@ -74,11 +74,13 @@ const ConfigSchema = z.object({
   // `STOREKIT_BUNDLE_ID` must match the bundle ID Apple signs into each
   // transaction; we reject any JWS whose bundleId doesn't match.
   // `STOREKIT_ALLOW_SANDBOX` lets us accept Sandbox transactions in
-  // staging/dev — production should set this to false.
+  // staging/dev. Defaults to false (deny by default): a misconfigured
+  // production deploy must reject Sandbox receipts, not grant entitlements
+  // off them. Staging sets STOREKIT_ALLOW_SANDBOX=true explicitly.
   STOREKIT_BUNDLE_ID: z.string().default('Res.CareCircle'),
   STOREKIT_ALLOW_SANDBOX: z
     .union([z.string(), z.boolean()])
-    .default(true)
+    .default(false)
     .transform((v) => v === true || v === 'true'),
   STOREKIT_VERIFIER_MODE: z.enum(['real', 'mock']).default('real'),
   // Used in mock mode to symmetrically sign synthetic JWS so tests can

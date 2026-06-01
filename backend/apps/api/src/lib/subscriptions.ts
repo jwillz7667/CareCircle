@@ -206,6 +206,10 @@ export async function applyTransactionToCircle(
   const status = derivePurchaseStatus(tx, renewal);
   const tier = tierForStatus(status, tx.tier);
   const graceUntil = renewal?.gracePeriodExpiresDate ?? null;
+  // Monotonic ordering key. A client sync is user-current, so its
+  // signedDate advances the circle's `subscription_event_at` and blocks
+  // any later-arriving but older webhook from regressing this state.
+  const eventAt = tx.signedDate ?? tx.purchaseDate;
 
   await withRls(pool, { role: 'app_service' }, async (client) => {
     // Refuse to bind a transaction to a different circle than the one
@@ -233,7 +237,8 @@ export async function applyTransactionToCircle(
              subscription_renews_at              = $6,
              subscription_grace_until            = $7,
              subscription_environment            = $8,
-             trial_used                          = trial_used OR $9
+             trial_used                          = trial_used OR $9,
+             subscription_event_at               = GREATEST(subscription_event_at, $10::timestamptz)
        WHERE id = $1`,
       [
         circleId,
@@ -245,6 +250,7 @@ export async function applyTransactionToCircle(
         graceUntil,
         tx.environment,
         tx.isTrialPeriod,
+        eventAt,
       ],
     );
   });
@@ -275,15 +281,49 @@ export async function applyNotification(
   if (!circleId) return null;
 
   const status = deriveNotificationStatus(ev.notificationType, tx, ev.renewalInfo);
-  if (status === null) {
-    // No-op event (PRICE_INCREASE, etc.) — leave state alone.
-    return fetchCircleSubscription(pool, circleId);
-  }
-  const tier = tierForStatus(status, tx.tier);
-  const graceUntil = ev.renewalInfo?.gracePeriodExpiresDate ?? null;
+  // Monotonic ordering key: Apple's notification signedDate, falling back
+  // to the transaction's signedDate, then purchaseDate.
+  const eventAt = ev.signedDate ?? tx.signedDate ?? tx.purchaseDate;
 
   await withRls(pool, { role: 'app_service' }, async (client) => {
-    await client.query(
+    // Idempotency ledger: Apple delivers a notificationUUID at-least-once
+    // (hours of retries on any non-2xx, plus possible redelivery on 2xx).
+    // A PK conflict means we've already processed it — record nothing new
+    // and skip the apply entirely.
+    const ledger = await client.query<{ notification_uuid: string }>(
+      `INSERT INTO storekit_notifications
+         (notification_uuid, notification_type, subtype, circle_id,
+          original_transaction_id, environment, signed_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+       ON CONFLICT (notification_uuid) DO NOTHING
+       RETURNING notification_uuid`,
+      [
+        ev.notificationUUID,
+        ev.notificationType,
+        ev.subtype ?? null,
+        circleId,
+        tx.originalTransactionId,
+        ev.environment,
+        eventAt,
+      ],
+    );
+    if (ledger.rows.length === 0) {
+      // Duplicate delivery — already processed.
+      return;
+    }
+    if (status === null) {
+      // No-op event type (PRICE_INCREASE, CONSUMPTION_REQUEST, …): the
+      // notification is recorded in the ledger but the circle is untouched.
+      return;
+    }
+
+    const tier = tierForStatus(status, tx.tier);
+    const graceUntil = ev.renewalInfo?.gracePeriodExpiresDate ?? null;
+
+    // Monotonic guard: only apply when this event is at least as new as the
+    // last one applied to the circle. A stale (out-of-order) webhook is
+    // still ledgered for audit but must not regress newer state.
+    const updated = await client.query(
       `UPDATE circles
          SET subscription_tier                   = $2::subscription_tier,
              subscription_status                 = $3::subscription_status,
@@ -292,8 +332,10 @@ export async function applyNotification(
              subscription_renews_at              = $6,
              subscription_grace_until            = $7,
              subscription_environment            = $8,
-             trial_used                          = trial_used OR $9
-       WHERE id = $1`,
+             trial_used                          = trial_used OR $9,
+             subscription_event_at               = $10::timestamptz
+       WHERE id = $1
+         AND (subscription_event_at IS NULL OR subscription_event_at <= $10::timestamptz)`,
       [
         circleId,
         tier,
@@ -304,7 +346,15 @@ export async function applyNotification(
         graceUntil,
         tx.environment,
         tx.isTrialPeriod,
+        eventAt,
       ],
+    );
+
+    await client.query(
+      `UPDATE storekit_notifications
+         SET applied = $2, applied_status = $3::subscription_status
+       WHERE notification_uuid = $1`,
+      [ev.notificationUUID, (updated.rowCount ?? 0) > 0, status],
     );
   });
 

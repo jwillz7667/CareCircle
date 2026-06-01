@@ -160,6 +160,7 @@ export const circles = pgTable(
     subscriptionOriginalTransactionId: text('subscription_original_transaction_id').unique(),
     subscriptionGraceUntil: timestamp('subscription_grace_until', { withTimezone: true }),
     subscriptionEnvironment: text('subscription_environment'),
+    subscriptionEventAt: timestamp('subscription_event_at', { withTimezone: true }),
     trialUsed: boolean('trial_used').notNull().default(false),
     settings: jsonb('settings').notNull().default(sql`'{}'::jsonb`),
     createdAt: createdAt(),
@@ -180,6 +181,28 @@ export const circleKeys = pgTable('circle_keys', {
   createdAt: createdAt(),
   rotatedAt: timestamp('rotated_at', { withTimezone: true }),
 });
+
+// Append-only idempotency ledger for App Store Server Notifications V2.
+// The webhook dedupes on `notificationUuid`; out-of-order deliveries are
+// ledgered but blocked from regressing newer state. See migration 0016.
+export const storekitNotifications = pgTable(
+  'storekit_notifications',
+  {
+    notificationUuid: text('notification_uuid').primaryKey(),
+    notificationType: text('notification_type').notNull(),
+    subtype: text('subtype'),
+    circleId: uuid('circle_id').references(() => circles.id, { onDelete: 'set null' }),
+    originalTransactionId: text('original_transaction_id'),
+    environment: text('environment'),
+    signedDate: timestamp('signed_date', { withTimezone: true }),
+    applied: boolean('applied').notNull().default(false),
+    appliedStatus: subscriptionStatus('applied_status'),
+    receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    circleIdx: index('storekit_notifications_circle_idx').on(t.circleId, t.signedDate),
+  }),
+);
 
 export const careRecipients = pgTable(
   'care_recipients',

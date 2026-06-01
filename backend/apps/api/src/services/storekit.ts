@@ -71,6 +71,8 @@ export type VerifiedTransaction = {
   /** True if the transaction was redeemed against an introductory free trial. */
   isTrialPeriod: boolean;
   appAccountToken?: string;
+  /** When Apple signed this transaction snapshot. Monotonic ordering key. */
+  signedDate?: Date;
 };
 
 export type VerifiedRenewalInfo = {
@@ -108,6 +110,10 @@ export type VerifiedNotification = {
   transaction?: VerifiedTransaction;
   renewalInfo?: VerifiedRenewalInfo;
   environment: Environment;
+  /** When Apple generated the notification. Monotonic ordering key for
+   *  out-of-order webhook deliveries; falls back to the transaction's
+   *  signedDate, then purchaseDate, when absent. */
+  signedDate?: Date;
 };
 
 export interface StoreKitService {
@@ -216,6 +222,7 @@ function mapTransactionPayload(
     isTrialPeriod: payload.offerType === 1 || payload.offerType === '1',
     appAccountToken:
       typeof payload.appAccountToken === 'string' ? payload.appAccountToken : undefined,
+    signedDate: pickOptionalDate(payload, 'signedDate'),
   };
 }
 
@@ -339,6 +346,7 @@ export function createRealStoreKitService(config: Config): StoreKitService {
         transaction,
         renewalInfo,
         environment,
+        signedDate: pickOptionalDate(payload, 'signedDate'),
       };
     },
   };
@@ -411,6 +419,7 @@ export function createMockStoreKitService(config: Config): StoreKitService {
         transaction,
         renewalInfo,
         environment,
+        signedDate: pickOptionalDate(payload, 'signedDate'),
       };
     },
   };
@@ -445,6 +454,7 @@ export async function signMockStoreKitTransaction(
     environment: claims.environment ?? 'Sandbox',
     offerType: claims.isTrialPeriod ? 1 : undefined,
     appAccountToken: claims.appAccountToken,
+    signedDate: claims.signedDate?.getTime() ?? now,
   }).setProtectedHeader({ alg: 'HS256' });
   return builder.sign(secret);
 }
@@ -458,6 +468,7 @@ export async function signMockStoreKitNotification(
     signedTransactionInfo?: string;
     signedRenewalInfo?: string;
     environment?: Environment;
+    signedDate?: Date;
   },
 ): Promise<string> {
   const secret = new TextEncoder().encode(config.STOREKIT_MOCK_SECRET ?? config.JWT_SECRET);
@@ -465,6 +476,7 @@ export async function signMockStoreKitNotification(
     notificationType: notification.notificationType,
     subtype: notification.subtype,
     notificationUUID: notification.notificationUUID,
+    signedDate: notification.signedDate?.getTime() ?? Date.now(),
     data: {
       bundleId: config.STOREKIT_BUNDLE_ID,
       environment: notification.environment ?? 'Sandbox',

@@ -33,6 +33,8 @@ const defaults: Record<string, string> = {
   AUTH_RATE_LIMIT_PER_MIN: '10000',
   APNS_BUNDLE_ID: 'Res.CareCircle',
   APNS_MOCK_MODE: 'true',
+  STOREKIT_VERIFIER_MODE: 'mock',
+  STOREKIT_MOCK_SECRET: 'test-mock-storekit-secret-please-rotate-32',
   INFERENCE_ENABLED: 'false',
   INFERENCE_MAX_PER_HOUR: '10000',
   OPENAI_MODEL: 'gpt-4o-mini',
