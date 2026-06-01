@@ -27,13 +27,18 @@ export async function runOpenFdaJob(
     filters.push(`openfda.product_ndc:${data.ndc}`);
   }
   if (data.brandName) {
-    filters.push(`openfda.brand_name:"${encodeURIComponent(data.brandName)}"`);
+    // Strip embedded quotes so the phrase query can't be broken out of; let
+    // URLSearchParams do the one and only percent-encoding pass below.
+    filters.push(`openfda.brand_name:"${data.brandName.replace(/"/g, '')}"`);
   }
   if (filters.length === 0) {
     throw new Error('openFda job requires rxcui, ndc, or brandName');
   }
   const params = new URLSearchParams();
-  params.set('search', filters.join('+AND+'));
+  // Join with a real " AND ": URLSearchParams encodes the spaces to "+", which
+  // is exactly openFDA's term separator. The previous "+AND+" literal was
+  // re-encoded to "%2B" (a literal plus), corrupting the query.
+  params.set('search', filters.join(' AND '));
   params.set('limit', '1');
   if (config.OPENFDA_API_KEY) {
     params.set('api_key', config.OPENFDA_API_KEY);

@@ -62,6 +62,30 @@ export async function memberRoutes(app: FastifyInstance): Promise<void> {
     const body = updateMemberSchema.parse(req.body);
 
     const result = await withRls(pool, { userId, role: 'app_user' }, async (client) => {
+      const current = await client.query<{ role: string }>(
+        `SELECT role FROM circle_members
+         WHERE id = $1 AND circle_id = $2 AND deleted_at IS NULL`,
+        [memberId, circleId],
+      );
+      const target = current.rows[0];
+      if (!target) {
+        return null;
+      }
+      // A circle has exactly one owner. Ownership is not transferable by
+      // editing a member, and the sitting owner cannot be demoted, so the
+      // circle can never become ownerless or grow a second owner.
+      if (body.role && body.role !== target.role) {
+        if (body.role === 'owner') {
+          throw conflict('Ownership cannot be reassigned by editing a member', {
+            code: 'owner_transfer_unsupported',
+          });
+        }
+        if (target.role === 'owner') {
+          throw conflict('The circle owner role cannot be changed', {
+            code: 'cannot_demote_owner',
+          });
+        }
+      }
       const updated = await client.query<{ id: string }>(
         `UPDATE circle_members
          SET role         = COALESCE($3, role),
