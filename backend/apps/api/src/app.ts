@@ -18,6 +18,7 @@ import { createInferenceService, type InferenceService } from './services/infere
 import { CircleKeyService } from './services/circleKeys.js';
 import authPlugin from './plugins/auth.js';
 import errorsPlugin from './plugins/errors.js';
+import paramsPlugin from './plugins/params.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { emailAuthRoutes } from './routes/emailAuth.js';
@@ -109,6 +110,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<FastifyInstance
   await app.register(websocket);
   await app.register(errorsPlugin);
   await app.register(authPlugin, { tokenService: tokens });
+  await app.register(paramsPlugin);
 
   await app.register(async (instance) => {
     await healthRoutes(instance);
