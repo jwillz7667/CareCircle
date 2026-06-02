@@ -116,35 +116,18 @@ struct CareCircleApp: App {
     }
 
     private static func makeModelContainer() -> ModelContainer {
-        let schema = Schema([
-            Circle.self,
-            CareRecipient.self,
-            Member.self,
-            Activity.self,
-            ActivityReaction.self,
-            ActivityComment.self,
-            Medication.self,
-            DoseEvent.self,
-            Appointment.self,
-            Document.self,
-            SOSEvent.self,
-            EmergencyContact.self,
-            CareMinuteEntry.self,
-            ShiftDigest.self,
-            Insight.self,
-            Vital.self,
-            LocationSnapshot.self,
-            HealthRecord.self,
-            JournalEntry.self,
-            PendingOperation.self,
-        ])
+        let schema = Schema(versionedSchema: CareCircleSchemaV1.self)
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
             cloudKitDatabase: .private(CloudKitConfiguration.containerIdentifier)
         )
         do {
-            return try ModelContainer(for: schema, configurations: [configuration])
+            return try ModelContainer(
+                for: schema,
+                migrationPlan: CareCircleMigrationPlan.self,
+                configurations: [configuration]
+            )
         } catch {
             AppLogger.persistence.critical(
                 "Failed to initialize ModelContainer: \(error.localizedDescription, privacy: .public)"
