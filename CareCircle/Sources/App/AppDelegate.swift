@@ -22,6 +22,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     private var bufferedDeviceToken: Data?
 
+    /// Retained for the process lifetime: MetricKit holds subscribers
+    /// weakly, so dropping this reference would silently stop diagnostics.
+    private let crashTelemetry = CrashTelemetry()
+
     func application(
         _: UIApplication,
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -29,6 +33,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         -> Bool
     {
         configureNavigationBarAppearance()
+        crashTelemetry.start()
         return true
     }
 
