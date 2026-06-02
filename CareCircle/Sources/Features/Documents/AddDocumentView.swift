@@ -18,6 +18,8 @@ struct AddDocumentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
+    @Environment(\.documentVault) private var documentVault
+    @Environment(\.circleDocumentKeySync) private var circleDocumentKeySync
 
     @State private var draft = DocumentDraft()
     @State private var plaintext: Data?
@@ -253,9 +255,9 @@ struct AddDocumentView: View {
 
         do {
             let payload: DocumentVault.SealedPayload = if isOwner {
-                try DocumentVault.shared.sealForOwner(plaintext: plaintext, circleID: circleID)
+                try documentVault.sealForOwner(plaintext: plaintext, circleID: circleID)
             } else {
-                try DocumentVault.shared.sealForMember(plaintext: plaintext, circleID: circleID)
+                try documentVault.sealForMember(plaintext: plaintext, circleID: circleID)
             }
             let uploaderName = circle.members
                 .first(where: { $0.appleUserID == viewerAppleUserID })?.displayName ?? ""
@@ -278,9 +280,10 @@ struct AddDocumentView: View {
             try modelContext.save()
             documentSweeper.triggerSweep(modelContext: modelContext)
             if isOwner {
+                let keySync = circleDocumentKeySync
                 Task {
                     do {
-                        try await CircleDocumentKeySyncService.shared.publishIfNeeded(circleID: circleID)
+                        try await keySync.publishIfNeeded(circleID: circleID)
                     } catch {
                         AppLogger.cloudKit.error(
                             "DEK publish failed: \(String(describing: error), privacy: .public)"

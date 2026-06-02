@@ -13,16 +13,12 @@ struct AppointmentDetailView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appointmentCalendarSync) private var calendarSync
 
     @State private var isEditing = false
     @State private var isConfirmingDelete = false
     @State private var deleteError: String?
-    @State private var isMirroring: Bool
-
-    init(appointment: Appointment) {
-        self.appointment = appointment
-        _isMirroring = State(initialValue: AppointmentCalendarSync.shared.isMirroring(appointment.id))
-    }
+    @State private var isMirroring = false
 
     var body: some View {
         List {
@@ -57,6 +53,9 @@ struct AppointmentDetailView: View {
             if let circle = appointment.circle {
                 AddAppointmentView(circle: circle, editing: appointment)
             }
+        }
+        .task(id: appointment.id) {
+            isMirroring = calendarSync.isMirroring(appointment.id)
         }
         .confirmationDialog(
             "Delete this appointment?",
@@ -205,7 +204,7 @@ struct AppointmentDetailView: View {
     private func delete() {
         let appointmentID = appointment.id
         let scheduler = AppointmentReminderScheduler()
-        let sync = AppointmentCalendarSync.shared
+        let sync = calendarSync
         Task {
             await scheduler.cancel(appointmentID: appointmentID)
             await sync.remove(for: appointmentID)

@@ -18,6 +18,7 @@ struct DocumentDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(BackendDocumentRetrySweeper.self) private var documentSweeper
+    @Environment(\.documentVault) private var documentVault
 
     @State private var decryptedData: Data?
     @State private var decryptionError: String?
@@ -251,7 +252,7 @@ struct DocumentDetailView: View {
         }
 
         do {
-            decryptedData = try DocumentVault.shared.open(payload: payload, circleID: circleID)
+            decryptedData = try documentVault.open(payload: payload, circleID: circleID)
             decryptionError = nil
         } catch let error as DocumentVault.VaultError {
             decryptionError = error.errorDescription

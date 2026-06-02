@@ -13,19 +13,23 @@ struct AddAppointmentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(SyncEngine.self) private var syncEngine
+    @Environment(\.appointmentCalendarSync) private var calendarSync
 
     @State private var draft: AppointmentDraft
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var didSeedMirrorState = false
 
     init(circle: Circle, editing: Appointment? = nil) {
         self.circle = circle
         self.editing = editing
         if let editing {
-            let mirroring = AppointmentCalendarSync.shared.isMirroring(editing.id)
+            // Calendar-mirror state is device-local; it's read from the
+            // injected `calendarSync` in `.task` once the environment is
+            // available, since `@Environment` can't be read in `init`.
             _draft = State(initialValue: AppointmentDraft(
                 appointment: editing,
-                mirrorToCalendar: mirroring
+                mirrorToCalendar: false
             ))
         } else {
             _draft = State(initialValue: AppointmentDraft())
@@ -69,6 +73,11 @@ struct AddAppointmentView: View {
             .toolbarBackground(Color.ccBackground, for: .navigationBar)
             .toolbar { toolbar }
             .interactiveDismissDisabled(isSaving)
+            .task {
+                guard !didSeedMirrorState, let editing else { return }
+                didSeedMirrorState = true
+                draft.mirrorToCalendar = calendarSync.isMirroring(editing.id)
+            }
         }
     }
 
@@ -183,12 +192,12 @@ struct AddAppointmentView: View {
         defer { isSaving = false }
 
         let reminderScheduler = AppointmentReminderScheduler()
-        let calendarSync = AppointmentCalendarSync.shared
+        let sync = calendarSync
         guard let target = isEditing ? applyEdit() : insertNew() else { return }
         let mirrorEnabled = draft.mirrorToCalendar
         Task {
             await rescheduleNotifications(for: target, scheduler: reminderScheduler)
-            await syncCalendarMirror(for: target, enabled: mirrorEnabled, sync: calendarSync)
+            await syncCalendarMirror(for: target, enabled: mirrorEnabled, sync: sync)
         }
         dismiss()
     }
