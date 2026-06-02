@@ -163,7 +163,9 @@ final class BackendHydrator {
     }
 
     private func hydrateMedications(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(matching: #Predicate<Medication> { $0.circle?.id == circleId }, modelContext: modelContext) == 0 else {
+        guard localCount(matching: #Predicate<Medication> { $0.circle?.id == circleId }, modelContext: modelContext) ==
+            0 else
+        {
             AppLogger.backend.debug("Medications skipped — local store is not empty.")
             return
         }
@@ -185,7 +187,10 @@ final class BackendHydrator {
     }
 
     private func hydrateDoseEvents(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(matching: #Predicate<DoseEvent> { $0.medication?.circle?.id == circleId }, modelContext: modelContext) == 0 else {
+        guard localCount(
+            matching: #Predicate<DoseEvent> { $0.medication?.circle?.id == circleId },
+            modelContext: modelContext
+        ) == 0 else {
             AppLogger.backend.debug("Dose events skipped — local store is not empty.")
             return
         }
@@ -216,7 +221,9 @@ final class BackendHydrator {
     }
 
     private func hydrateAppointments(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(matching: #Predicate<Appointment> { $0.circle?.id == circleId }, modelContext: modelContext) == 0 else {
+        guard localCount(matching: #Predicate<Appointment> { $0.circle?.id == circleId }, modelContext: modelContext) ==
+            0 else
+        {
             AppLogger.backend.debug("Appointments skipped — local store is not empty.")
             return
         }
@@ -238,7 +245,10 @@ final class BackendHydrator {
     }
 
     private func hydrateEmergencyContacts(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(matching: #Predicate<EmergencyContact> { $0.circle?.id == circleId }, modelContext: modelContext) == 0 else {
+        guard localCount(
+            matching: #Predicate<EmergencyContact> { $0.circle?.id == circleId },
+            modelContext: modelContext
+        ) == 0 else {
             AppLogger.backend.debug("Emergency contacts skipped — local store is not empty.")
             return
         }
@@ -282,7 +292,10 @@ final class BackendHydrator {
     }
 
     private func hydrateCareMinutes(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(matching: #Predicate<CareMinuteEntry> { $0.circle?.id == circleId }, modelContext: modelContext) == 0 else {
+        guard localCount(
+            matching: #Predicate<CareMinuteEntry> { $0.circle?.id == circleId },
+            modelContext: modelContext
+        ) == 0 else {
             AppLogger.backend.debug("Care minutes skipped — local store is not empty.")
             return
         }
@@ -326,7 +339,9 @@ final class BackendHydrator {
     }
 
     private func hydrateShiftDigests(circleId: UUID, modelContext: ModelContext) async throws {
-        guard localCount(matching: #Predicate<ShiftDigest> { $0.circle?.id == circleId }, modelContext: modelContext) == 0 else {
+        guard localCount(matching: #Predicate<ShiftDigest> { $0.circle?.id == circleId }, modelContext: modelContext) ==
+            0 else
+        {
             AppLogger.backend.debug("Shift digests skipped — local store is not empty.")
             return
         }

@@ -152,8 +152,8 @@ struct VitalsQuickViewBar: View {
 
     private var bpText: String {
         guard let systolic = latest(.bloodPressureSystolic),
-              let diastolic = latest(.bloodPressureDiastolic)
-        else {
+              let diastolic = latest(.bloodPressureDiastolic) else
+        {
             return "—"
         }
         return "\(Int(systolic.rounded()))/\(Int(diastolic.rounded()))"

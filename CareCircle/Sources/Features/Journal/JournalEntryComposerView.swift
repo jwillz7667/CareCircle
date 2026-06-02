@@ -19,7 +19,7 @@ struct JournalEntryComposerView: View {
     @State private var recordedAt: Date = .now
     @State private var mood: Mood = .neutral
     @State private var selectedSymptoms: Set<SymptomTag> = []
-    @State private var notes: String = ""
+    @State private var notes = ""
     @State private var saveError: String?
 
     init(

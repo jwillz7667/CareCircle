@@ -144,7 +144,6 @@ enum VitalKind: String, CaseIterable, Codable, Sendable, Identifiable {
         case .stepCount: 0 ... 100_000
         }
     }
-
 }
 
 // MARK: - VitalSource

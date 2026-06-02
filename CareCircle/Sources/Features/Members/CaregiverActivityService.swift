@@ -41,9 +41,9 @@ struct CaregiverActivitySummary: Identifiable, Hashable {
 enum CaregiverActivityService {
     private struct Bucket {
         var displayName: String
-        var activities: Int = 0
-        var minutes: Int = 0
-        var journals: Int = 0
+        var activities = 0
+        var minutes = 0
+        var journals = 0
     }
 
     static func summaries(
