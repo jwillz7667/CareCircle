@@ -33,4 +33,11 @@
 --operatorfunc spaced
 --ranges spaced
 
+# redundantSendable (added as a default in swiftformat 0.61) strips explicit
+# Sendable from non-public types. We keep those conformances explicit on purpose:
+# under SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor they document which value types
+# are deliberately nonisolated/Sendable. Disabling also keeps CI (unpinned brew
+# swiftformat) deterministic across version bumps.
+--disable redundantSendable
+
 --exclude build,DerivedData,.build,spec-docs,docs

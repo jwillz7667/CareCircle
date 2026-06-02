@@ -185,7 +185,7 @@ nonisolated struct PHIRedactor: Sendable {
     /// refer to the care recipient (the parent/grandparent being cared for).
     /// Mapped to `[RECIPIENT]`. Deliberately excludes ambiguous terms like
     /// "aunt"/"uncle" that as often name a caregiver.
-    private static let recipientRelationshipTerms: Set<String> = [
+    private static let recipientRelationshipTerms: Set = [
         "mom", "mum", "mam", "mama", "momma", "mommy", "mommie", "mother", "ma",
         "dad", "daddy", "papa", "pa", "pop", "pops", "father",
         "grandma", "grandmother", "grandmom", "granny", "nana", "nan", "gran",
