@@ -15,6 +15,7 @@ struct RootView: View {
     @Environment(HealthKitVitalsReader.self) private var healthKitReader
     @Environment(HealthRecordsImporter.self) private var healthRecordsImporter
     @Environment(SubscriptionService.self) private var subscriptionService
+    @Environment(\.circleDocumentKeySync) private var circleDocumentKeySync
     @State private var didHydrateThisLaunch = false
     @State private var didStartSubscriptionsThisLaunch = false
     @State private var didRequestHealthKitAuth = false
@@ -43,14 +44,15 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active, isSignedIn {
-                MedicationOverdueSweeper().sweep(in: modelContext)
-                documentSweeper.triggerSweep(modelContext: modelContext)
-                documentSweeper.triggerPrefetch(modelContext: modelContext)
+                // Connecting the realtime socket is a lightweight start;
+                // the heavier sweeps and insights recompute are deferred
+                // into the task below so they don't block the scene-phase
+                // transition (and the first foreground frame).
                 realtimeClient.start(modelContext: modelContext)
-                recomputeInsightsForAllCircles()
                 Task {
                     await authState.verifyBackendSession()
                     await maybeHydrateOnce()
+                    await runForegroundMaintenance()
                     await readHealthKitForAllCircles()
                     await hydrateSubscriptionsForAllCircles()
                 }
@@ -58,6 +60,19 @@ struct RootView: View {
                 realtimeClient.stop()
             }
         }
+    }
+
+    /// Maintenance work that doesn't need to run before the UI paints:
+    /// the overdue-dose sweep, document retry/prefetch, insights recompute,
+    /// and re-topping dose reminders so they don't fall off past their
+    /// scheduling horizon. Yields first so any pending UI work interleaves.
+    private func runForegroundMaintenance() async {
+        await Task.yield()
+        MedicationOverdueSweeper().sweep(in: modelContext)
+        documentSweeper.triggerSweep(modelContext: modelContext)
+        documentSweeper.triggerPrefetch(modelContext: modelContext)
+        recomputeInsightsForAllCircles()
+        await MedicationReminderScheduler().rescheduleActiveMeds(in: modelContext)
     }
 
     private func maybeHydrateOnce() async {
@@ -75,7 +90,9 @@ struct RootView: View {
         await pullDocumentKeys()
         documentSweeper.triggerPrefetch(modelContext: modelContext)
         realtimeClient.start(modelContext: modelContext)
+        await Task.yield()
         recomputeInsightsForAllCircles()
+        await MedicationReminderScheduler().rescheduleActiveMeds(in: modelContext)
         await maybeStartSubscriptions()
         await hydrateSubscriptionsForAllCircles()
         await maybeRequestHealthKitAuth()
@@ -143,7 +160,7 @@ struct RootView: View {
         let descriptor = FetchDescriptor<Circle>(sortBy: [SortDescriptor(\.createdAt)])
         let circleIDs = (try? modelContext.fetch(descriptor))?.map(\.id) ?? []
         guard !circleIDs.isEmpty else { return }
-        await CircleDocumentKeySyncService.shared.pullForAllCircles(circleIDs)
+        await circleDocumentKeySync.pullForAllCircles(circleIDs)
     }
 
     private func recomputeInsightsForAllCircles() {
