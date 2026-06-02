@@ -9,6 +9,10 @@ struct CircleDetailView: View {
 
     @State private var isEditingRecipient = false
 
+    private var permissions: CirclePermissions {
+        CirclePermissions.resolve(circle: circle, appleUserID: signedInAppleUserID)
+    }
+
     private var activeMemberCount: Int {
         circle.members.count(where: { $0.status != .removed })
     }
@@ -69,12 +73,14 @@ struct CircleDetailView: View {
                     .padding(.vertical, Theme.tightSpacing / 2)
                 }
 
-                Button {
-                    isEditingRecipient = true
-                } label: {
-                    Label("Edit Care Recipient", systemImage: "pencil")
+                if permissions.canEditCareRecipient {
+                    Button {
+                        isEditingRecipient = true
+                    } label: {
+                        Label("Edit Care Recipient", systemImage: "pencil")
+                    }
+                    .foregroundStyle(Color.ccPrimary)
                 }
-                .foregroundStyle(Color.ccPrimary)
             }
         }
     }
