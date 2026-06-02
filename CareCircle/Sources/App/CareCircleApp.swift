@@ -115,24 +115,82 @@ struct CareCircleApp: App {
         AppLogger.auth.info("Fresh install detected — cleared cached auth credentials from prior install.")
     }
 
+    /// Builds the SwiftData store with a recovery ladder rather than crashing
+    /// on the first failure. CloudKit and the Railway backend are the record
+    /// of truth, so a wiped or downgraded local store re-hydrates on next
+    /// sync — locking the user out of the app is the worse outcome.
+    ///
+    /// 1. CloudKit-synced persistent store (normal path).
+    /// 2. Same on-disk store with CloudKit disabled — covers iCloud account or
+    ///    entitlement failures where the store itself is intact.
+    /// 3. Delete the store and recreate it fresh — covers corruption or a
+    ///    schema the migration plan can't bridge.
+    /// 4. In-memory store so the app still launches this session.
+    /// 5. `fatalError` only if even an in-memory store can't be created.
     private static func makeModelContainer() -> ModelContainer {
         let schema = Schema(versionedSchema: CareCircleSchemaV1.self)
-        let configuration = ModelConfiguration(
+        let cloudKitConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
             cloudKitDatabase: .private(CloudKitConfiguration.containerIdentifier)
         )
-        do {
-            return try ModelContainer(
-                for: schema,
-                migrationPlan: CareCircleMigrationPlan.self,
-                configurations: [configuration]
-            )
-        } catch {
-            AppLogger.persistence.critical(
-                "Failed to initialize ModelContainer: \(error.localizedDescription, privacy: .public)"
-            )
-            fatalError("Unable to initialize SwiftData ModelContainer: \(error)")
+
+        if let container = try? makeContainer(schema: schema, configuration: cloudKitConfiguration) {
+            return container
+        }
+
+        let storeURL = cloudKitConfiguration.url
+        AppLogger.persistence.critical(
+            "CloudKit ModelContainer failed; retrying local-only at \(storeURL.path, privacy: .public)"
+        )
+
+        let localConfiguration = ModelConfiguration(
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
+        if let container = try? makeContainer(schema: schema, configuration: localConfiguration) {
+            return container
+        }
+
+        AppLogger.persistence.critical(
+            "Local store unreadable; deleting and recreating at \(storeURL.path, privacy: .public)"
+        )
+        Self.deleteStoreFiles(at: storeURL)
+        if let container = try? makeContainer(schema: schema, configuration: localConfiguration) {
+            return container
+        }
+
+        AppLogger.persistence.fault("All persistent stores failed; falling back to in-memory store")
+        let memoryConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        if let container = try? makeContainer(schema: schema, configuration: memoryConfiguration) {
+            return container
+        }
+
+        fatalError("Unable to initialize any SwiftData ModelContainer")
+    }
+
+    private static func makeContainer(
+        schema: Schema,
+        configuration: ModelConfiguration
+    ) throws
+        -> ModelContainer
+    {
+        try ModelContainer(
+            for: schema,
+            migrationPlan: CareCircleMigrationPlan.self,
+            configurations: [configuration]
+        )
+    }
+
+    /// Removes the SQLite store and its `-wal` / `-shm` sidecars. Best-effort:
+    /// a missing file is the desired end state, so failures are ignored.
+    private static func deleteStoreFiles(at storeURL: URL) {
+        let fileManager = FileManager.default
+        let directory = storeURL.deletingLastPathComponent()
+        let base = storeURL.lastPathComponent
+        for suffix in ["", "-wal", "-shm"] {
+            try? fileManager.removeItem(at: directory.appendingPathComponent(base + suffix))
         }
     }
 
