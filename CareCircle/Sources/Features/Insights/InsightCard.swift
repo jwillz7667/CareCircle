@@ -2,8 +2,8 @@ import SwiftUI
 
 // MARK: - InsightCard
 
-/// Single insight surface used inside `InsightsView` and in the
-/// inline `InsightsBanner`. The same card is also reused in the apply
+/// Single insight surface used inside `InsightsView` and the Today
+/// dashboard's Pulse card. The same card is also reused in the apply
 /// CTA target so the caregiver can see the observation that prompted
 /// the navigation.
 struct InsightCard: View {
