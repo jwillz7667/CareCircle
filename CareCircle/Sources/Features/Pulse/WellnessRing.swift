@@ -54,7 +54,7 @@ struct WellnessRing: View {
                     .background(Color.ccPrimary.opacity(0.12), in: Capsule())
                 }
                 Text("Heuristic indicator — not medical advice.")
-                    .font(.system(size: 10))
+                    .font(.system(.caption2))
                     .foregroundStyle(Color.ccSecondary)
             }
             Spacer(minLength: 0)

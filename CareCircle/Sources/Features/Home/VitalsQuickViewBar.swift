@@ -123,7 +123,7 @@ struct VitalsQuickViewBar: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(label)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(.caption2, weight: .medium))
                 .foregroundStyle(Color.ccSecondary)
         }
         .frame(maxWidth: .infinity)

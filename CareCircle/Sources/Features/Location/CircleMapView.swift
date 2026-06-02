@@ -144,7 +144,7 @@ struct CircleMapView: View {
             }
             .foregroundStyle(Color.ccText)
             Text(VitalFormatting.relativeRecordedAt(snap.recordedAt))
-                .font(.system(size: 10))
+                .font(.system(.caption2))
                 .foregroundStyle(Color.ccSecondary)
         }
         .padding(.horizontal, 10)

@@ -106,14 +106,14 @@ struct VitalTile: View {
     private var footerChip: some View {
         HStack(spacing: 4) {
             Image(systemName: summary.trend.systemImage)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(.caption2, weight: .bold))
             Text(trendLabel)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(.caption2, weight: .semibold))
                 .monospacedDigit()
             Spacer(minLength: 0)
             if let latest = summary.latest {
                 Text(VitalFormatting.relativeRecordedAt(latest.recordedAt))
-                    .font(.system(size: 10))
+                    .font(.system(.caption2))
                     .foregroundStyle(Color.ccSecondary)
                     .lineLimit(1)
             }

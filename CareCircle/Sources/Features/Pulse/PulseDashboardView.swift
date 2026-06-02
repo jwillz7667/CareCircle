@@ -324,7 +324,7 @@ private struct AnomalyCallout: View {
                 row(for: summary)
             }
             Text("Anomaly = current value more than 2σ from rolling baseline. Heuristic, not diagnostic.")
-                .font(.system(size: 10))
+                .font(.system(.caption2))
                 .foregroundStyle(Color.ccSecondary)
         }
         .padding(Theme.spacing)
@@ -357,7 +357,7 @@ private struct AnomalyCallout: View {
             }
             if let z = summary.zScore {
                 Text(String(format: "%+.1fσ", z))
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(.caption2, weight: .semibold))
                     .monospacedDigit()
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
@@ -409,7 +409,7 @@ private struct BloodPressurePairTile: View {
                             .padding(.leading, 4)
                     }
                     Text(recordedLabel)
-                        .font(.system(size: 10))
+                        .font(.system(.caption2))
                         .foregroundStyle(Color.ccSecondary)
                 }
                 Spacer(minLength: 0)

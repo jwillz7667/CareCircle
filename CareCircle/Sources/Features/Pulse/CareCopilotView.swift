@@ -175,7 +175,7 @@ struct CareCopilotView: View {
                 .accessibilityLabel("Send")
             }
             Text("v1 answers heuristically from the brief above. Foundation Models upgrade lands with iOS 26.")
-                .font(.system(size: 10))
+                .font(.system(.caption2))
                 .foregroundStyle(Color.ccSecondary)
         }
         .padding(Theme.spacing)

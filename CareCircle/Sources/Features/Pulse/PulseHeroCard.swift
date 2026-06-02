@@ -179,7 +179,7 @@ struct PulseHeroCard: View {
                     .font(.footnote.weight(.semibold))
                     .monospacedDigit()
                 Text(caption)
-                    .font(.system(size: 9, weight: .medium))
+                    .font(.system(.caption2, weight: .medium))
                     .opacity(0.75)
             }
         }
@@ -197,7 +197,7 @@ struct PulseHeroCard: View {
                 .frame(width: 6, height: 6)
                 .shadow(color: isLive ? Color.green : .clear, radius: 4)
             Text(isLive ? "LIVE" : "OFFLINE")
-                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .heavy))
                 .tracking(1.2)
                 .foregroundStyle(.white)
         }
