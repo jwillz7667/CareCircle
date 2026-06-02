@@ -4,8 +4,9 @@ import SwiftUI
 // MARK: - HeaderStrip
 
 /// Recipient name + status dot + tiny SOS pill. Lives at the very top
-/// of the Today dashboard. Status copy is a placeholder until phase E
-/// produces synthesized signals.
+/// of the Today dashboard. The status line reflects the most urgent live
+/// signal: an active SOS, then the top warning-severity Pulse insight,
+/// otherwise "All quiet".
 struct HomeHeaderStrip: View {
     let circle: Circle
     let onTriggerSOS: () -> Void
@@ -15,8 +16,25 @@ struct HomeHeaderStrip: View {
         return name.isEmpty ? circle.name : name
     }
 
+    private var hasActiveSOS: Bool {
+        circle.sosEvents.contains { $0.status == .active }
+    }
+
+    private var topWarning: Insight? {
+        circle.insights
+            .first { $0.dismissedAt == nil && $0.appliedAt == nil && $0.severity == .warning }
+    }
+
     private var statusLine: String {
-        "All quiet"
+        if hasActiveSOS { return "SOS active" }
+        if let topWarning { return topWarning.title }
+        return "All quiet"
+    }
+
+    private var statusColor: Color {
+        if hasActiveSOS { return .ccStatusCritical }
+        if topWarning != nil { return .ccStatusAttention }
+        return .ccStatusPositive
     }
 
     var body: some View {
@@ -28,12 +46,14 @@ struct HomeHeaderStrip: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
-                    Color.ccStatusPositive
+                    statusColor
                         .frame(width: 8, height: 8)
                         .clipShape(.circle)
                     Text(statusLine)
                         .font(.CC.caption)
                         .foregroundStyle(Color.ccTextSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Status: \(statusLine)")
@@ -57,15 +77,75 @@ struct HomeHeaderStrip: View {
 
 // MARK: - PulseInsightCard
 
-/// Placeholder for the on-device Pulse insight surface. Renders shape
-/// only — the synthesis voice arrives with the phase E build of
-/// Foundation Models patterns + confidence-thresholded insights.
+/// On-device Pulse insight surface. Shows the single most important
+/// un-dismissed insight for entitled Circles, an upsell for free Circles,
+/// and a "building up" placeholder when intelligence has nothing to say
+/// yet. The whole card pushes the full `InsightsView`, so Pulse is always
+/// reachable from Today.
 struct HomePulseInsightCard: View {
+    let circle: Circle
+    let author: ActivityAuthorContext
+
+    private var isEntitled: Bool {
+        circle.entitles(.insights)
+    }
+
+    private var topInsight: Insight? {
+        circle.insights
+            .filter { $0.dismissedAt == nil && $0.appliedAt == nil }
+            .min {
+                if $0.severity.sortRank != $1.severity.sortRank {
+                    return $0.severity.sortRank < $1.severity.sortRank
+                }
+                return $0.computedAt > $1.computedAt
+            }
+    }
+
+    /// Headline shown in the card body. Free Circles see an upsell instead
+    /// of insight content so the paywall is not bypassed.
+    private var headline: String {
+        guard isEntitled else {
+            return "Unlock Pulse to surface patterns across meds, vitals, and visits."
+        }
+        return topInsight?.title ?? "Patterns will appear here as care data builds up."
+    }
+
+    private var detail: String? {
+        guard isEntitled, let topInsight else { return nil }
+        return topInsight.body
+    }
+
+    private var iconName: String {
+        if isEntitled, topInsight?.severity == .warning {
+            return "exclamationmark.triangle.fill"
+        }
+        return "sparkles"
+    }
+
+    private var iconColor: Color {
+        if isEntitled, topInsight?.severity == .warning {
+            return .ccDanger
+        }
+        return .ccAccent
+    }
+
     var body: some View {
+        NavigationLink {
+            InsightsView(circle: circle, author: author)
+        } label: {
+            card
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Pulse insight. \(headline)")
+        .accessibilityHint("Opens the full list of insights for this Circle.")
+    }
+
+    private var card: some View {
         HStack(alignment: .top, spacing: Spacing.s) {
-            Image(systemName: "sparkles")
+            Image(systemName: iconName)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(Color.ccAccent)
+                .foregroundStyle(iconColor)
                 .frame(width: 28, alignment: .top)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -73,21 +153,32 @@ struct HomePulseInsightCard: View {
                     .font(.CC.label)
                     .foregroundStyle(Color.ccAccent)
                     .textCase(.uppercase)
-                Text("Patterns will appear here as care data builds up.")
+                Text(headline)
                     .font(.CC.body)
                     .foregroundStyle(Color.ccTextPrimary)
                     .lineSpacing(Typography.lineSpacingDefault)
+                    .multilineTextAlignment(.leading)
+                if let detail {
+                    Text(detail)
+                        .font(.CC.caption)
+                        .foregroundStyle(Color.ccTextSecondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
                 Text("On-device intelligence. Names and vitals never leave this device.")
                     .font(.CC.captionSmall)
                     .foregroundStyle(Color.ccTextSecondary)
             }
 
             Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.ccTextSecondary)
         }
         .padding(Spacing.m)
         .background(Color.ccAccentSoft, in: .rect(cornerRadius: Radius.card))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Pulse insight. Patterns will appear here as care data builds up.")
+        .contentShape(.rect(cornerRadius: Radius.card))
     }
 }
 

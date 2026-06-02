@@ -131,7 +131,7 @@ struct HomeDashboardView: View {
 
                     UpgradeBanner(circle: circle, viewerAppleUserID: signedInUser?.id ?? "")
 
-                    HomePulseInsightCard()
+                    HomePulseInsightCard(circle: circle, author: authorContext)
 
                     HomeTodaysPlanCard(circle: circle) {
                         selectedTab = .meds
