@@ -47,6 +47,7 @@ struct PaywallView: View {
                 trialFootnote
                 restoreLink
                 disclaimer
+                legalLinks
             }
             .padding(.horizontal, Theme.spacing)
             .padding(.vertical, Theme.spacing)
@@ -125,6 +126,21 @@ struct PaywallView: View {
         )
         .font(.caption)
         .foregroundStyle(Color.ccSecondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var legalLinks: some View {
+        HStack(spacing: Theme.spacing) {
+            if let terms = LegalLinks.termsOfUse {
+                Link("Terms of Use (EULA)", destination: terms)
+            }
+            if let privacy = LegalLinks.privacyPolicy {
+                Link("Privacy Policy", destination: privacy)
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.caption.weight(.medium))
+        .tint(Color.ccPrimary)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
