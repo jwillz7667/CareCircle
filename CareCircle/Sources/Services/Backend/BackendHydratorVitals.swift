@@ -41,12 +41,11 @@ extension BackendHydrator {
     }
 
     private func localVitalsCount(in circleId: UUID, modelContext: ModelContext) -> Int {
-        let descriptor = FetchDescriptor<Vital>()
+        let descriptor = FetchDescriptor<Vital>(
+            predicate: #Predicate { $0.circle?.id == circleId }
+        )
         do {
-            let rows = try modelContext.fetch(descriptor)
-            return rows.reduce(0) { acc, row in
-                acc + (row.circle?.id == circleId ? 1 : 0)
-            }
+            return try modelContext.fetchCount(descriptor)
         } catch {
             AppLogger.backend.error(
                 "Local count fetch failed for Vital: \(String(describing: error), privacy: .public)"

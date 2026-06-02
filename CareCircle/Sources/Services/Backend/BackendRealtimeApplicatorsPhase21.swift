@@ -50,7 +50,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "activities",
                 deleteAbsent: false,
-                circleIDOf: { (row: Activity) in row.circle?.id },
+                localPredicate: #Predicate<Activity> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeActivity(from: dto)
@@ -88,7 +88,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "medications",
                 deleteAbsent: true,
-                circleIDOf: { (row: Medication) in row.circle?.id },
+                localPredicate: #Predicate<Medication> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeMedication(from: dto)
@@ -126,7 +126,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "appointments",
                 deleteAbsent: true,
-                circleIDOf: { (row: Appointment) in row.circle?.id },
+                localPredicate: #Predicate<Appointment> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeAppointment(from: dto)
@@ -164,7 +164,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "members",
                 deleteAbsent: true,
-                circleIDOf: { (row: Member) in row.circle?.id },
+                localPredicate: #Predicate<Member> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeMember(from: dto)
@@ -202,7 +202,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "emergency-contacts",
                 deleteAbsent: true,
-                circleIDOf: { (row: EmergencyContact) in row.circle?.id },
+                localPredicate: #Predicate<EmergencyContact> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeEmergencyContact(from: dto)
@@ -240,7 +240,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "documents",
                 deleteAbsent: true,
-                circleIDOf: { (row: Document) in row.circle?.id },
+                localPredicate: #Predicate<Document> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeDocumentPlaceholder(from: dto)

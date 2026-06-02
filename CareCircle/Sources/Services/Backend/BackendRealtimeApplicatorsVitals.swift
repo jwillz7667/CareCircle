@@ -45,7 +45,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "vitals",
                 deleteAbsent: false,
-                circleIDOf: { (row: Vital) in row.circle?.id },
+                localPredicate: #Predicate<Vital> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeVital(from: dto)

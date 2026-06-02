@@ -13,7 +13,10 @@ struct UpsertSpec<M: PersistentModel & Identifiable, DTO> where M.ID == UUID {
     let circleId: UUID
     let domain: String
     let deleteAbsent: Bool
-    let circleIDOf: (M) -> UUID?
+    /// Scopes the local-row fetch to this circle at the store layer. Replaces
+    /// a whole-table fetch + in-Swift circle filter — the predicate hits the
+    /// SwiftData index instead of materializing every row in every circle.
+    let localPredicate: Predicate<M>
     let parseID: (DTO) -> UUID?
     let insert: (DTO, Circle) -> M
     let update: (M, DTO) -> Void
@@ -70,9 +73,9 @@ extension BackendRealtimeClient {
     )
         -> [UUID: M] where M.ID == UUID
     {
-        let all = (try? modelContext.fetch(FetchDescriptor<M>())) ?? []
+        let scoped = (try? modelContext.fetch(FetchDescriptor<M>(predicate: spec.localPredicate))) ?? []
         var map: [UUID: M] = [:]
-        for row in all where spec.circleIDOf(row) == spec.circleId {
+        for row in scoped {
             map[row.id] = row
         }
         return map

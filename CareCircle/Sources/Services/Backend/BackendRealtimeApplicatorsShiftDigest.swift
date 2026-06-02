@@ -47,7 +47,7 @@ extension BackendRealtimeClient {
                 circleId: circleId,
                 domain: "shift-digests",
                 deleteAbsent: false,
-                circleIDOf: { (row: ShiftDigest) in row.circle?.id },
+                localPredicate: #Predicate<ShiftDigest> { $0.circle?.id == circleId },
                 parseID: { BackendHydratorMappers.parseUUID($0.id) },
                 insert: { dto, parent in
                     let row = BackendHydratorMappers.makeShiftDigest(from: dto)
