@@ -84,6 +84,9 @@ final class SOSCenter {
     ) async throws(SOSCenterError) {
         guard case .idle = state else { throw .alreadyArmed }
         await SOSNotificationAuthorizer.requestAuthorization()
+        // Pre-prompt for location now so the OS dialog is answered during the
+        // countdown — at fire time the fix then resolves without racing it.
+        locationProvider.prepareAuthorization()
 
         state = .arming(secondsRemaining: armDuration)
         countdownTask = Task { [weak self] in

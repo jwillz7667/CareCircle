@@ -158,7 +158,7 @@ struct CircleMapView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Share my location")
+                    Text("Share with this Circle")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.ccText)
                     Text(shareSubtitle)
@@ -166,10 +166,10 @@ struct CircleMapView: View {
                         .foregroundStyle(Color.ccSecondary)
                 }
                 Spacer(minLength: 0)
-                @Bindable var binding = locationService
-                Toggle("", isOn: $binding.shareLocation)
+                Toggle("", isOn: shareBinding)
                     .labelsHidden()
                     .tint(Color.ccPrimary)
+                    .disabled(activeCircle == nil)
             }
             permissionAction
         }
@@ -194,6 +194,16 @@ struct CircleMapView: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(Color.ccPrimary)
         }
+    }
+
+    private var shareBinding: Binding<Bool> {
+        Binding(
+            get: { activeCircle.map { locationService.isSharing(in: $0.id) } ?? false },
+            set: { newValue in
+                guard let circle = activeCircle else { return }
+                locationService.setSharing(newValue, in: circle.id)
+            }
+        )
     }
 
     private var shareSubtitle: String {

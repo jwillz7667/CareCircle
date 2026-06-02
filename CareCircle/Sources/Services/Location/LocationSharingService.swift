@@ -25,22 +25,17 @@ final class LocationSharingService: NSObject {
     private(set) var authorizationStatus: CLAuthorizationStatus
     private(set) var lastLocation: CLLocation?
     private(set) var lastError: String?
-    var shareLocation: Bool {
-        didSet {
-            UserDefaults.standard.set(shareLocation, forKey: Self.preferenceKey)
-            if shareLocation {
-                startUpdates()
-            } else {
-                stopUpdates()
-                Task { await markPausedRowForAllCircles() }
-            }
-        }
-    }
+
+    /// Per-circle sharing consent. A device only publishes its location into
+    /// circles the member has explicitly opted into — precise coordinates are
+    /// never fanned out to every circle from a single global switch.
+    private(set) var enabledCircleIDs: Set<UUID>
 
     private let manager: CLLocationManager
     private let modelContainer: ModelContainer
     private let currentAuthor: @MainActor () -> ActivityAuthorContext?
-    private static let preferenceKey = "com.jwillz.carecircle.locationSharing.enabled"
+    private static let enabledCirclesKey = "com.jwillz.carecircle.locationSharing.enabledCircles"
+    private static let legacyPreferenceKey = "com.jwillz.carecircle.locationSharing.enabled"
 
     init(
         modelContainer: ModelContainer,
@@ -50,14 +45,15 @@ final class LocationSharingService: NSObject {
         self.modelContainer = modelContainer
         self.currentAuthor = currentAuthor
         self.manager = manager
-        shareLocation = UserDefaults.standard.bool(forKey: Self.preferenceKey)
+        enabledCircleIDs = Self.loadEnabledCircleIDs()
         authorizationStatus = manager.authorizationStatus
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         manager.distanceFilter = 25
         manager.pausesLocationUpdatesAutomatically = true
-        if shareLocation { startUpdates() }
+        migrateLegacyGlobalConsentIfNeeded()
+        if !enabledCircleIDs.isEmpty { startUpdates() }
     }
 
     // MARK: - Public
@@ -75,10 +71,34 @@ final class LocationSharingService: NSObject {
         }
     }
 
+    func isSharing(in circleID: UUID) -> Bool {
+        enabledCircleIDs.contains(circleID)
+    }
+
+    /// Opts the current device's location sharing in or out for a single
+    /// circle. Enabling ensures authorization and starts updates; disabling
+    /// marks that circle's pin paused and stops the manager once no circle
+    /// remains opted in.
+    func setSharing(_ enabled: Bool, in circleID: UUID) {
+        if enabled {
+            enabledCircleIDs.insert(circleID)
+        } else {
+            enabledCircleIDs.remove(circleID)
+        }
+        persistEnabledCircleIDs()
+        if enabled {
+            ensureAuthorizationAndStart()
+        } else {
+            Task { await markPausedRow(circleID: circleID) }
+            if enabledCircleIDs.isEmpty { stopUpdates() }
+        }
+    }
+
     func startUpdates() {
-        guard CLLocationManager.locationServicesEnabled() else { return }
+        guard CLLocationManager.locationServicesEnabled(), !enabledCircleIDs.isEmpty else { return }
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
+            configureBackgroundUpdates()
             manager.startUpdatingLocation()
             if manager.authorizationStatus == .authorizedAlways {
                 manager.startMonitoringSignificantLocationChanges()
@@ -93,6 +113,52 @@ final class LocationSharingService: NSObject {
     func stopUpdates() {
         manager.stopUpdatingLocation()
         manager.stopMonitoringSignificantLocationChanges()
+        manager.allowsBackgroundLocationUpdates = false
+    }
+
+    private func ensureAuthorizationAndStart() {
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            startUpdates()
+        default:
+            break
+        }
+    }
+
+    /// `allowsBackgroundLocationUpdates` requires the `location`
+    /// `UIBackgroundMode` (declared in Info.plist) and throws without it.
+    /// Gate it on Always authorization so When-In-Use sessions don't surface
+    /// the persistent blue background indicator.
+    private func configureBackgroundUpdates() {
+        let always = manager.authorizationStatus == .authorizedAlways
+        manager.allowsBackgroundLocationUpdates = always
+        manager.showsBackgroundLocationIndicator = always
+    }
+
+    private static func loadEnabledCircleIDs() -> Set<UUID> {
+        let raw = UserDefaults.standard.stringArray(forKey: enabledCirclesKey) ?? []
+        return Set(raw.compactMap(UUID.init(uuidString:)))
+    }
+
+    private func persistEnabledCircleIDs() {
+        UserDefaults.standard.set(enabledCircleIDs.map(\.uuidString), forKey: Self.enabledCirclesKey)
+    }
+
+    /// Migrates the pre-per-circle single global sharing bool: if it was on,
+    /// seed every existing circle as opted-in once, then drop the legacy key.
+    private func migrateLegacyGlobalConsentIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: Self.legacyPreferenceKey) != nil else { return }
+        if defaults.bool(forKey: Self.legacyPreferenceKey) {
+            let context = ModelContext(modelContainer)
+            if let circles = try? context.fetch(FetchDescriptor<Circle>()) {
+                enabledCircleIDs.formUnion(circles.map(\.id))
+                persistEnabledCircleIDs()
+            }
+        }
+        defaults.removeObject(forKey: Self.legacyPreferenceKey)
     }
 
     // MARK: - Persistence
@@ -103,7 +169,7 @@ final class LocationSharingService: NSObject {
         let descriptor = FetchDescriptor<Circle>()
         guard let circles = try? context.fetch(descriptor), !circles.isEmpty else { return }
         let memberID = author.appleUserID
-        for circle in circles {
+        for circle in circles where enabledCircleIDs.contains(circle.id) {
             upsert(
                 in: circle,
                 location: location,
@@ -158,17 +224,15 @@ final class LocationSharingService: NSObject {
         }
     }
 
-    private func markPausedRowForAllCircles() async {
+    private func markPausedRow(circleID: UUID) async {
         guard let author = currentAuthor() else { return }
         let context = ModelContext(modelContainer)
-        let descriptor = FetchDescriptor<Circle>()
-        guard let circles = try? context.fetch(descriptor) else { return }
-        for circle in circles {
-            for row in circleLocations(circle: circle, context: context)
-                where row.memberAppleUserID == author.appleUserID
-            {
-                row.isSharingEnabled = false
-            }
+        let descriptor = FetchDescriptor<Circle>(predicate: #Predicate { $0.id == circleID })
+        guard let circle = try? context.fetch(descriptor).first else { return }
+        for row in circleLocations(circle: circle, context: context)
+            where row.memberAppleUserID == author.appleUserID
+        {
+            row.isSharingEnabled = false
         }
         try? context.save()
     }
@@ -187,7 +251,7 @@ extension LocationSharingService: CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         Task { @MainActor in
             authorizationStatus = status
-            if shareLocation, status == .authorizedWhenInUse || status == .authorizedAlways {
+            if !enabledCircleIDs.isEmpty, status == .authorizedWhenInUse || status == .authorizedAlways {
                 startUpdates()
             }
         }
