@@ -9,7 +9,7 @@ import Foundation
 enum AppTab: Hashable {
     /// Synthesis surface. Composes signals from Meds + Pulse + Brain.
     case today
-    /// Medication safety system. Interactions, escalation, refills, adherence.
+    /// Medication safety system. Interactions, reminders, adherence.
     case meds
     /// Family Brain. Shared multi-author record of care.
     case brain
