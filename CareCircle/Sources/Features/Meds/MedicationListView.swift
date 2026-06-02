@@ -57,7 +57,7 @@ struct MedicationListView: View {
                     EmptyStateView(
                         systemImage: "pills.fill",
                         title: "No medications yet",
-                        message: "Add a medication to track doses, refills, and history."
+                        message: "Add a medication to track doses, reminders, and history."
                     )
 
                     DisclaimerFooter()
