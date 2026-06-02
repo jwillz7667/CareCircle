@@ -72,8 +72,8 @@ importers:
         specifier: ^5.4.1
         version: 5.10.1
       jose:
-        specifier: ^5.9.6
-        version: 5.10.0
+        specifier: ^6.2.3
+        version: 6.2.3
       minio:
         specifier: ^8.0.2
         version: 8.0.7
@@ -155,8 +155,8 @@ importers:
         specifier: ^5.4.1
         version: 5.10.1
       jose:
-        specifier: ^5.9.6
-        version: 5.10.0
+        specifier: ^6.2.3
+        version: 6.2.3
       minio:
         specifier: ^8.0.2
         version: 8.0.7
@@ -1977,8 +1977,8 @@ packages:
     resolution: {integrity: sha512-6B3tLtFqtQS4ekarvLVMZ+X+VlvQekbe4taUkf/rhVO3d/h0M2rfARm/pXLcPEsjjMsFgrFgSrhQIxcSVrBz8w==}
     engines: {node: '>=18'}
 
-  jose@5.10.0:
-    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
+  jose@6.2.3:
+    resolution: {integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==}
 
   jpeg-exif@1.1.4:
     resolution: {integrity: sha512-a+bKEcCjtuW5WTdgeXFzswSrdqi0jk4XlEtZlx5A94wCoBpFjfFTbo/Tra5SpNCl/YFZPvcV1dJc+TAYeg6ROQ==}
@@ -4259,7 +4259,7 @@ snapshots:
 
   isexe@3.1.5: {}
 
-  jose@5.10.0: {}
+  jose@6.2.3: {}
 
   jpeg-exif@1.1.4: {}
 
