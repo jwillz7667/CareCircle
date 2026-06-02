@@ -89,6 +89,13 @@ struct MoreView: View {
                         }
 
                         NavigationLink {
+                            JournalListView(circle: circle, author: authorContext)
+                        } label: {
+                            Label("Symptom journal", systemImage: "note.text")
+                                .foregroundStyle(Color.ccText)
+                        }
+
+                        NavigationLink {
                             VitalsListView(circle: circle, author: authorContext)
                         } label: {
                             Label("Vitals history", systemImage: "list.bullet.rectangle")

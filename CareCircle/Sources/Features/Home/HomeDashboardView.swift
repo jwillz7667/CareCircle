@@ -12,7 +12,8 @@ import SwiftUI
 ///    (placeholder until phase E lands; surfaces shape now, content later).
 /// 4. Today's plan — next handful of doses + the next appointment.
 /// 5. What changed — recent activity rolled up from the Brain.
-/// 6. Quick capture FAB — the only verb on the screen.
+/// 6. Daily check-in — quick mood/symptom log for the Care Recipient today.
+/// 7. Quick capture FAB — the only verb on the screen.
 ///
 /// Critical-action strip (missed life-critical doses, red-zone vitals)
 /// will appear above Pulse once phase B / E generate the signals. It is
@@ -140,6 +141,8 @@ struct HomeDashboardView: View {
                     HomeWhatChangedCard(circle: circle) {
                         selectedTab = .brain
                     }
+
+                    JournalTodayCard(circle: circle, author: authorContext)
 
                     Color.clear.frame(height: 96)
                 }
