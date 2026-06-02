@@ -8,7 +8,7 @@ Full spec: @docs/CARECIRCLE_SPEC.md. Backend spec: @docs/CARECIRCLE_DATABASE_SPE
 
 ## Stack
 - **iOS:** Swift 6, SwiftUI, SwiftData, CloudKit (private + shared databases for Circle sharing)
-- **Backend:** Node.js 22 + Fastify 5 + PostgreSQL 16 + Redis + MinIO on Railway (monorepo under `backend/`)
+- **Backend:** Node.js 22 + Fastify 5 + **Drizzle ORM** (not Prisma) + PostgreSQL 16 + Redis + MinIO on Railway (monorepo under `backend/`). Migrations run through `@carecircle/migrator`; backend code is organized by layer (`routes/`, `services/`, `lib/`, `plugins/`), not feature-first. The global `~/.claude/CLAUDE.md` canonical layouts (Prisma, feature-first) are generic defaults and do **not** describe this backend.
 - Swift Testing framework for unit tests; XCUITest reserved for late-phase critical flows only
 - swiftformat + swiftlint enforced (configs at root)
 - Three auth paths, all minting the same CareCircle JWT and resolving to the same `users.id`: **Sign in with Apple** (primary, OS-native UX), **Sign in with Google** (OAuth ID token verified via Google's JWKS), and **email + password** (Argon2id hash, prod-grade rate limit, audit-logged). Backend keeps providers separable: `users.apple_user_id`, `users.google_user_id`, `users.password_hash` are independent nullable columns. A single user can later link multiple providers; v1 disallows account merge — a duplicate-email sign-up across providers fails fast with a clear error.
