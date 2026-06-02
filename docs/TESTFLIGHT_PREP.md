@@ -13,28 +13,15 @@ device + Apple ID login. None of these steps require Claude Code.
 
 ## 1. Deployment target review
 
-**Current state:** The Xcode project ships with
-`IPHONEOS_DEPLOYMENT_TARGET = 26.4`, which limits installs to iOS
-26.4+ devices. The product spec calls for "iOS 17+" as the official
-floor.
+**Resolved (2026-05-13):** `IPHONEOS_DEPLOYMENT_TARGET = 17.0` in
+both build configurations. The floor was lowered from 26.4 to iOS 17
+to widen TestFlight reach to iPhone XS and later. The Phase 6 entity
+extractor uses on-device Foundation Models where available (iOS 26+)
+and a PHI-stripped cloud-proxy fallback on older devices; iOS 26-only
+SwiftUI APIs are guarded with `if #available`. The project builds
+clean against the 17.0 floor.
 
-**Decision required before submission:**
-- **Option A — stay on 26.4.** Required if you want to keep the
-  Foundation Models on-device entity extraction (Phase 6) and the
-  newest SwiftUI APIs without back-porting. Cuts the addressable
-  device list to iPhones from the iPhone 16 line forward.
-- **Option B — drop to iOS 17.** Re-enables installs on iPhone XS
-  and later, but the Phase 6 entity extractor must fall back to a
-  cloud-proxy path (PHI-stripped). Several iOS 26-only SwiftUI APIs
-  (e.g. `@Bindable` ergonomics, `Toolbar` defaults) need API checks
-  or `if #available` guards.
-
-Recommended for v1 TestFlight: **stay on iOS 26.4** for the initial
-internal build, gather feedback from family beta testers on iPhone
-16-class hardware, then make the back-port decision when sizing
-production launch.
-
-How to change: Xcode → project navigator → CareCircle target →
+To change again: Xcode → project navigator → CareCircle target →
 General → Minimum Deployments. There is no equivalent flag in the
 entitlements file — it lives only in build settings.
 
@@ -73,7 +60,7 @@ push pipeline.
 | Capability | Status | Notes |
 |---|---|---|
 | Sign in with Apple | ✅ enabled | `com.apple.developer.applesignin = ["Default"]` |
-| CloudKit (private + shared) | ✅ enabled | container `iCloud.Res.CareCircle` |
+| CloudKit (private + shared) | ✅ enabled | container `iCloud.com.jwillz.carecircle` |
 | Push (APNs) | ✅ development | `aps-environment = development`. **Flip to `production` before App Store review.** |
 | Critical Alerts | ⏳ **pending Apple approval** | Required for SOS + missed-critical-meds escalation per spec §5.5. Submit the form at https://developer.apple.com/contact/request/critical-alerts — be precise about the medical-coordination use case. The app must continue to work if the request is denied; the fall-back is time-sensitive notifications. |
 
@@ -96,10 +83,19 @@ CareCircle collects in v1 (CloudKit-only path):
 | Identifiers — User ID | Yes | Yes | No | Apple ID `sub` used as primary key. |
 | Usage Data — Product Interaction | No | — | — | We do not ship analytics in v1. |
 | Diagnostics — Crash / performance | No | — | — | No third-party SDK; Apple's standard crash logs only (opt-in by user). |
-| Location — Coarse | Yes (event-scoped) | Yes | No | SOS captures lat/lng at trigger time only. |
+| Location — Precise | Yes (event-scoped) | Yes | No | SOS captures precise lat/lng + accuracy at trigger time; per-circle live location is shared only for circles the user explicitly opts into. |
 
 "Used for tracking" answers should all be **No** — we do not share
 identifiers with third parties.
+
+A `PrivacyInfo.xcprivacy` manifest ships in the app bundle
+(`CareCircle/PrivacyInfo.xcprivacy`, auto-bundled via the synchronized
+root). It declares `NSPrivacyTracking = false`, an empty tracking-domains
+list, the one required-reason API in use (User Defaults, reason
+`CA92.1`), and the collected-data categories above (each linked to the
+user, not used for tracking, for App Functionality). Keep the App Store
+Connect answers in this table consistent with the manifest — Apple
+cross-checks them.
 
 ---
 
@@ -186,7 +182,8 @@ Run these on a physical iPhone 16 Pro before uploading.
 
 ## 8. Known issues / open items
 
-- The app is iOS 26.4-only in v1; the spec asks for iOS 17. See §1.
+- Deployment floor is iOS 17.0 (see §1); on-device Foundation Models
+  features degrade to a cloud-proxy fallback on pre-iOS-26 devices.
 - Critical Alert entitlement is pending Apple approval. Until
   granted, SOS notifications respect Focus / Do Not Disturb.
 - CloudKit-shared circles cannot be tested on Simulator without
@@ -219,5 +216,3 @@ Run these on a physical iPhone 16 Pro before uploading.
    for the first wave).
 3. Capture feedback in a single shared note for one week before
    making any post-feedback changes — avoid thrashing the build.
-4. Schedule the iOS 17 back-port decision review for two weeks
-   after first upload.
