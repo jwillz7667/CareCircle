@@ -25,6 +25,8 @@
 	<string>CareCircle reads heart rate, blood pressure, oxygen saturation, body temperature, weight, glucose, respiratory rate, walking steadiness, steps, falls, and sleep from Apple Health so caregivers in your Circle can see the Care Recipient's vitals trend over time.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>CareCircle keeps sharing your location with the Circles you opt into, even in the background, so caregivers can coordinate and respond quickly if someone at risk of wandering leaves a safe area. Background updates run only while you keep location sharing turned on.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>CareCircle uses your location to attach it to an SOS so your Circle can see where to send help, and — only for Circles you opt into — to share your live location so caregivers can coordinate.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
