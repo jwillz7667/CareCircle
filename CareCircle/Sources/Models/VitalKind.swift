@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI
 
 // MARK: - VitalKind
 
@@ -146,23 +145,6 @@ enum VitalKind: String, CaseIterable, Codable, Sendable, Identifiable {
         }
     }
 
-    /// Color hint surfaced in row chips so the eye can spot kinds at
-    /// a glance. Keys into SageTheme.
-    var tintColor: Color {
-        switch self {
-        case .heartRate,
-             .bloodPressureSystolic,
-             .bloodPressureDiastolic,
-             .bodyTemperature,
-             .falls,
-             .restingHeartRate:
-            Color.ccDanger
-        case .bodyWeight, .bloodGlucose, .respiratoryRate, .stepCount, .walkingSteadiness:
-            Color.ccPrimary
-        case .oxygenSaturation, .sleepHours:
-            Color.ccSecondary
-        }
-    }
 }
 
 // MARK: - VitalSource

@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import HealthKit
 import OSLog
@@ -143,6 +144,11 @@ extension HealthKitVitalsReader {
     /// adds a new sample to an already-recorded night, the key
     /// changes and a new row lands — UI ordering keeps both visible
     /// until cold-start hydration reconciles. Acceptable noise for v1.
+    ///
+    /// The digest is SHA-256, not `String.hashValue`: Swift seeds the
+    /// standard hasher per process, so `hashValue` would produce a
+    /// different key for the same night on every launch and defeat the
+    /// dedupe entirely.
     static func sleepDedupeKey(
         forNight night: Date,
         samples: [HKCategorySample]
@@ -152,7 +158,9 @@ extension HealthKitVitalsReader {
         let sortedIDs = samples.map(\.uuid.uuidString).sorted()
         let joined = sortedIDs.joined(separator: "|")
         let nightStamp = Int(night.timeIntervalSince1970)
-        return "sleep:\(nightStamp):\(joined.hashValue)"
+        let digest = SHA256.hash(data: Data(joined.utf8))
+        let fingerprint = digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        return "sleep:\(nightStamp):\(fingerprint)"
     }
 }
 

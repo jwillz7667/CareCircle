@@ -16,7 +16,12 @@ struct MedicationOverdueSweeper {
     private let logger = AppLogger.app
 
     func sweep(in context: ModelContext) {
-        let descriptor = FetchDescriptor<Medication>()
+        // Fetch only active meds in the store rather than every med then
+        // filtering in Swift — this runs on the main actor on every
+        // foreground transition.
+        let descriptor = FetchDescriptor<Medication>(
+            predicate: #Predicate { $0.statusRaw == "active" }
+        )
         do {
             let medications = try context.fetch(descriptor)
             let now = Date()
@@ -27,7 +32,7 @@ struct MedicationOverdueSweeper {
                 to: now
             ) ?? now
 
-            for medication in medications where medication.status == .active {
+            for medication in medications {
                 synthesizeMissedOccurrences(
                     for: medication,
                     between: lookbackCutoff,
