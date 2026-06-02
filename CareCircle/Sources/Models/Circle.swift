@@ -73,14 +73,8 @@ final class Circle {
     @Relationship(deleteRule: .cascade, inverse: \LocationSnapshot.circle)
     var locationSnapshotsStore: [LocationSnapshot]?
 
-    @Relationship(deleteRule: .cascade, inverse: \ChatMessage.circle)
-    var chatMessagesStore: [ChatMessage]?
-
     @Relationship(deleteRule: .cascade, inverse: \HealthRecord.circle)
     var healthRecordsStore: [HealthRecord]?
-
-    @Relationship(deleteRule: .cascade, inverse: \DirectThread.circle)
-    var directThreadsStore: [DirectThread]?
 
     @Relationship(deleteRule: .cascade, inverse: \JournalEntry.circle)
     var journalEntriesStore: [JournalEntry]?
@@ -145,19 +139,9 @@ final class Circle {
         set { locationSnapshotsStore = newValue }
     }
 
-    var chatMessages: [ChatMessage] {
-        get { chatMessagesStore ?? [] }
-        set { chatMessagesStore = newValue }
-    }
-
     var healthRecords: [HealthRecord] {
         get { healthRecordsStore ?? [] }
         set { healthRecordsStore = newValue }
-    }
-
-    var directThreads: [DirectThread] {
-        get { directThreadsStore ?? [] }
-        set { directThreadsStore = newValue }
     }
 
     var journalEntries: [JournalEntry] {
