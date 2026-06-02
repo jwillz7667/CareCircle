@@ -31,8 +31,8 @@ nonisolated final class CrashTelemetry: NSObject, MXMetricManagerSubscriber {
         MXMetricManager.shared.remove(self)
     }
 
-    // Performance metrics aren't routed anywhere yet; diagnostics are the
-    // signal we care about. Implemented to satisfy the protocol.
+    /// Performance metrics aren't routed anywhere yet; diagnostics are the
+    /// signal we care about. Implemented to satisfy the protocol.
     func didReceive(_: [MXMetricPayload]) {}
 
     func didReceive(_ payloads: [MXDiagnosticPayload]) {
@@ -47,7 +47,7 @@ nonisolated final class CrashTelemetry: NSObject, MXMetricManagerSubscriber {
     private func log(_ diagnostics: [some MXDiagnostic]?, kind: String) {
         guard let diagnostics, !diagnostics.isEmpty else { return }
         for diagnostic in diagnostics {
-            let json = String(decoding: diagnostic.jsonRepresentation(), as: UTF8.self)
+            let json = String(bytes: diagnostic.jsonRepresentation(), encoding: .utf8) ?? "<undecodable>"
             AppLogger.app.fault(
                 "MetricKit \(kind, privacy: .public) diagnostic: \(json, privacy: .public)"
             )

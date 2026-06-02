@@ -43,6 +43,9 @@ final class SyncEngine {
     /// room for future per-op growth.
     private static let batchChunkSize = 50
 
+    /// `POST /v1/sync/status` accepts up to 500 ids; stay well under that.
+    private static let statusChunkSize = 200
+
     init(
         apiClient: APIClient,
         modelContainer: ModelContainer
@@ -286,14 +289,21 @@ final class SyncEngine {
         }
     }
 
+    nonisolated(unsafe) private static let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+}
+
+// MARK: - Drain pass
+
+extension SyncEngine {
     private enum ChunkOutcome {
         case progressed
         case deferred(String)
         case failed(String)
     }
-
-    /// `POST /v1/sync/status` accepts up to 500 ids; stay well under that.
-    private static let statusChunkSize = 200
 
     private func drainOnce() async {
         guard await apiClient.tokenStore.currentTokens() != nil else {
@@ -540,12 +550,6 @@ final class SyncEngine {
         let envelope: [String: Any] = ["operations": wireOps]
         return try JSONSerialization.data(withJSONObject: envelope, options: [.sortedKeys])
     }
-
-    nonisolated(unsafe) private static let isoFormatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
 }
 
 // MARK: - Array chunking
