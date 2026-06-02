@@ -10,6 +10,7 @@ struct VoiceComposerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncEngine.self) private var syncEngine
     @Environment(BackendInferenceClient.self) private var inferenceClient
 
     @State private var service = VoiceCaptureService()
@@ -200,6 +201,7 @@ struct VoiceComposerView: View {
 
         do {
             try modelContext.save()
+            syncEngine.enqueueActivityCreate(activity)
             scheduleExtraction(for: activity, transcript: result.transcript)
             dismiss()
         } catch {
