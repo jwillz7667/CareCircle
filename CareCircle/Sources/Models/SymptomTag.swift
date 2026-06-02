@@ -22,7 +22,9 @@ enum SymptomTag: String, CaseIterable, Sendable, Identifiable {
     case cough
     case constipation
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var displayName: String {
         switch self {

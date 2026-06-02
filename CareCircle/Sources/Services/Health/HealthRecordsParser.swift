@@ -23,8 +23,8 @@ enum HealthRecordsParser {
 
         guard
             let data = fhirData,
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else {
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else
+        {
             return Parsed(
                 sourceName: sourceName,
                 displayTitle: record.displayName,
@@ -59,7 +59,9 @@ enum HealthRecordsParser {
         kind: HealthRecord.Kind,
         json: [String: Any],
         record: HKClinicalRecord
-    ) -> Fields {
+    )
+        -> Fields
+    {
         switch kind {
         case .medication: medication(json: json, record: record)
         case .condition: condition(json: json, record: record)

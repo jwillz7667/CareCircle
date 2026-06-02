@@ -140,7 +140,7 @@ struct MedicationReminderScheduler {
     /// its own stale requests don't count against it.
     private func remainingMedicationBudget() async -> Int {
         let pending = await center.pendingNotificationRequests()
-        let used = pending.lazy.filter { $0.identifier.hasPrefix(Self.identifierPrefix) }.count
+        let used = pending.lazy.count(where: { $0.identifier.hasPrefix(Self.identifierPrefix) })
         return max(0, Self.maxPendingMedicationRequests - used)
     }
 

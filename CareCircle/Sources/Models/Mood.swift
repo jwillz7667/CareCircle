@@ -16,7 +16,9 @@ enum Mood: Int, CaseIterable, Sendable, Identifiable {
     case good = 4
     case great = 5
 
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
 
     var emoji: String {
         switch self {
