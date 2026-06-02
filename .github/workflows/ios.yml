@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache Homebrew
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/Library/Caches/Homebrew
@@ -79,7 +79,7 @@ jobs:
           xcodebuild -version
 
       - name: Cache DerivedData
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: derived-data-${{ runner.os }}-${{ hashFiles('CareCircle.xcodeproj/project.pbxproj') }}
