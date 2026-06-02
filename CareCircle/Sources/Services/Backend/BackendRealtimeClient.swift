@@ -125,13 +125,13 @@ final class BackendRealtimeClient {
             return
         }
 
-        guard let url = buildRealtimeURL(token: token) else {
+        guard let request = buildRealtimeRequest(token: token) else {
             lastError = "Realtime URL malformed"
             AppLogger.backend.error("Realtime URL could not be built.")
             return
         }
 
-        let task = urlSession.webSocketTask(with: url)
+        let task = urlSession.webSocketTask(with: request)
         webSocket = task
         task.resume()
         AppLogger.backend.info("Realtime: connecting…")
@@ -265,15 +265,20 @@ final class BackendRealtimeClient {
         }
     }
 
-    private func buildRealtimeURL(token: String) -> URL? {
+    /// Builds the upgrade request with the access token in the
+    /// `Authorization` header rather than the query string — query strings
+    /// leak into server access logs and proxy history.
+    private func buildRealtimeRequest(token: String) -> URLRequest? {
         guard var components = URLComponents(
             url: configuration.baseURL,
             resolvingAgainstBaseURL: false
         ) else { return nil }
         components.scheme = (components.scheme == "https") ? "wss" : "ws"
         components.path = "/v1/realtime"
-        components.queryItems = [URLQueryItem(name: "token", value: token)]
-        return components.url
+        guard let url = components.url else { return nil }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        return request
     }
 
     // MARK: - Dispatch
