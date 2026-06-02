@@ -1,3 +1,5 @@
+import Foundation
+import OSLog
 import SwiftData
 
 // MARK: - LocalStoreEraser
@@ -9,7 +11,23 @@ import SwiftData
 /// The type list mirrors the schema in `CareCircleApp.makeModelContainer`;
 /// keep the two in lockstep when models are added or removed.
 enum LocalStoreEraser {
-    static func eraseAll(in context: ModelContext) throws {
+    /// Erases all model rows and forgets every per-circle document key.
+    ///
+    /// Per-circle AES keys live in the Keychain under
+    /// `AccessibleAfterFirstUnlockThisDeviceOnly`, which — like the cached
+    /// auth credentials `CareCircleApp` purges on fresh install — survives
+    /// an app uninstall. Account deletion must drop them too, otherwise a
+    /// reinstall could still decrypt CloudKit-cached ciphertext. We read the
+    /// circle IDs before deleting the rows, then forget each key.
+    ///
+    /// (A future per-member "leave circle" flow should call
+    /// `keyStore.forget(circleID:)` for just that circle on the same basis.)
+    static func eraseAll(
+        in context: ModelContext,
+        keyStore: DocumentKeyStore = .shared
+    ) throws {
+        let circleIDs = (try? context.fetch(FetchDescriptor<Circle>()))?.map(\.id) ?? []
+
         try context.delete(model: Circle.self)
         try context.delete(model: CareRecipient.self)
         try context.delete(model: Member.self)
@@ -34,5 +52,17 @@ enum LocalStoreEraser {
         try context.delete(model: JournalEntry.self)
         try context.delete(model: PendingOperation.self)
         try context.save()
+
+        // Best-effort: the rows are already gone, so a Keychain delete
+        // failure shouldn't fail the whole account deletion — log and move on.
+        for circleID in circleIDs {
+            do {
+                try keyStore.forget(circleID: circleID)
+            } catch {
+                AppLogger.persistence.error(
+                    "Failed to forget document key on account erase: \(String(describing: error), privacy: .public)"
+                )
+            }
+        }
     }
 }
