@@ -31,7 +31,7 @@ struct DocumentDraft: Equatable {
     }
 
     static let maxSizeBytes = 10 * 1_024 * 1_024
-    static let allowedMimeTypes: Set<String> = [
+    static let allowedMimeTypes: Set = [
         "image/jpeg",
         "image/png",
         "image/heic",

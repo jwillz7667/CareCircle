@@ -31,7 +31,7 @@ nonisolated struct MedicationLabelParser: Sendable {
         ("gtt", .drops),
     ]
 
-    private static let stopwords: Set<String> = [
+    private static let stopwords: Set = [
         "rx", "ndc", "lot", "exp", "qty", "refills", "pharmacy", "patient",
         "directions", "warning", "warnings", "use", "use:", "see", "side",
         "store", "keep", "tablets", "capsules", "doctor", "physician", "take",
