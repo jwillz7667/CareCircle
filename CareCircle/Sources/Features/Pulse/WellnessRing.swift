@@ -16,6 +16,7 @@ struct WellnessRing: View {
     let subtitle: String
 
     @State private var animatedScore: Double = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var clamped: Double {
         min(100, max(0, Double(score ?? 0)))
@@ -127,7 +128,7 @@ struct WellnessRing: View {
     }
 
     private func animateTo(_ value: Double) {
-        withAnimation(.spring(response: 1.1, dampingFraction: 0.78)) {
+        withAnimation(Motion.respecting(reduceMotion, .spring(response: 1.1, dampingFraction: 0.78))) {
             animatedScore = value
         }
     }

@@ -21,46 +21,53 @@ struct BedsideMonitorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(BackendRealtimeClient.self) private var realtimeClient
-    @State private var now: Date = .now
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// Latest reading per vital, derived from a single
+    /// `VitalsAnalytics.summarize` pass. Computed once per body evaluation
+    /// (not once per metric, and — because the clock lives in its own
+    /// subview — not on every per-second tick).
+    private struct Readings {
+        var heartRate: Double?
+        var oxygen: Double?
+        var temperature: Double?
+        var respRate: Double?
+        var systolic: Double?
+        var diastolic: Double?
 
-    private var summaries: [VitalsAnalytics.KindSummary] {
-        VitalsAnalytics.summarize(vitals: circle.vitals)
-    }
+        init(vitals: [Vital]) {
+            let summaries = VitalsAnalytics.summarize(vitals: vitals)
+            func latest(_ kind: VitalKind) -> Double? {
+                summaries.first { $0.kind == kind }?.latest?.value
+            }
+            heartRate = latest(.heartRate)
+            oxygen = latest(.oxygenSaturation)
+            temperature = latest(.bodyTemperature)
+            respRate = latest(.respiratoryRate)
+            systolic = latest(.bloodPressureSystolic)
+            diastolic = latest(.bloodPressureDiastolic)
+        }
 
-    private var heartRate: Double? {
-        summaries.first(where: { $0.kind == .heartRate })?.latest?.value
-    }
+        var hrText: String {
+            guard let heartRate else { return "—" }
+            return "\(Int(heartRate.rounded()))"
+        }
 
-    private var oxygen: Double? {
-        summaries.first(where: { $0.kind == .oxygenSaturation })?.latest?.value
-    }
-
-    private var temperature: Double? {
-        summaries.first(where: { $0.kind == .bodyTemperature })?.latest?.value
-    }
-
-    private var respRate: Double? {
-        summaries.first(where: { $0.kind == .respiratoryRate })?.latest?.value
-    }
-
-    private var systolic: Double? {
-        summaries.first(where: { $0.kind == .bloodPressureSystolic })?.latest?.value
-    }
-
-    private var diastolic: Double? {
-        summaries.first(where: { $0.kind == .bloodPressureDiastolic })?.latest?.value
+        var bpText: String {
+            guard let systolic, let diastolic else { return "—" }
+            return "\(Int(systolic.rounded()))/\(Int(diastolic.rounded()))"
+        }
     }
 
     var body: some View {
-        ZStack {
+        let readings = Readings(vitals: circle.vitals)
+        return ZStack {
             Color.black.ignoresSafeArea()
             VStack(spacing: 24) {
                 topBar
-                centerStack
+                centerStack(readings: readings)
                 Spacer()
-                metricGrid
+                metricGrid(readings: readings)
                 Spacer().frame(height: 8)
             }
             .padding(.horizontal, 28)
@@ -71,9 +78,6 @@ struct BedsideMonitorView: View {
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
-        }
-        .onReceive(clockTimer) { date in
-            now = date
         }
         .statusBarHidden()
         .preferredColorScheme(.dark)
@@ -90,10 +94,7 @@ struct BedsideMonitorView: View {
                     .foregroundStyle(realtimeClient.isConnected ? Color.green : Color.gray)
             }
             Spacer()
-            Text(clockString)
-                .font(.system(size: 36, weight: .light, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.white.opacity(0.85))
+            BedsideClock()
             Spacer()
             Button {
                 dismiss()
@@ -106,13 +107,13 @@ struct BedsideMonitorView: View {
         }
     }
 
-    private var centerStack: some View {
+    private func centerStack(readings: Readings) -> some View {
         VStack(spacing: 8) {
-            ECGWaveformView(bpm: heartRate ?? 72, tint: Color.green)
+            ECGWaveformView(bpm: readings.heartRate ?? 72, tint: Color.green, reduceMotion: reduceMotion)
                 .frame(height: 140)
 
             HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text(hrText)
+                Text(readings.hrText)
                     .font(.system(size: 140, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.green)
@@ -123,35 +124,35 @@ struct BedsideMonitorView: View {
                         .tracking(2)
                         .foregroundStyle(Color.green.opacity(0.7))
                     Text("Heart rate")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.white.opacity(0.55))
                 }
             }
         }
     }
 
-    private var metricGrid: some View {
+    private func metricGrid(readings: Readings) -> some View {
         HStack(spacing: 14) {
             metric(
-                value: oxygen.map { "\(Int($0.rounded()))" } ?? "—",
+                value: readings.oxygen.map { "\(Int($0.rounded()))" } ?? "—",
                 unit: "%",
                 label: "SpO₂",
                 tint: Color.cyan
             )
             metric(
-                value: respRate.map { "\(Int($0.rounded()))" } ?? "—",
+                value: readings.respRate.map { "\(Int($0.rounded()))" } ?? "—",
                 unit: "/min",
                 label: "Resp",
                 tint: Color.yellow
             )
             metric(
-                value: bpString,
+                value: readings.bpText,
                 unit: "mmHg",
                 label: "BP",
                 tint: Color.orange
             )
             metric(
-                value: temperature.map { String(format: "%.1f", $0) } ?? "—",
+                value: readings.temperature.map { String(format: "%.1f", $0) } ?? "—",
                 unit: "°F",
                 label: "Temp",
                 tint: Color.pink
@@ -171,7 +172,7 @@ struct BedsideMonitorView: View {
                 .foregroundStyle(tint)
                 .shadow(color: tint.opacity(0.4), radius: 6)
             Text(unit)
-                .font(.system(size: 11, weight: .medium))
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(.white.opacity(0.45))
         }
         .frame(maxWidth: .infinity)
@@ -185,21 +186,30 @@ struct BedsideMonitorView: View {
                 .stroke(tint.opacity(0.18), lineWidth: 1)
         )
     }
+}
+
+// MARK: - BedsideClock
+
+/// The live HH:mm:ss clock. Owns its own 1 Hz timer so the per-second
+/// redraw is scoped to this small subview — the parent monitor (and its
+/// vitals analytics) only re-evaluates when the readings actually change.
+private struct BedsideClock: View {
+    @State private var now: Date = .now
+    private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        Text(clockString)
+            .font(.system(size: 36, weight: .light, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(.white.opacity(0.85))
+            .onReceive(tick) { now = $0 }
+            .accessibilityLabel("Current time")
+    }
 
     private var clockString: String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss"
-        return f.string(from: now)
-    }
-
-    private var hrText: String {
-        guard let hr = heartRate else { return "—" }
-        return "\(Int(hr.rounded()))"
-    }
-
-    private var bpString: String {
-        guard let sys = systolic, let dia = diastolic else { return "—" }
-        return "\(Int(sys.rounded()))/\(Int(dia.rounded()))"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: now)
     }
 }
 
@@ -213,9 +223,12 @@ struct BedsideMonitorView: View {
 private struct ECGWaveformView: View {
     let bpm: Double
     let tint: Color
+    /// When Reduce Motion is on, the timeline is paused so the trace
+    /// renders as a single static frame instead of scrolling.
+    let reduceMotion: Bool
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { context in
             Canvas { ctx, size in
                 drawWave(into: ctx, size: size, time: context.date.timeIntervalSinceReferenceDate)
             }

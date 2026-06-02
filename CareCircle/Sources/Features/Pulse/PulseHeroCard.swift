@@ -21,6 +21,8 @@ struct PulseHeroCard: View {
     let sourceLabel: String
     let isLive: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var bpm: Double {
         heartRate ?? 72
     }
@@ -36,7 +38,7 @@ struct PulseHeroCard: View {
     var body: some View {
         ZStack {
             backgroundGradient
-            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: false)) { context in
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { context in
                 let t = context.date.timeIntervalSinceReferenceDate
                 ZStack {
                     breathRing(t: t)
