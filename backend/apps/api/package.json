@@ -28,7 +28,7 @@
     "pg": "^8.13.1",
     "pg-listen": "^1.7.0",
     "tsx": "^4.19.2",
-    "zod": "^3.24.1"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@carecircle/migrator": "workspace:*",
