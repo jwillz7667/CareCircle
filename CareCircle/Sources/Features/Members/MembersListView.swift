@@ -1,3 +1,4 @@
+import OSLog
 import SwiftData
 import SwiftUI
 
@@ -10,6 +11,7 @@ struct MembersListView: View {
     @Environment(BackendRealtimeClient.self) private var realtimeClient
     @Environment(\.modelContext) private var modelContext
     @State private var isAddingMember = false
+    @State private var memberPendingRemoval: Member?
 
     private var permissions: CirclePermissions {
         CirclePermissions.resolve(circle: circle, appleUserID: signedInAppleUserID)
@@ -34,6 +36,15 @@ struct MembersListView: View {
                 Section {
                     ForEach(group.members) { member in
                         memberRow(member)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                if canRemove(member) {
+                                    Button(role: .destructive) {
+                                        memberPendingRemoval = member
+                                    } label: {
+                                        Label("Remove", systemImage: "person.fill.xmark")
+                                    }
+                                }
+                            }
                     }
                 } header: {
                     sectionHeader(for: group.status, count: group.members.count)
@@ -54,6 +65,56 @@ struct MembersListView: View {
         .toolbar { toolbar }
         .sheet(isPresented: $isAddingMember) {
             AddMemberView(circle: circle, ownerAppleUserID: signedInAppleUserID)
+        }
+        .confirmationDialog(
+            "Remove from Circle?",
+            isPresented: removalDialogBinding,
+            titleVisibility: .visible,
+            presenting: memberPendingRemoval
+        ) { member in
+            Button("Remove \(member.displayName)", role: .destructive) {
+                remove(member)
+                memberPendingRemoval = nil
+            }
+            Button("Cancel", role: .cancel) {
+                memberPendingRemoval = nil
+            }
+        } message: { member in
+            Text(
+                "\(member.displayName) will be taken off the member list and their seat freed. Information already synced to their device isn't recalled."
+            )
+        }
+    }
+
+    private var removalDialogBinding: Binding<Bool> {
+        Binding(
+            get: { memberPendingRemoval != nil },
+            set: { isPresented in
+                if !isPresented { memberPendingRemoval = nil }
+            }
+        )
+    }
+
+    /// Owner-only. The circle owner can never be removed, and an already-removed
+    /// row offers no further action.
+    private func canRemove(_ member: Member) -> Bool {
+        guard permissions.canRemoveMembers, member.status != .removed else { return false }
+        let isCircleOwner = member.role == .owner
+            || (!member.appleUserID.isEmpty && member.appleUserID == circle.ownerAppleUserID)
+        return !isCircleOwner
+    }
+
+    /// Marks the member removed locally; the change syncs to other members via
+    /// CloudKit and frees a roster seat. CloudKit data already replicated to the
+    /// removed member's device is not recalled by this action — hard revocation
+    /// is tracked separately as a device-verified follow-up.
+    private func remove(_ member: Member) {
+        member.status = .removed
+        do {
+            try modelContext.save()
+        } catch {
+            let description = String(describing: error)
+            AppLogger.persistence.error("Failed to remove member: \(description, privacy: .public)")
         }
     }
 
