@@ -48,7 +48,16 @@ jobs:
 
       - name: Install tools
         run: |
+          # The Homebrew cache restores the Cellar kegs but not the bin
+          # symlinks, so a cache hit leaves swiftformat/swiftlint installed but
+          # unlinked — `brew install` then no-ops without relinking and the
+          # binaries are absent from PATH. Link explicitly, then verify both
+          # resolve so any genuine failure surfaces here, not as a later 127.
           brew install swiftformat swiftlint || true
+          brew link --overwrite swiftformat || true
+          brew link --overwrite swiftlint || true
+          swiftformat --version
+          swiftlint version
 
       - name: swiftformat --lint
         run: swiftformat --lint .
